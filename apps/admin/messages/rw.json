@@ -1,0 +1,10 @@
+{
+  "dashboard": {
+    "title": "Ikibaho cya Admin",
+    "welcome": "Murakaza neza"
+  },
+  "toggleTheme": {
+    "light": "Urumuri",
+    "dark": "Ijuru"
+  }
+}

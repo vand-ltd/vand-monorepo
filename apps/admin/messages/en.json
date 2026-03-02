@@ -1,0 +1,10 @@
+{
+  "dashboard": {
+    "title": "Admin Dashboard",
+    "welcome": "Welcome back"
+  },
+  "toggleTheme": {
+    "light": "Light",
+    "dark": "Dark"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "dashboard": {
+    "title": "Tableau de bord Admin",
+    "welcome": "Bon retour"
+  },
+  "toggleTheme": {
+    "light": "Clair",
+    "dark": "Sombre"
+  }
+}

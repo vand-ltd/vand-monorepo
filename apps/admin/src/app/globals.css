@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@source "../../../../packages/ui/src/**/*.{ts,tsx}";
+
+body {
+  margin: 0;
+  padding: 0;
+}
