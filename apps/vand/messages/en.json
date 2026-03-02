@@ -1,0 +1,11 @@
+{
+  "comingSoon": {
+    "title": "Vand",
+    "subtitle": "Something great is coming soon.",
+    "stayTuned": "Stay tuned"
+  },
+  "toggleTheme": {
+    "light": "Light",
+    "dark": "Dark"
+  }
+}

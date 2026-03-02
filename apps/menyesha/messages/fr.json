@@ -1,0 +1,19 @@
+{
+  "home": {
+    "title": "Bienvenue sur la page d'accueil",
+    "description": "Voici le contenu de la page d'accueil."
+  },
+  "about": {
+    "title": "À propos de nous",
+    "description": "En savoir plus sur nous."
+  },
+  "nav": {
+    "home": "Accueil",
+    "about": "À propos",
+    "contact": "Contact"
+  },
+  "toggleTheme": {
+    "light": "Clair",
+    "dark": "Sombre"
+  }
+}

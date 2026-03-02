@@ -1,0 +1,19 @@
+{
+  "home": {
+    "title": "Welcome to the Home Page",
+    "description": "This is the content of the home page."
+  },
+  "about": {
+    "title": "About Us",
+    "description": "Learn more about us."
+  },
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "contact": "Contact"
+  },
+  "toggleTheme": {
+    "light": "Light",
+    "dark": "Dark"
+  }
+}

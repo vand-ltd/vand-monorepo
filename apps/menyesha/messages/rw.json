@@ -1,0 +1,19 @@
+{
+  "home": {
+    "title": "Murakaza ku rubuga rw'imbere",
+    "description": "Iyi niyo nyandiko y'urupapuro rw'imbere."
+  },
+  "about": {
+    "title": "Ibyerekeye Twebwe",
+    "description": "Menya byinshi kuri twebwe."
+  },
+  "nav": {
+    "home": "Ahabanza",
+    "about": "Abo turi bo",
+    "contact": "Twandikire"
+  },
+  "toggleTheme": {
+    "light": "Umucyo",
+    "dark": "Umwijima"
+  }
+}

@@ -2,5 +2,18 @@
   "extends": "./tsconfig.base.json",
   "compileOnSave": false,
   "files": [],
-  "references": []
+  "references": [
+    {
+      "path": "./apps/menyesha"
+    },
+    {
+      "path": "./apps/vand"
+    },
+    {
+      "path": "./packages/i18n"
+    },
+    {
+      "path": "./packages/ui"
+    }
+  ]
 }
