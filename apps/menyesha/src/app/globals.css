@@ -176,6 +176,17 @@ html.dark .dark\:hover\:text-brand-secondary:hover,
 :is(.dark *) .group:hover .dark\:group-hover\:text-brand-secondary { color: var(--color-brand-secondary) !important; }
 
 /* Custom animations for news website */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes marquee {
   0% {
     transform: translate3d(100%, 0, 0);
