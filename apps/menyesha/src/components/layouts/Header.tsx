@@ -2,7 +2,8 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useTheme } from "next-themes"
 import { ToggleMode } from "./ToggleMode"
 import { SearchInput } from "./SearchInput"
 import LanguageSwitcher from "./LanguageSwitcher"
@@ -16,6 +17,9 @@ import { useClientDateTime } from "@/hooks/useClientDateTime"
 export const Header = () => {
   const [isOpen, setIsOpen] = useState(false)
   const { currentDate, currentTime, mounted } = useClientDateTime()
+  const { resolvedTheme } = useTheme()
+  const [logoMounted, setLogoMounted] = useState(false)
+  useEffect(() => setLogoMounted(true), [])
   
   const t = useTranslations('nav')
   const locale = useLocale();
@@ -60,11 +64,11 @@ export const Header = () => {
             {/* Logo */}
             <Link href="/">
               <Image
-                src="/vand-logo.svg"
-                alt="Vand News Logo"
-                width={100}
-                height={100}
-                className="h-12 w-auto object-contain"
+                src={logoMounted && resolvedTheme === 'dark' ? '/menyesha-logo-dark.svg' : '/menyesha-logo.svg'}
+                alt="Menyesha Logo"
+                width={160}
+                height={40}
+                className="h-10 w-auto object-contain"
               />
             </Link>
 

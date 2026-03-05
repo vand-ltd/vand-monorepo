@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" width="320" height="80">
+  <defs>
+    <linearGradient id="iconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F59E0B"/>
+      <stop offset="100%" style="stop-color:#D97706"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="4" y="8" width="64" height="64" rx="14" fill="url(#iconGrad)"/>
+
+  <circle cx="26" cy="40" r="4.5" fill="#003153"/>
+  <path d="M 33 31 A 13 13 0 0 1 33 49" stroke="#003153" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+  <path d="M 39 25 A 21 21 0 0 1 39 55" stroke="#003153" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.7"/>
+  <path d="M 46 19 A 29 29 0 0 1 46 61" stroke="#003153" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.35"/>
+
+  <text x="82" y="50"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="34" font-weight="700" letter-spacing="-0.5"
+        fill="#F59E0B">Menyesha</text>
+</svg>

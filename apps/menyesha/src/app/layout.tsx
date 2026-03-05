@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     telephone: false,
   },
   icons: {
-    icon: '/vercel.svg',
+    icon: '/favicon.ico',
   },
   robots: {
     index: true,
