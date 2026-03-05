@@ -6,5 +6,39 @@
   "toggleTheme": {
     "light": "Light",
     "dark": "Dark"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "login": "Login",
+    "createArticle": "Create Article",
+    "admin": "Vand Admin"
+  },
+  "user": {
+    "profileTitle": "Admin User",
+    "fullName": "Full Name",
+    "email": "Email",
+    "phone": "Phone",
+    "role": "Role",
+    "adminRole": "Administrator",
+    "status": "Status",
+    "active": "Active"
+  },
+  "login": {
+    "title": "Admin Login",
+    "subtitle": "Sign in to your admin account",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "Enter your email",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "signIn": "Sign In",
+    "forgotPassword": "Forgot password?",
+    "rememberMe": "Remember me",
+    "welcomeHeading": "Vand Admin Panel",
+    "welcomeDescription": "Manage your content, users, and platform settings from one central dashboard.",
+    "backToDashboard": "Back to Dashboard"
+  },
+  "createArticle": {
+    "title": "Create Article",
+    "subtitle": "This page is under construction. Article creation tools will be available soon."
   }
 }

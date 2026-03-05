@@ -6,5 +6,39 @@
   "toggleTheme": {
     "light": "Urumuri",
     "dark": "Ijuru"
+  },
+  "nav": {
+    "dashboard": "Ikibaho",
+    "login": "Kwinjira",
+    "createArticle": "Andika inkuru",
+    "admin": "Vand Admin"
+  },
+  "user": {
+    "profileTitle": "Umukoresha wa Admin",
+    "fullName": "Amazina yose",
+    "email": "Imeyili",
+    "phone": "Telefoni",
+    "role": "Umurimo",
+    "adminRole": "Umuyobozi",
+    "status": "Imiterere",
+    "active": "Arakora"
+  },
+  "login": {
+    "title": "Kwinjira muri Admin",
+    "subtitle": "Injira muri konti yawe ya admin",
+    "emailLabel": "Aderesi ya imeyili",
+    "emailPlaceholder": "Andika imeyili yawe",
+    "passwordLabel": "Ijambo ryibanga",
+    "passwordPlaceholder": "Andika ijambo ryibanga",
+    "signIn": "Injira",
+    "forgotPassword": "Wibagiwe ijambo ryibanga?",
+    "rememberMe": "Unyibuke",
+    "welcomeHeading": "Ikibaho cya Vand Admin",
+    "welcomeDescription": "Gucunga ibikubiyemo, abakoresha, n'igenamiterere ry'urubuga binyuze mu kibaho kimwe.",
+    "backToDashboard": "Subira ku kibaho"
+  },
+  "createArticle": {
+    "title": "Andika inkuru",
+    "subtitle": "Iyi paji iracyubakwa. Ibikoresho byo kwandika inkuru bizaboneka vuba."
   }
 }

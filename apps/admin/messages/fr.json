@@ -6,5 +6,39 @@
   "toggleTheme": {
     "light": "Clair",
     "dark": "Sombre"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "login": "Connexion",
+    "createArticle": "Créer un article",
+    "admin": "Vand Admin"
+  },
+  "user": {
+    "profileTitle": "Utilisateur Admin",
+    "fullName": "Nom complet",
+    "email": "E-mail",
+    "phone": "Téléphone",
+    "role": "Rôle",
+    "adminRole": "Administrateur",
+    "status": "Statut",
+    "active": "Actif"
+  },
+  "login": {
+    "title": "Connexion Admin",
+    "subtitle": "Connectez-vous à votre compte administrateur",
+    "emailLabel": "Adresse e-mail",
+    "emailPlaceholder": "Entrez votre e-mail",
+    "passwordLabel": "Mot de passe",
+    "passwordPlaceholder": "Entrez votre mot de passe",
+    "signIn": "Se connecter",
+    "forgotPassword": "Mot de passe oublié ?",
+    "rememberMe": "Se souvenir de moi",
+    "welcomeHeading": "Panneau Admin Vand",
+    "welcomeDescription": "Gérez votre contenu, vos utilisateurs et les paramètres de la plateforme depuis un tableau de bord central.",
+    "backToDashboard": "Retour au tableau de bord"
+  },
+  "createArticle": {
+    "title": "Créer un article",
+    "subtitle": "Cette page est en cours de construction. Les outils de création d'articles seront bientôt disponibles."
   }
 }
