@@ -35,10 +35,11 @@ import {
   RemoveFormatting,
 } from 'lucide-react';
 import { useCallback, useState } from 'react';
+import { uploadMedia } from '@org/api';
 
 interface RichTextEditorProps {
   content: string;
-  onChange: (content: string) => void;
+  onChange: (content: string, json: object) => void;
   placeholder?: string;
 }
 
@@ -105,7 +106,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
     ],
     content,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      onChange(editor.getHTML(), editor.getJSON());
     },
     editorProps: {
       attributes: {
@@ -120,22 +121,27 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
     },
   });
 
+  const [uploading, setUploading] = useState(false);
+
   const addImage = useCallback(() => {
     if (!editor) return;
 
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.onchange = () => {
+    input.onchange = async () => {
       const file = input.files?.[0];
       if (!file) return;
 
-      const reader = new FileReader();
-      reader.onload = () => {
-        const src = reader.result as string;
-        editor.chain().focus().setImage({ src }).run();
-      };
-      reader.readAsDataURL(file);
+      setUploading(true);
+      try {
+        const media = await uploadMedia(file);
+        editor.chain().focus().setImage({ src: media.url }).run();
+      } catch (error) {
+        console.error('Failed to upload image:', error);
+      } finally {
+        setUploading(false);
+      }
     };
     input.click();
   }, [editor]);

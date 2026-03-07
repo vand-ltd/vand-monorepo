@@ -17,10 +17,10 @@ import {
 } from 'lucide-react';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { AuthGuard } from '@/components/AuthGuard';
-import { useQuery } from '@tanstack/react-query';
-import { getCategories } from '@org/api';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { getCategories, createArticle, uploadMedia } from '@org/api';
 
-type ArticleStatus = 'draft' | 'published';
+type ArticleStatus = 'Draft' | 'Published';
 
 export default function CreateArticlePage() {
   const t = useTranslations('createArticle');
@@ -29,11 +29,13 @@ export default function CreateArticlePage() {
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
   const [content, setContent] = useState('');
+  const [contentJson, setContentJson] = useState({});
   const [category, setCategory] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [coverImage, setCoverImage] = useState<string | null>(null);
-  const [status, setStatus] = useState<ArticleStatus>('draft');
+  const [thumbnailId, setThumbnailId] = useState<string | null>(null);
+  const [status, setStatus] = useState<ArticleStatus>('Draft');
   const [isPreview, setIsPreview] = useState(false);
   const [language, setLanguage] = useState(locale);
 
@@ -62,33 +64,42 @@ export default function CreateArticlePage() {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.onchange = () => {
+    input.onchange = async () => {
       const file = input.files?.[0];
       if (!file) return;
 
-      const reader = new FileReader();
-      reader.onload = () => {
-        setCoverImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const media = await uploadMedia(file);
+        setCoverImage(media.url);
+        setThumbnailId(media.id);
+      } catch (error) {
+        console.error('Failed to upload cover image:', error);
+      }
     };
     input.click();
   };
 
+  const articleMutation = useMutation({
+    mutationFn: createArticle,
+    onSuccess: (data) => {
+      console.log('Article created successfully:', data);
+    },
+    onError: (error) => {
+      console.error('Failed to create article:', error);
+    },
+  })
+
   const handleSubmit = (articleStatus: ArticleStatus) => {
-    setStatus(articleStatus);
-    const articleData = {
+    articleMutation.mutate({
       title,
-      subtitle,
-      content,
-      category,
-      tags,
-      coverImage,
-      status: articleStatus,
+      excerpt: subtitle,
       language,
-    };
-    console.log('Article data:', articleData);
-    // TODO: call API to save article
+      categoryId: category,
+      content: contentJson,
+      ...(thumbnailId ? { thumbnailId } : {}),
+      tagIds: tags,
+      status: articleStatus,
+    });
   };
 
   return (
@@ -107,7 +118,7 @@ export default function CreateArticlePage() {
                   {t('pageTitle')}
                 </h1>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {status === 'draft' ? t('statusDraft') : t('statusPublished')}
+                  {status === 'Draft' ? t('statusDraft') : t('statusPublished')}
                 </p>
               </div>
             </div>
@@ -123,18 +134,20 @@ export default function CreateArticlePage() {
               </button>
               <button
                 type="button"
-                onClick={() => handleSubmit('draft')}
+                  onClick={() => handleSubmit('Draft')}
+                  disabled={articleMutation.isPending}
                 className="flex items-center gap-1.5 px-3 h-9 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
               >
-                <Save className="w-4 h-4" />
-                {t('saveDraft')}
+                {articleMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {t('saveDraft')}
               </button>
               <button
                 type="button"
-                onClick={() => handleSubmit('published')}
+                  onClick={() => handleSubmit('Published')}
+                  disabled={articleMutation.isPending}
                 className="flex items-center gap-1.5 px-4 h-9 text-sm font-semibold text-white bg-gradient-to-r from-[#003153] to-[#005F73] rounded-lg hover:opacity-90 transition-all shadow-sm"
               >
-                <Send className="w-4 h-4" />
+                {articleMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 {t('publish')}
               </button>
             </div>
@@ -204,7 +217,7 @@ export default function CreateArticlePage() {
                       </div>
                       <button
                         type="button"
-                        onClick={(e) => { e.stopPropagation(); setCoverImage(null); }}
+                        onClick={(e) => { e.stopPropagation(); setCoverImage(null); setThumbnailId(null); }}
                         className="absolute top-3 right-3 p-1.5 bg-black/50 hover:bg-black/70 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <X className="w-4 h-4" />
@@ -240,7 +253,7 @@ export default function CreateArticlePage() {
                 {/* Rich Text Editor */}
                 <RichTextEditor
                   content={content}
-                  onChange={setContent}
+                  onChange={(html, json) => { setContent(html); setContentJson(json); }}
                   placeholder={t('contentPlaceholder')}
                 />
               </>
