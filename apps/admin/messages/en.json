@@ -11,7 +11,8 @@
     "dashboard": "Dashboard",
     "login": "Login",
     "createArticle": "Create Article",
-    "admin": "Vand Admin"
+    "admin": "Vand Admin",
+    "logout": "Logout"
   },
   "user": {
     "profileTitle": "Admin User",

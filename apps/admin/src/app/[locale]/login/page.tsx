@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 import { Mail, Lock, Eye, EyeOff, Shield, LayoutDashboard, FileText } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { login } from '@org/api';
@@ -13,11 +13,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const router = useRouter();
 
   const loginMutation = useMutation({
     mutationFn: ({ email, password }: { email: string; password: string }) => login(email, password),
     onSuccess: (data) => {
       console.log('Login successful:', data);
+      localStorage.setItem('token', data.data.accessToken);
+      router.push(`/create-article`);
     },
     onError: (error) => {
       console.error('Login failed:', error);

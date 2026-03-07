@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import {
   FileText,
   Eye,
@@ -13,13 +13,18 @@ import {
   Globe,
   Tag,
   Clock,
+  Loader2,
 } from 'lucide-react';
 import { RichTextEditor } from '@/components/RichTextEditor';
+import { AuthGuard } from '@/components/AuthGuard';
+import { useQuery } from '@tanstack/react-query';
+import { getCategories } from '@org/api';
 
 type ArticleStatus = 'draft' | 'published';
 
 export default function CreateArticlePage() {
   const t = useTranslations('createArticle');
+  const locale = useLocale();
 
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
@@ -30,12 +35,14 @@ export default function CreateArticlePage() {
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [status, setStatus] = useState<ArticleStatus>('draft');
   const [isPreview, setIsPreview] = useState(false);
-  const [language, setLanguage] = useState('en');
+  const [language, setLanguage] = useState(locale);
 
-  const categories = [
-    'politics', 'business', 'technology', 'sports',
-    'entertainment', 'health', 'science', 'world',
-  ];
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
+    queryKey: ['categories', language],
+    queryFn: () => getCategories(language),
+  });
+
+
 
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && tagInput.trim()) {
@@ -52,8 +59,20 @@ export default function CreateArticlePage() {
   };
 
   const handleCoverImage = () => {
-    const url = window.prompt(t('coverImagePrompt'));
-    if (url) setCoverImage(url);
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        setCoverImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
   };
 
   const handleSubmit = (articleStatus: ArticleStatus) => {
@@ -73,6 +92,7 @@ export default function CreateArticlePage() {
   };
 
   return (
+    <AuthGuard>
     <div className="min-h-[calc(100vh-4rem)] bg-gray-50 dark:bg-gray-900">
       {/* Top bar */}
       <div className="sticky top-16 z-30 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700">
@@ -250,12 +270,15 @@ export default function CreateArticlePage() {
                       className="w-full h-10 px-3 pr-8 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003153] appearance-none"
                     >
                       <option value="">{t('selectCategory')}</option>
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {t(`categories.${cat}`)}
+                        {categories.map((cat: { id: string; name: string }) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
                         </option>
                       ))}
-                    </select>
+                      </select>
+                      {categoriesLoading && (
+                        <Loader2 className="absolute right-8 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 animate-spin" />
+                      )}
                     <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                   </div>
                 </div>
@@ -331,5 +354,6 @@ export default function CreateArticlePage() {
         </div>
       </div>
     </div>
+    </AuthGuard>
   );
 }

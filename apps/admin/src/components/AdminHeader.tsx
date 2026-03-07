@@ -5,20 +5,29 @@ import { usePathname } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import { ToggleMode } from './ToggleMode';
 import { LanguageSwitcher } from './LanguageSwitcher';
-import { LayoutDashboard, LogIn, FileText, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { LayoutDashboard, LogIn, LogOut, FileText, Menu, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 export function AdminHeader() {
   const t = useTranslations('nav');
   const locale = useLocale();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    setIsLoggedIn(!!localStorage.getItem('token'));
+  }, [pathname]);
 
   const navLinks = [
-    { href: '/' as const, label: t('dashboard'), icon: LayoutDashboard },
-    { href: '/login' as const, label: t('login'), icon: LogIn },
-    { href: '/create-article' as const, label: t('createArticle'), icon: FileText },
-  ];
+    { href: '/' as const, label: t('dashboard'), icon: LayoutDashboard, auth: false },
+    { href: '/login' as const, label: t('login'), icon: LogIn, auth: false, hideWhenAuth: true },
+    { href: '/create-article' as const, label: t('createArticle'), icon: FileText, auth: true },
+  ].filter((link) => {
+    if (link.auth && !isLoggedIn) return false;
+    if (link.hideWhenAuth && isLoggedIn) return false;
+    return true;
+  });
 
   const normalizePath = (path: string) =>
     path.endsWith('/') && path !== '/' ? path.slice(0, -1) : path;
@@ -62,6 +71,20 @@ export function AdminHeader() {
           <div className="flex items-center space-x-3">
             <LanguageSwitcher />
             <ToggleMode />
+            {isLoggedIn && (
+              <button
+                onClick={() => {
+                  localStorage.removeItem('token');
+                  setIsLoggedIn(false);
+                  window.location.href = `/${locale}/login`;
+                }}
+                className="flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                title={t('logout')}
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">{t('logout')}</span>
+              </button>
+            )}
             <button
               className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
               onClick={() => setMobileOpen(!mobileOpen)}

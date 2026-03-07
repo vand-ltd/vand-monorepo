@@ -11,7 +11,8 @@
     "dashboard": "Tableau de bord",
     "login": "Connexion",
     "createArticle": "Créer un article",
-    "admin": "Vand Admin"
+    "admin": "Vand Admin",
+    "logout": "Déconnexion"
   },
   "user": {
     "profileTitle": "Utilisateur Admin",

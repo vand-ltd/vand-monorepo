@@ -11,7 +11,8 @@
     "dashboard": "Ikibaho",
     "login": "Kwinjira",
     "createArticle": "Andika inkuru",
-    "admin": "Vand Admin"
+    "admin": "Vand Admin",
+    "logout": "Gusohoka"
   },
   "user": {
     "profileTitle": "Umukoresha wa Admin",
