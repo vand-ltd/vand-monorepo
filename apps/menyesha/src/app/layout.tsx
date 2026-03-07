@@ -1,3 +1,4 @@
+// @ts-ignore
 import "./globals.css";
 import type { Metadata, Viewport } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';

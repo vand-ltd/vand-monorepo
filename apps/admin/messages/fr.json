@@ -38,7 +38,49 @@
     "backToDashboard": "Retour au tableau de bord"
   },
   "createArticle": {
-    "title": "Créer un article",
-    "subtitle": "Cette page est en cours de construction. Les outils de création d'articles seront bientôt disponibles."
+    "pageTitle": "Créer un article",
+    "statusDraft": "Brouillon",
+    "statusPublished": "Publié",
+    "preview": "Aperçu",
+    "editMode": "Modifier",
+    "saveDraft": "Enregistrer le brouillon",
+    "publish": "Publier",
+    "titlePlaceholder": "Titre de l'article...",
+    "subtitlePlaceholder": "Ajouter un sous-titre (optionnel)...",
+    "contentPlaceholder": "Commencez à rédiger votre article...",
+    "addCover": "Ajouter une image de couverture",
+    "coverHint": "Cliquez pour ajouter une URL d'image",
+    "changeCover": "Cliquez pour changer la couverture",
+    "coverImagePrompt": "Entrez l'URL de l'image de couverture",
+    "untitled": "Article sans titre",
+    "noContent": "Pas encore de contenu. Passez en mode édition pour commencer à écrire.",
+    "articleSettings": "Paramètres de l'article",
+    "categoryLabel": "Catégorie",
+    "selectCategory": "Sélectionner une catégorie",
+    "languageLabel": "Langue de l'article",
+    "tagsLabel": "Étiquettes",
+    "tagsPlaceholder": "Ajouter une étiquette et appuyez sur Entrée",
+    "tipsTitle": "Conseils de rédaction",
+    "tips": {
+      "0": "Utilisez un titre accrocheur qui attire l'attention",
+      "1": "Ajoutez une image de couverture pour augmenter l'engagement",
+      "2": "Divisez votre contenu en sections avec des titres",
+      "3": "Relisez avant de publier pour assurer la qualité"
+    },
+    "categories": {
+      "politics": "Politique",
+      "business": "Affaires",
+      "technology": "Technologie",
+      "sports": "Sports",
+      "entertainment": "Divertissement",
+      "health": "Santé",
+      "science": "Science",
+      "world": "Monde"
+    },
+    "languages": {
+      "en": "Anglais",
+      "fr": "Français",
+      "rw": "Kinyarwanda"
+    }
   }
 }

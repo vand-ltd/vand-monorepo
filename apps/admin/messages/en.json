@@ -38,7 +38,49 @@
     "backToDashboard": "Back to Dashboard"
   },
   "createArticle": {
-    "title": "Create Article",
-    "subtitle": "This page is under construction. Article creation tools will be available soon."
+    "pageTitle": "Create Article",
+    "statusDraft": "Draft",
+    "statusPublished": "Published",
+    "preview": "Preview",
+    "editMode": "Edit",
+    "saveDraft": "Save Draft",
+    "publish": "Publish",
+    "titlePlaceholder": "Article title...",
+    "subtitlePlaceholder": "Add a subtitle (optional)...",
+    "contentPlaceholder": "Start writing your article...",
+    "addCover": "Add Cover Image",
+    "coverHint": "Click to add a cover image URL",
+    "changeCover": "Click to change cover",
+    "coverImagePrompt": "Enter cover image URL",
+    "untitled": "Untitled Article",
+    "noContent": "No content yet. Switch to edit mode to start writing.",
+    "articleSettings": "Article Settings",
+    "categoryLabel": "Category",
+    "selectCategory": "Select a category",
+    "languageLabel": "Article Language",
+    "tagsLabel": "Tags",
+    "tagsPlaceholder": "Add a tag and press Enter",
+    "tipsTitle": "Writing Tips",
+    "tips": {
+      "0": "Use a compelling headline that grabs attention",
+      "1": "Add a cover image to increase engagement",
+      "2": "Break your content into sections with headings",
+      "3": "Proofread before publishing to ensure quality"
+    },
+    "categories": {
+      "politics": "Politics",
+      "business": "Business",
+      "technology": "Technology",
+      "sports": "Sports",
+      "entertainment": "Entertainment",
+      "health": "Health",
+      "science": "Science",
+      "world": "World"
+    },
+    "languages": {
+      "en": "English",
+      "fr": "French",
+      "rw": "Kinyarwanda"
+    }
   }
 }

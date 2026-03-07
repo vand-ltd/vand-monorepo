@@ -38,7 +38,49 @@
     "backToDashboard": "Subira ku kibaho"
   },
   "createArticle": {
-    "title": "Andika inkuru",
-    "subtitle": "Iyi paji iracyubakwa. Ibikoresho byo kwandika inkuru bizaboneka vuba."
+    "pageTitle": "Andika inkuru",
+    "statusDraft": "Impapuro",
+    "statusPublished": "Yasohotse",
+    "preview": "Reba",
+    "editMode": "Hindura",
+    "saveDraft": "Bika impapuro",
+    "publish": "Sohora",
+    "titlePlaceholder": "Umutwe w'inkuru...",
+    "subtitlePlaceholder": "Ongeraho umutwe muto (ntibisabwa)...",
+    "contentPlaceholder": "Tangira kwandika inkuru yawe...",
+    "addCover": "Ongeraho ifoto y'imbonerahamwe",
+    "coverHint": "Kanda hano wongere URL y'ifoto",
+    "changeCover": "Kanda uhindure ifoto",
+    "coverImagePrompt": "Andika URL y'ifoto y'imbonerahamwe",
+    "untitled": "Inkuru idafite umutwe",
+    "noContent": "Nta bikubiyemo. Hindura uburyo bwo kwandika utangire.",
+    "articleSettings": "Igenamiterere ry'inkuru",
+    "categoryLabel": "Icyiciro",
+    "selectCategory": "Hitamo icyiciro",
+    "languageLabel": "Ururimi rw'inkuru",
+    "tagsLabel": "Amazina y'ibicishije",
+    "tagsPlaceholder": "Ongeraho izina ukande Enter",
+    "tipsTitle": "Inama zo kwandika",
+    "tips": {
+      "0": "Koresha umutwe ukurura umwitwarire",
+      "1": "Ongeraho ifoto y'imbonerahamwe kugira ngo wongereze ubwitabire",
+      "2": "Gabanya ibikubiyemo mu bice bifite imutwe",
+      "3": "Subiramo usuzume mbere yo gusohora kugira ngo ubone ubuziranenge"
+    },
+    "categories": {
+      "politics": "Politiki",
+      "business": "Ubucuruzi",
+      "technology": "Ikoranabuhanga",
+      "sports": "Siporo",
+      "entertainment": "Imikino",
+      "health": "Ubuzima",
+      "science": "Ubumenyi",
+      "world": "Amakuru y'isi"
+    },
+    "languages": {
+      "en": "Icyongereza",
+      "fr": "Igifaransa",
+      "rw": "Ikinyarwanda"
+    }
   }
 }

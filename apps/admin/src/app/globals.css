@@ -1,8 +1,23 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
 @source "../../../../packages/ui/src/**/*.{ts,tsx}";
+
+/* Tiptap editor styles */
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #9ca3af;
+  pointer-events: none;
+  height: 0;
+}
+
+.tiptap:focus {
+  outline: none;
+}
+
 
 :root {
   --color-brand-primary: #003153;

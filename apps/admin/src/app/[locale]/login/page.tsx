@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Mail, Lock, Eye, EyeOff, Shield, LayoutDashboard, FileText } from 'lucide-react';
+import { useMutation } from '@tanstack/react-query';
+import { login } from '@org/api';
 
 export default function LoginPage() {
   const t = useTranslations('login');
@@ -12,9 +14,18 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
+  const loginMutation = useMutation({
+    mutationFn: ({ email, password }: { email: string; password: string }) => login(email, password),
+    onSuccess: (data) => {
+      console.log('Login successful:', data);
+    },
+    onError: (error) => {
+      console.error('Login failed:', error);
+    },
+  })
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: implement authentication
+    loginMutation.mutate({ email, password });
   };
 
   const features = [
@@ -135,10 +146,17 @@ export default function LoginPage() {
 
               <button
                 type="submit"
+                disabled={loginMutation.isPending}
                 className="w-full h-12 bg-gradient-brand text-white font-semibold rounded-lg hover:opacity-90 transition-all transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#003153] focus:ring-offset-2"
               >
-                {t('signIn')}
+                {loginMutation.isPending ? 'Signing in ...' : t('signIn')}
               </button>
+              {loginMutation.isError && (
+                <p className="text-sm text-red-600 mt-2">
+                  {/* {t('loginError')} */}
+                  Invalid email or password. Please try again.
+                </p>
+              )}
             </form>
 
             <div className="mt-6 text-center">
