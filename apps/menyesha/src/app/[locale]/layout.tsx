@@ -48,11 +48,11 @@ export default async function LocaleLayout({
         <div className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}>
           <Header />
           <div className="flex-1">
-            <AsideBanner>
-              <QueryProvider>
+            <QueryProvider>
+              <AsideBanner>
                 {children}
-              </QueryProvider>
-            </AsideBanner>
+              </AsideBanner>
+            </QueryProvider>
           </div>
           <Footer />
         </div>

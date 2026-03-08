@@ -5,6 +5,8 @@ export async function getArticlesFeed(parms: {
   limit?: number;
   language?: string;
   categorySlug?: string;
+  status?: string;
+  featuredType?: string;
 }) {
   const { data } = await api.get('/api/menyesha/articles/feed', { params: parms });
   return data.data;

@@ -18,3 +18,26 @@ export async function getArticleBySlug(slug: string) {
   const { data } = await api.get(`/api/menyesha/articles/slug/${slug}`);
   return data.data;
 }
+
+export async function getArticles(params: {
+  language?: string;
+  page?: number;
+  limit?: number;
+  status?: string;
+}) {
+  const { data } = await api.get('/api/menyesha/articles', { params });
+  return data.data;
+}
+
+export async function toggleFeaturedArticle(articleId: string) {
+  const { data } = await api.patch(`/api/menyesha/articles/${articleId}/feature`);
+  return data.data;
+}
+
+export async function getTrendingArticles(params: {
+  limit?: number;
+  language?: string;
+}) {
+  const { data } = await api.get('/api/menyesha/articles/trending', { params });
+  return data.data;
+}

@@ -3,50 +3,47 @@
 import React, { ReactNode } from "react";
 import { TrendingUp, Clock, Eye, ArrowUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { getTrendingArticles } from "@org/api";
+import { useLocale } from "next-intl";
+import Link from "next/link";
+import Image from "next/image";
 
 type AsideBannerProps = {
   children: ReactNode;
 };
 
-const trendingStories = [
-  { 
-    title: "Breaking: Economic Summit Reaches Historic Agreement", 
-    views: "2.4M", 
-    time: "2 hours ago",
-    category: "Politics",
-    image: "https://images.unsplash.com/photo-1541872705-1f73c6400ec9?w=80&h=60&fit=crop"
-  },
-  { 
-    title: "AI Revolution: New Technology Changes Healthcare", 
-    views: "1.8M", 
-    time: "4 hours ago",
-    category: "Technology",
-    image: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=80&h=60&fit=crop"
-  },
-  { 
-    title: "Climate Summit: World Leaders Unite on Green Energy", 
-    views: "1.2M", 
-    time: "6 hours ago",
-    category: "Environment",
-    image: "https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=80&h=60&fit=crop"
-  },
-  { 
-    title: "Sports Championship Sets New Global Records", 
-    views: "980K", 
-    time: "8 hours ago",
-    category: "Sports",
-    image: "https://images.unsplash.com/photo-1579952363873-27d3bfad9c0d?w=80&h=60&fit=crop"
-  },
-  { 
-    title: "Tech Giants Announce Groundbreaking Partnership", 
-    views: "750K", 
-    time: "12 hours ago",
-    category: "Business",
-    image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=80&h=60&fit=crop"
-  },
-];
+function formatTimeAgo(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMinutes = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMinutes < 1) return 'Just now';
+  if (diffMinutes < 60) return `${diffMinutes}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString();
+}
+
+function formatViews(count: number): string {
+  if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`;
+  if (count >= 1_000) return `${(count / 1_000).toFixed(1)}K`;
+  return String(count);
+}
 
 const AsideBanner = ({ children }: AsideBannerProps) => {
+  const locale = useLocale();
+
+  const { data: trendingData } = useQuery({
+    queryKey: ['trending-sidebar', locale],
+    queryFn: () => getTrendingArticles({ language: locale, limit: 5 }),
+  });
+
+  const trendingStories = Array.isArray(trendingData) ? trendingData : trendingData?.articles ?? [];
+
   return (
     <>
       {/* Top Banner Ad */}
@@ -78,40 +75,62 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
                 </div>
               </div>
               <CardContent className="p-0">
-                {trendingStories.map((story, index) => (
-                  <div 
-                    key={index} 
-                    className="p-4 border-b last:border-b-0 hover:bg-brand-secondary dark:hover:bg-brand-accent hover:text-white dark:hover:text-white transition-colors cursor-pointer group"
+                {trendingStories.length === 0 && (
+                  <div className="p-4 space-y-4">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="flex items-start space-x-3 animate-pulse">
+                        <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full flex-shrink-0" />
+                        <div className="w-16 h-12 bg-gray-200 dark:bg-gray-700 rounded flex-shrink-0" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full" />
+                          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                {trendingStories.map((story: any, index: number) => (
+                  <Link
+                    key={story.id}
+                    href={`/article/${story.slug}`}
+                    className="block p-4 border-b last:border-b-0 hover:bg-brand-secondary dark:hover:bg-brand-secondary hover:text-white dark:hover:text-white transition-colors cursor-pointer group"
                   >
                     <div className="flex items-start space-x-3">
-                      <div className="flex-shrink-0 w-8 h-8 bg-brand-light text-brand-primary rounded-full flex items-center justify-center text-sm font-bold group-hover:text-white dark:group-hover:text-white">
+                      <div className="flex-shrink-0 w-8 h-8 bg-brand-light dark:bg-brand-primary/30 text-brand-primary dark:text-brand-accent rounded-full flex items-center justify-center text-sm font-bold group-hover:text-white dark:group-hover:text-white">
                         {index + 1}
                       </div>
                       <div className="relative w-16 h-12 flex-shrink-0 rounded overflow-hidden">
-                        <img
-                          src={story.image}
-                          alt={story.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
+                        {story.thumbnail?.url ? (
+                          <img
+                            src={story.thumbnail.url}
+                            alt={story.title}
+                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                            <Image src="/favicon.svg" alt="" width={24} height={24} className="object-contain" />
+                          </div>
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="text-sm font-medium line-clamp-2 group-hover:text-white dark:group-hover:text-white transition-colors leading-tight">
                           {story.title}
                         </h4>
                         <div className="flex items-center space-x-3 mt-2 text-xs text-muted-foreground group-hover:text-white dark:group-hover:text-white">
-                          <span className="text-brand-primary font-medium group-hover:text-white dark:group-hover:text-white">{story.category}</span>
+                          <span className="text-brand-primary dark:text-brand-accent font-medium group-hover:text-white dark:group-hover:text-white">{story.category?.name || 'General'}</span>
                           <div className="flex items-center space-x-1">
                             <Eye className="h-3 w-3" />
-                            <span>{story.views}</span>
+                            <span>{formatViews(story.viewCount || 0)}</span>
                           </div>
                           <div className="flex items-center space-x-1">
                             <Clock className="h-3 w-3" />
-                            <span>{story.time}</span>
+                            <span>{formatTimeAgo(story.createdAt)}</span>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </CardContent>
             </Card>

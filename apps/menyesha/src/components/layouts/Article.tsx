@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
-import { MessageCircle, Clock, Eye, ArrowRight, BookmarkPlus, TrendingUp, Share2, Heart, Grid, List, Zap, Loader2, ChevronDown } from "lucide-react";
+import { useMemo, useState } from "react";
+import { MessageCircle, Clock, Eye, ArrowRight, BookmarkPlus, TrendingUp, Share2, Heart, Grid, List, Zap, Loader2, ChevronDown, Star } from "lucide-react";
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { getArticlesFeed, getCategories } from '@org/api';
 import { useLocale } from 'next-intl';
@@ -95,6 +95,46 @@ function formatTimeAgo(dateString: string): string {
   return date.toLocaleDateString();
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function AuthorAvatar({ author, size = 'md' }: { author: any; size?: 'sm' | 'md' | 'lg' }) {
+  const sizeClasses = { sm: 'w-6 h-6', md: 'w-8 h-8', lg: 'w-10 h-10 sm:w-12 sm:h-12' };
+  const textSizes = { sm: 'text-[10px]', md: 'text-xs', lg: 'text-sm' };
+  const initials = (author?.user?.fullName || 'A').split(' ').map((n: string) => n[0]).join('');
+
+  if (author?.avatar) {
+    return (
+      <div className={`relative ${sizeClasses[size]} rounded-full overflow-hidden`}>
+        <img src={author.avatar} alt={author.user?.fullName || ''} className="absolute inset-0 w-full h-full object-cover" />
+      </div>
+    );
+  }
+  return (
+    <div className={`${sizeClasses[size]} bg-gradient-to-br from-brand-accent to-amber-400 rounded-full flex items-center justify-center ring-2 ring-white/30 dark:ring-white/20`}>
+      <span className={`font-bold text-gray-900 ${textSizes[size]}`}>{initials}</span>
+    </div>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function ArticleThumbnail({ article, className = '', imageClassName = '' }: { article: any; className?: string; imageClassName?: string }) {
+  const hasThumb = !!article.thumbnail?.url;
+  return (
+    <div className={`overflow-hidden ${className}`}>
+      {hasThumb ? (
+        <img
+          src={article.thumbnail.url}
+          alt={article.title}
+          className={`w-full h-full object-cover ${imageClassName}`}
+        />
+      ) : (
+        <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <Image src="/favicon.svg" alt={article.title} width={64} height={64} className="object-contain" />
+        </div>
+      )}
+    </div>
+  );
+}
+
 const Article = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -118,6 +158,7 @@ const Article = () => {
         cursor: pageParam,
         language: locale,
         ...(selectedCategory ? { categorySlug: selectedCategory } : {}),
+        status: 'Published',
       }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) =>
@@ -126,15 +167,36 @@ const Article = () => {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const articles: any[] = data?.pages.flatMap((page: { articles: any[] }) => page.articles) ?? [];
-  const heroArticle = articles[0];
-  const restArticles = articles.slice(1);
+
+  // Derive featured slots — only use articles explicitly marked with featuredType
+  // Unmarked articles always go to the Latest Stories feed
+  const { heroArticle, secondaryArticles, spotlightArticle, feedArticles } = useMemo(() => {
+    const hero = articles.find((a: any) => a.featuredType === 'Hero') || null;
+    const secondary = articles.filter((a: any) => a.featuredType === 'Secondary').slice(0, 2);
+    const spotlight = articles.find((a: any) => a.featuredType === 'Spotlight') || null;
+
+    const usedIds = new Set(
+      [hero?.id, spotlight?.id, ...secondary.map((a: any) => a.id)].filter(Boolean)
+    );
+    const feed = articles.filter((a: any) => !usedIds.has(a.id));
+
+    return {
+      heroArticle: hero,
+      secondaryArticles: secondary,
+      spotlightArticle: spotlight,
+      feedArticles: feed,
+    };
+  }, [articles]);
 
   if (isLoading) {
     return (
       <div className="w-full space-y-8 sm:space-y-12">
         <div className="h-[400px] sm:h-[500px] lg:h-[600px] rounded-xl lg:rounded-2xl bg-gray-200 dark:bg-gray-700 animate-pulse" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="h-64 rounded-xl bg-gray-200 dark:bg-gray-700 animate-pulse" />
+          <div className="h-64 rounded-xl bg-gray-200 dark:bg-gray-700 animate-pulse" />
+        </div>
         <div className="space-y-5 lg:space-y-6">
-          <ArticleSkeleton viewMode={viewMode} />
           <ArticleSkeleton viewMode={viewMode} />
           <ArticleSkeleton viewMode={viewMode} />
         </div>
@@ -152,66 +214,146 @@ const Article = () => {
 
   return (
     <div className="w-full space-y-8 sm:space-y-12">
-      {/* Hero Section */}
-      {heroArticle && (
-        <section className="relative w-full max-w-full overflow-hidden">
-          <Link href={`/article/${heroArticle.slug}`} className="group block">
-            <div className="relative h-[400px] sm:h-[500px] lg:h-[600px] rounded-xl lg:rounded-2xl overflow-hidden bg-gradient-to-br from-gray-900 to-black shadow-2xl">
-              <Image
-                src={heroArticle.thumbnail?.url || '/favicon.svg'}
-                alt={heroArticle.title}
-                fill
-                className={heroArticle.thumbnail?.url
-                  ? 'object-cover group-hover:scale-105 transition-transform duration-700 ease-out'
-                  : 'object-contain p-20 bg-gray-100 dark:bg-gray-800'}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
 
-              {/* Content Overlay */}
-              <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 lg:p-8 xl:p-12 text-white">
-                <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 mb-4 sm:mb-6">
-                  <CategoryBadge
-                    slug={heroArticle.category?.slug}
-                    name={heroArticle.category?.name}
-                    className="px-3 sm:px-4 py-1 sm:py-1.5 shadow-lg inline-block w-fit"
-                  />
-                  <div className="flex items-center space-x-2 text-xs sm:text-sm opacity-90">
-                    <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span>{formatTimeAgo(heroArticle.createdAt)}</span>
-                  </div>
-                </div>
+      {/* ══════════════════════════════════════════════════════════
+          HERO + SECONDARY — Top featured section
+          Only displayed when articles are explicitly marked with featuredType
+         ══════════════════════════════════════════════════════════ */}
+      {(heroArticle || secondaryArticles.length > 0) && (
+        <section className={`grid grid-cols-1 ${heroArticle && secondaryArticles.length > 0 ? 'lg:grid-cols-3' : ''} gap-4 lg:gap-6`}>
+          {/* HERO — Main featured article */}
+          {heroArticle && (
+            <Link href={`/article/${heroArticle.slug}`} className={`group block ${secondaryArticles.length > 0 ? 'lg:col-span-2' : ''}`}>
+              <div className="relative h-[400px] sm:h-[500px] lg:h-full lg:min-h-[500px] rounded-xl lg:rounded-2xl overflow-hidden bg-gradient-to-br from-gray-900 to-black shadow-2xl">
+                <ArticleThumbnail
+                  article={heroArticle}
+                  className="absolute inset-0"
+                  imageClassName="group-hover:scale-105 transition-transform duration-700 ease-out"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 
-                <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-5xl font-bold leading-tight mb-3 sm:mb-4 lg:mb-6 group-hover:text-brand-accent transition-colors duration-300 max-w-4xl">
-                  {heroArticle.title}
-                </h1>
-
-                <p className="text-gray-200 mb-4 sm:mb-6 leading-relaxed text-sm sm:text-base lg:text-lg xl:text-xl max-w-4xl line-clamp-3 sm:line-clamp-none">
-                  {heroArticle.excerpt}
-                </p>
-
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-                  <div className="flex items-center space-x-2 sm:space-x-3">
-                    {heroArticle.author?.avatar ? (
-                      <div className="relative w-8 h-8 sm:w-10 lg:w-12 sm:h-10 lg:h-12 rounded-full overflow-hidden">
-                        <Image src={heroArticle.author.avatar} alt={heroArticle.author.user?.fullName || ''} fill className="object-cover" />
-                      </div>
-                    ) : (
-                      <div className="w-8 h-8 sm:w-10 lg:w-12 sm:h-10 lg:h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                        <span className="text-xs sm:text-sm font-bold">
-                          {(heroArticle.author?.user?.fullName || 'A').split(' ').map((n: string) => n[0]).join('')}
-                        </span>
-                      </div>
-                    )}
-                    <div>
-                      <div className="font-semibold text-sm sm:text-base">{heroArticle.author?.user?.fullName || 'Author'}</div>
+                <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 lg:p-8 text-white">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <CategoryBadge
+                      slug={heroArticle.category?.slug}
+                      name={heroArticle.category?.name}
+                      className="px-3 py-1.5 shadow-lg"
+                    />
+                    <div className="flex items-center space-x-1.5 text-xs opacity-90">
+                      <Clock className="h-3.5 w-3.5" />
+                      <span>{formatTimeAgo(heroArticle.createdAt)}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-3 sm:space-x-4 text-xs sm:text-sm opacity-90">
-                    <div className="flex items-center space-x-1.5 bg-white/10 backdrop-blur-sm rounded-full px-2.5 sm:px-3 py-1">
-                      <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold leading-tight mb-3 group-hover:text-brand-accent transition-colors duration-300 max-w-3xl">
+                    {heroArticle.title}
+                  </h1>
+
+                  <p className="text-gray-200 mb-4 text-sm sm:text-base lg:text-lg max-w-3xl line-clamp-2 lg:line-clamp-3">
+                    {heroArticle.excerpt}
+                  </p>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <AuthorAvatar author={heroArticle.author} size="md" />
+                      <span className="font-semibold text-sm">{heroArticle.author?.user?.fullName || 'Author'}</span>
+                    </div>
+                    <div className="flex items-center space-x-1.5 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1 text-xs">
+                      <Eye className="h-3.5 w-3.5" />
                       <span>{heroArticle.viewCount || 0}</span>
                     </div>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          )}
+
+          {/* SECONDARY — 2 stacked cards beside hero */}
+          {secondaryArticles.length > 0 && (
+            <div className="flex flex-col gap-4 lg:gap-6">
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {secondaryArticles.map((article: any) => (
+                <Link key={article.id} href={`/article/${article.slug}`} className="group flex-1 block">
+                  <div className="relative h-[200px] sm:h-[240px] lg:h-full rounded-xl overflow-hidden bg-gray-900 shadow-lg">
+                    <ArticleThumbnail
+                      article={article}
+                      className="absolute inset-0"
+                      imageClassName="group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+
+                    <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                      <CategoryBadge
+                        slug={article.category?.slug}
+                        name={article.category?.name}
+                        className="mb-2 inline-block"
+                      />
+                      <h3 className="font-bold text-base sm:text-lg leading-tight mb-2 group-hover:text-brand-accent transition-colors line-clamp-2">
+                        {article.title}
+                      </h3>
+                      <div className="flex items-center justify-between text-xs opacity-90">
+                        <div className="flex items-center space-x-2">
+                          <AuthorAvatar author={article.author} size="sm" />
+                          <span>{article.author?.user?.fullName || 'Author'}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Clock className="h-3 w-3" />
+                          <span>{formatTimeAgo(article.createdAt)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════
+          SPOTLIGHT — Editor's Pick
+          Full-width, horizontal layout with large image
+         ══════════════════════════════════════════════════════════ */}
+      {spotlightArticle && (
+        <section>
+          <div className="flex items-center space-x-2 mb-4">
+            <Star className="h-5 w-5 text-brand-accent" />
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">Editor&apos;s Pick</h2>
+          </div>
+          <Link href={`/article/${spotlightArticle.slug}`} className="group block">
+            <div className="flex flex-col md:flex-row bg-white dark:bg-gray-800 rounded-xl lg:rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl hover:border-brand-primary/40 transition-all duration-300">
+              <div className="relative w-full md:w-1/2 h-[250px] sm:h-[300px] md:h-[320px]">
+                <ArticleThumbnail
+                  article={spotlightArticle}
+                  className="absolute inset-0"
+                  imageClassName="group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute top-3 left-3">
+                  <CategoryBadge slug={spotlightArticle.category?.slug} name={spotlightArticle.category?.name} />
+                </div>
+              </div>
+              <div className="flex-1 p-5 sm:p-6 lg:p-8 flex flex-col justify-center">
+                <div className="flex items-center space-x-3 mb-3 text-xs text-gray-400">
+                  <div className="flex items-center space-x-1">
+                    <Clock className="h-3 w-3" />
+                    <span>{formatTimeAgo(spotlightArticle.createdAt)}</span>
+                  </div>
+                  <span>·</span>
+                  <div className="flex items-center space-x-1">
+                    <Eye className="h-3 w-3" />
+                    <span>{spotlightArticle.viewCount || 0} views</span>
+                  </div>
+                </div>
+                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-brand-primary dark:group-hover:text-brand-accent transition-colors leading-tight">
+                  {spotlightArticle.title}
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base leading-relaxed mb-4 line-clamp-3">
+                  {spotlightArticle.excerpt}
+                </p>
+                <div className="flex items-center space-x-3">
+                  <AuthorAvatar author={spotlightArticle.author} size="md" />
+                  <div>
+                    <div className="font-semibold text-sm text-gray-900 dark:text-white">{spotlightArticle.author?.user?.fullName || 'Author'}</div>
                   </div>
                 </div>
               </div>
@@ -220,8 +362,10 @@ const Article = () => {
         </section>
       )}
 
-      {/* Latest News */}
-      {restArticles.length > 0 && (
+      {/* ══════════════════════════════════════════════════════════
+          LATEST STORIES — Regular feed with category filter
+         ══════════════════════════════════════════════════════════ */}
+      {feedArticles.length > 0 && (
         <section>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 lg:mb-8 space-y-3 sm:space-y-0">
             <div className="flex items-center space-x-3">
@@ -230,41 +374,36 @@ const Article = () => {
                 <span>Latest Stories</span>
               </h2>
               <span className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-1 rounded-full">
-                {articles.length} articles
+                {feedArticles.length} articles
               </span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="relative group">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-lg transition-all duration-200 ${
-                    viewMode === 'grid'
-                      ? 'bg-brand-primary text-white shadow-sm'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  <Grid className="h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="relative group">
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-lg transition-all duration-200 ${
-                    viewMode === 'list'
-                      ? 'bg-brand-primary text-white shadow-sm'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  <List className="h-4 w-4" />
-                </button>
-              </div>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-lg transition-all duration-200 ${
+                  viewMode === 'grid'
+                    ? 'bg-brand-primary text-white shadow-sm'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                <Grid className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-lg transition-all duration-200 ${
+                  viewMode === 'list'
+                    ? 'bg-brand-primary text-white shadow-sm'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                <List className="h-4 w-4" />
+              </button>
             </div>
           </div>
 
           {/* Category Filter */}
           {categories && categories.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-2">
+            <div className="flex flex-wrap gap-2 mb-6">
               <button
                 onClick={() => setSelectedCategory(null)}
                 className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide transition-all duration-200 ${
@@ -300,131 +439,104 @@ const Article = () => {
 
           <div className={`space-y-5 lg:space-y-6 ${viewMode === 'grid' ? 'md:grid md:grid-cols-2 md:gap-6 md:space-y-0' : ''}`}>
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {restArticles.map((article: any) => {
-              return (
-                <Link
-                  key={article.id}
-                  href={`/article/${article.slug}`}
-                  className="group block"
-                >
-                  <article className={`relative ${
+            {feedArticles.map((article: any) => (
+              <Link
+                key={article.id}
+                href={`/article/${article.slug}`}
+                className="group block"
+              >
+                <article className={`relative ${
+                  viewMode === 'grid'
+                    ? 'flex flex-col space-y-4 p-4 sm:p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:border-brand-primary/40 transition-all duration-300 transform hover:-translate-y-1'
+                    : 'flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-6 lg:space-x-8 p-4 sm:p-5 lg:p-6 bg-white dark:bg-gray-800 rounded-xl lg:rounded-2xl border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:border-brand-primary/40 transition-all duration-300 transform hover:-translate-y-1'
+                }`}>
+                  {/* Article Image */}
+                  <div className={`relative ${
                     viewMode === 'grid'
-                      ? 'flex flex-col space-y-4 p-4 sm:p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:border-brand-primary/40 transition-all duration-300 transform hover:-translate-y-1'
-                      : 'flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-6 lg:space-x-8 p-4 sm:p-5 lg:p-6 bg-white dark:bg-gray-800 rounded-xl lg:rounded-2xl border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:border-brand-primary/40 transition-all duration-300 transform hover:-translate-y-1'
-                  }`}>
-
-                    {/* Article Image */}
-                    <div className={`relative ${
-                      viewMode === 'grid'
-                        ? 'w-full h-48 sm:h-52'
-                        : 'w-full md:w-60 lg:w-72 h-48 sm:h-52 md:h-40 lg:h-44'
-                    } flex-shrink-0 rounded-lg lg:rounded-xl overflow-hidden`}>
-                      <Image
-                        src={article.thumbnail?.url || '/favicon.svg'}
-                        alt={article.title}
-                        fill
-                        className={article.thumbnail?.url
-                          ? 'object-cover group-hover:scale-105 transition-transform duration-500'
-                          : 'object-contain p-8 bg-gray-100 dark:bg-gray-800'}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                      {/* Category Badge */}
-                      <div className="absolute top-3 left-3">
-                        <CategoryBadge slug={article.category?.slug} name={article.category?.name} />
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="absolute top-3 right-3 flex space-x-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <button className="p-1.5 bg-white/90 hover:bg-brand-primary hover:text-white rounded-full transition-colors shadow-sm">
-                          <BookmarkPlus className="h-3.5 w-3.5" />
-                        </button>
-                        <button className="p-1.5 bg-white/90 hover:bg-brand-primary hover:text-white rounded-full transition-colors shadow-sm">
-                          <Share2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
+                      ? 'w-full h-48 sm:h-52'
+                      : 'w-full md:w-60 lg:w-72 h-48 sm:h-52 md:h-40 lg:h-44'
+                  } flex-shrink-0 rounded-lg lg:rounded-xl overflow-hidden`}>
+                    <ArticleThumbnail
+                      article={article}
+                      className="absolute inset-0"
+                      imageClassName="group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute top-3 left-3">
+                      <CategoryBadge slug={article.category?.slug} name={article.category?.name} />
                     </div>
+                    <div className="absolute top-3 right-3 flex space-x-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <button className="p-1.5 bg-white/90 hover:bg-brand-primary hover:text-white rounded-full transition-colors shadow-sm">
+                        <BookmarkPlus className="h-3.5 w-3.5" />
+                      </button>
+                      <button className="p-1.5 bg-white/90 hover:bg-brand-primary hover:text-white rounded-full transition-colors shadow-sm">
+                        <Share2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
 
-                    {/* Article Content */}
-                    <div className="flex-1 min-w-0 flex flex-col justify-between">
-                      <div>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-2 text-xs text-gray-400">
-                          <div className="flex items-center space-x-1">
-                            <Clock className="h-3 w-3" />
-                            <span>{formatTimeAgo(article.createdAt)}</span>
-                          </div>
-                          <span>·</span>
-                          <div className="flex items-center space-x-1">
-                            <Heart className="h-3 w-3" />
-                            <span>{article.viewCount || 0}</span>
-                          </div>
+                  {/* Article Content */}
+                  <div className="flex-1 min-w-0 flex flex-col justify-between">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-2 text-xs text-gray-400">
+                        <div className="flex items-center space-x-1">
+                          <Clock className="h-3 w-3" />
+                          <span>{formatTimeAgo(article.createdAt)}</span>
                         </div>
-
-                        <h3 className={`font-bold text-gray-900 dark:text-white group-hover:text-brand-primary dark:group-hover:text-brand-accent transition-colors leading-tight ${
-                          viewMode === 'grid'
-                            ? 'text-base sm:text-lg mb-2'
-                            : 'text-lg sm:text-xl lg:text-2xl mb-3'
-                        }`}>
-                          {article.title}
-                        </h3>
-
-                        <p className={`text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-2 ${
-                          viewMode === 'grid'
-                            ? 'text-sm mb-3'
-                            : 'text-sm sm:text-base mb-4 sm:line-clamp-3'
-                        }`}>
-                          {article.excerpt}
-                        </p>
+                        <span>·</span>
+                        <div className="flex items-center space-x-1">
+                          <Heart className="h-3 w-3" />
+                          <span>{article.viewCount || 0}</span>
+                        </div>
                       </div>
 
-                      <div className={`flex ${
+                      <h3 className={`font-bold text-gray-900 dark:text-white group-hover:text-brand-primary dark:group-hover:text-brand-accent transition-colors leading-tight ${
                         viewMode === 'grid'
-                          ? 'flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0'
-                          : 'flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0'
+                          ? 'text-base sm:text-lg mb-2'
+                          : 'text-lg sm:text-xl lg:text-2xl mb-3'
                       }`}>
-                        <div className="flex items-center space-x-3">
-                          {article.author?.avatar ? (
-                            <div className={`relative rounded-full overflow-hidden ${
-                              viewMode === 'grid' ? 'w-7 h-7' : 'w-8 h-8 sm:w-9 sm:h-9'
-                            }`}>
-                              <Image src={article.author.avatar} alt={article.author.user?.fullName || ''} fill className="object-cover" />
-                            </div>
-                          ) : (
-                            <div className={`bg-gradient-to-br from-brand-primary to-brand-secondary rounded-full flex items-center justify-center ${
-                              viewMode === 'grid' ? 'w-7 h-7' : 'w-8 h-8 sm:w-9 sm:h-9'
-                            }`}>
-                              <span className="font-bold text-white text-xs">
-                                {(article.author?.user?.fullName || 'A').split(' ').map((n: string) => n[0]).join('')}
-                              </span>
-                            </div>
-                          )}
-                          <div>
-                            <div className={`font-semibold text-gray-900 dark:text-white ${
-                              viewMode === 'grid' ? 'text-xs' : 'text-sm'
-                            }`}>{article.author?.user?.fullName || 'Author'}</div>
-                          </div>
-                        </div>
+                        {article.title}
+                      </h3>
 
-                        <div className={`flex items-center space-x-3 text-gray-400 ${
-                          viewMode === 'grid' ? 'text-xs' : 'text-xs sm:text-sm'
-                        }`}>
-                          <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 rounded-full px-2.5 py-1">
-                            <Eye className="h-3 w-3" />
-                            <span>{article.viewCount || 0}</span>
-                          </div>
-                          <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 rounded-full px-2.5 py-1">
-                            <MessageCircle className="h-3 w-3" />
-                            <span>{article.tags?.length || 0}</span>
-                          </div>
+                      <p className={`text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-2 ${
+                        viewMode === 'grid'
+                          ? 'text-sm mb-3'
+                          : 'text-sm sm:text-base mb-4 sm:line-clamp-3'
+                      }`}>
+                        {article.excerpt}
+                      </p>
+                    </div>
+
+                    <div className={`flex ${
+                      viewMode === 'grid'
+                        ? 'flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0'
+                        : 'flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0'
+                    }`}>
+                      <div className="flex items-center space-x-3">
+                        <AuthorAvatar author={article.author} size={viewMode === 'grid' ? 'sm' : 'md'} />
+                        <div className={`font-semibold text-gray-900 dark:text-white ${
+                          viewMode === 'grid' ? 'text-xs' : 'text-sm'
+                        }`}>{article.author?.user?.fullName || 'Author'}</div>
+                      </div>
+
+                      <div className={`flex items-center space-x-3 text-gray-400 ${
+                        viewMode === 'grid' ? 'text-xs' : 'text-xs sm:text-sm'
+                      }`}>
+                        <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 rounded-full px-2.5 py-1">
+                          <Eye className="h-3 w-3" />
+                          <span>{article.viewCount || 0}</span>
+                        </div>
+                        <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 rounded-full px-2.5 py-1">
+                          <MessageCircle className="h-3 w-3" />
+                          <span>{article.tags?.length || 0}</span>
                         </div>
                       </div>
                     </div>
-                  </article>
-                </Link>
-              );
-            })}
+                  </div>
+                </article>
+              </Link>
+            ))}
 
-            {/* Skeleton loaders while fetching next page */}
             {isFetchingNextPage && (
               <>
                 <ArticleSkeleton viewMode={viewMode} />
