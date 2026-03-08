@@ -5,6 +5,7 @@ import { MessageCircle, Clock, Eye, Grid, List, Layers, Layout } from "lucide-re
 // Type definition for articles
 interface Article {
   id: number;
+  slug: string;
   title: string;
   excerpt: string;
   image: string;
@@ -23,7 +24,7 @@ export const MasonryLayout = ({ articles }: { articles: Article[] }) => {
   return (
     <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
       {articles.map((article) => (
-        <Link key={article.id} href={`/article/${article.id}`} className="group block break-inside-avoid mb-6">
+        <Link key={article.id} href={`/article/${article.slug}`} className="group block break-inside-avoid mb-6">
           <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
             <div className="relative h-48 overflow-hidden">
               <Image
@@ -69,7 +70,7 @@ export const NewspaperLayout = ({ articles }: { articles: Article[] }) => {
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
       {/* Main feature article */}
       <div className="lg:col-span-2">
-        <Link href={`/article/${featuredArticle.id}`} className="group block">
+        <Link href={`/article/${featuredArticle.slug}`} className="group block">
           <div className="relative h-96 rounded-xl overflow-hidden">
             <Image
               src={featuredArticle.image}
@@ -94,7 +95,7 @@ export const NewspaperLayout = ({ articles }: { articles: Article[] }) => {
       {/* Column articles */}
       <div className="lg:col-span-2 space-y-6">
         {columnArticles.slice(0, 4).map((article) => (
-          <Link key={article.id} href={`/article/${article.id}`} className="group block">
+          <Link key={article.id} href={`/article/${article.slug}`} className="group block">
             <div className="flex space-x-4 p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
               <div className="relative w-20 h-16 flex-shrink-0 rounded overflow-hidden">
                 <Image
@@ -132,7 +133,7 @@ export const MagazineGridLayout = ({ articles }: { articles: Article[] }) => {
         return (
           <Link 
             key={article.id} 
-            href={`/article/${article.id}`} 
+            href={`/article/${article.slug}`} 
             className={`group block ${isLarge ? 'md:col-span-2 lg:col-span-2' : ''}`}
           >
             <div className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
@@ -191,7 +192,7 @@ export const TimelineLayout = ({ articles }: { articles: Article[] }) => {
               </div>
               
               {/* Article content */}
-              <Link href={`/article/${article.id}`} className="group block flex-1">
+              <Link href={`/article/${article.slug}`} className="group block flex-1">
                 <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
                   <div className="flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-6">
                     <div className="relative w-full lg:w-64 h-48 lg:h-32 flex-shrink-0 rounded-lg overflow-hidden">
@@ -280,7 +281,7 @@ export const BentoLayout = ({ articles }: { articles: Article[] }) => {
         return (
           <Link 
             key={article.id} 
-            href={`/article/${article.id}`} 
+            href={`/article/${article.slug}`} 
             className={`group block ${colSpan} ${rowSpan}`}
           >
             <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 h-full">

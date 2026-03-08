@@ -9,7 +9,12 @@ export async function createArticle(articleData: {
   thumbnailId?: string;
   tagIds?: string[];
   status: String;
-}): Promise<any> { 
+}): Promise<any> {
   const { data } = await api.post('/api/menyesha/articles', articleData);
   return data;
+}
+
+export async function getArticleBySlug(slug: string) {
+  const { data } = await api.get(`/api/menyesha/articles/slug/${slug}`);
+  return data.data;
 }

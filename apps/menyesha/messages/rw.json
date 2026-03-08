@@ -15,5 +15,9 @@
   "toggleTheme": {
     "light": "Umucyo",
     "dark": "Umwijima"
+  },
+  "article": {
+    "backToHome": "Subira ku rubuga",
+    "articleNotFound": "Inyandiko ntibashije kuboneka"
   }
 }

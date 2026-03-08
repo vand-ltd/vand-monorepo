@@ -4,3 +4,4 @@ export * from './services/login';
 export * from './services/categories';
 export * from './services/articles';
 export * from './services/media';
+export * from './services/feed';

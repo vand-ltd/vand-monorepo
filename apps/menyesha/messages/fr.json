@@ -15,5 +15,9 @@
   "toggleTheme": {
     "light": "Clair",
     "dark": "Sombre"
+  },
+  "article": {
+    "backToHome": "Retour à l'accueil",
+    "articleNotFound": "Article introuvable"
   }
 }

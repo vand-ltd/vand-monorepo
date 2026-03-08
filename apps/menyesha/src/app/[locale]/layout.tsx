@@ -1,5 +1,6 @@
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { Geist, Geist_Mono } from "next/font/google";
+// @ts-ignore
 import "../globals.css";
 import { notFound } from "next/navigation";
 import { routing } from '@/i18n/routing';
@@ -7,6 +8,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Header } from '@/components/layouts/Header';
 import AsideBanner from '@/components/layouts/AsideBanner';
 import Footer from '@/components/layouts/Footer';
+import { QueryProvider } from '@org/api'
 
 // Font loaders must be called at module scope
 const geistSans = Geist({
@@ -46,7 +48,11 @@ export default async function LocaleLayout({
         <div className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}>
           <Header />
           <div className="flex-1">
-            <AsideBanner>{children}</AsideBanner>
+            <AsideBanner>
+              <QueryProvider>
+                {children}
+              </QueryProvider>
+            </AsideBanner>
           </div>
           <Footer />
         </div>

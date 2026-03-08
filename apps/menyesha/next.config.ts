@@ -4,7 +4,7 @@ import { composePlugins, withNx } from '@nx/next';
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ['images.pexels.com', 'images.unsplash.com', 'picsum.photos'],
+    domains: [process.env.NEXT_PUBLIC_IMAGE_DOMAIN || ''].filter(Boolean),
   },
 };
 

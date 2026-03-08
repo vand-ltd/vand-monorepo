@@ -15,5 +15,9 @@
   "toggleTheme": {
     "light": "Light",
     "dark": "Dark"
+  },
+  "article": {
+    "backToHome": "Back to Home",
+    "articleNotFound": "Article not found"
   }
 }

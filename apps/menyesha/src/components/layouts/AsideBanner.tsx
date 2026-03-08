@@ -1,7 +1,6 @@
 'use client'
 
 import React, { ReactNode } from "react";
-import Image from "next/image";
 import { TrendingUp, Clock, Eye, ArrowUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -89,11 +88,10 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
                         {index + 1}
                       </div>
                       <div className="relative w-16 h-12 flex-shrink-0 rounded overflow-hidden">
-                        <Image
+                        <img
                           src={story.image}
                           alt={story.title}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -160,11 +158,10 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
                     Sponsored Content
                   </div>
                   <div className="relative aspect-square w-24 mx-auto rounded-lg overflow-hidden bg-white dark:bg-gray-800 p-2">
-                    <Image
+                    <img
                       src="https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=96&h=96&fit=crop"
                       alt="Company Logo"
-                      fill
-                      className="object-contain"
+                      className="w-full h-full object-contain"
                     />
                   </div>
                   <div>
@@ -212,11 +209,10 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
             {/* Alternative Advertisement Layout */}
             <Card className="overflow-hidden">
               <div className="relative aspect-[4/3] bg-gradient-to-br from-green-400 to-blue-500">
-                <Image
+                <img
                   src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=320&h=240&fit=crop"
                   alt="Business Advertisement"
-                  fill
-                  className="object-cover"
+                  className="absolute inset-0 w-full h-full object-cover"
                 />
                 <div className="absolute top-2 right-2">
                   <span className="bg-black/50 text-white text-xs px-2 py-1 rounded">

@@ -32,7 +32,6 @@
       }
     }
   ],
-  "nxCloudId": "69a5538836c7d37d31f5e716",
   "generators": {
     "@nx/next": {
       "application": {
