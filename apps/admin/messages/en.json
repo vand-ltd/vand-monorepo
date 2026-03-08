@@ -82,6 +82,8 @@
       "en": "English",
       "fr": "French",
       "rw": "Kinyarwanda"
-    }
+    },
+    "articleCreated": "Article created successfully!",
+    "articleFailed": "Failed to create article. Please try again."
   }
 }

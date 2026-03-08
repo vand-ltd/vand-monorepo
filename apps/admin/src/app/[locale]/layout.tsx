@@ -4,6 +4,7 @@ import { routing } from '@/i18n/routing';
 import { ThemeProvider } from "@org/ui";
 import { AdminHeader } from '@/components/AdminHeader';
 import { QueryProvider } from '@org/api';
+import { Toaster } from 'sonner';
 
 export default async function LocaleLayout({
   children,
@@ -31,6 +32,7 @@ export default async function LocaleLayout({
           <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
             <AdminHeader />
             <main className="flex-1">{children}</main>
+            <Toaster richColors position="top-right" />
           </div>
         </QueryProvider>
       </ThemeProvider>

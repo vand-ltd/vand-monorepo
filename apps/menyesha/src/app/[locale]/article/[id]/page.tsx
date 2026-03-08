@@ -28,6 +28,23 @@ import {
   ArticleSideBySide, 
   ArticleVideo 
 } from "@/components/article/MediaComponents";
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { getArticlesFeed } from '@org/api';
+
+const {
+  data,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
+  isLoading,
+} = useInfiniteQuery({
+  queryKey: ['articles-feed', language],
+  queryFn: ({ pageParam }) => getArticlesFeed({ cursor: pageParam, language }),
+  initialPageParam: undefined as string | undefined,
+  getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+});
+
+const articles = data?.pages.flatMap((page) => page.articles) ?? [];
 
 // Sample article data - in a real app, this would come from an API or database
 const getArticleData = (id: string) => ({

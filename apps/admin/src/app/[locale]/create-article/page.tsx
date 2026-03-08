@@ -19,12 +19,15 @@ import { RichTextEditor } from '@/components/RichTextEditor';
 import { AuthGuard } from '@/components/AuthGuard';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { getCategories, createArticle, uploadMedia } from '@org/api';
+import { useRouter } from '@/i18n/navigation';
+import { toast } from 'sonner';
 
 type ArticleStatus = 'Draft' | 'Published';
 
 export default function CreateArticlePage() {
   const t = useTranslations('createArticle');
   const locale = useLocale();
+  const router = useRouter();
 
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
@@ -81,11 +84,12 @@ export default function CreateArticlePage() {
 
   const articleMutation = useMutation({
     mutationFn: createArticle,
-    onSuccess: (data) => {
-      console.log('Article created successfully:', data);
+    onSuccess: () => {
+      toast.success(t('articleCreated'));
+      router.push('/');
     },
-    onError: (error) => {
-      console.error('Failed to create article:', error);
+    onError: () => {
+      toast.error(t('articleFailed'));
     },
   })
 
