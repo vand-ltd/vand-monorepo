@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import { ToggleMode } from './ToggleMode';
 import { LanguageSwitcher } from './LanguageSwitcher';
-import { LayoutDashboard, LogIn, LogOut, FileText, List, Menu, X } from 'lucide-react';
+import { LayoutDashboard, LogIn, LogOut, FileText, List, Menu, X, UserPlus, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 export function AdminHeader() {
@@ -14,19 +14,24 @@ export function AdminHeader() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState('');
 
   useEffect(() => {
     setIsLoggedIn(!!localStorage.getItem('token'));
+    setUserRole(localStorage.getItem('userRole') || '');
   }, [pathname]);
 
   const navLinks = [
-    { href: '/' as const, label: t('dashboard'), icon: LayoutDashboard, auth: false },
+    { href: '/' as const, label: t('dashboard'), icon: LayoutDashboard, auth: true },
     { href: '/login' as const, label: t('login'), icon: LogIn, auth: false, hideWhenAuth: true },
     { href: '/articles' as const, label: t('articles'), icon: List, auth: true },
     { href: '/create-article' as const, label: t('createArticle'), icon: FileText, auth: true },
+    { href: '/users' as const, label: t('users'), icon: Users, auth: true, adminOnly: true },
+    { href: '/create-user' as const, label: t('createUser'), icon: UserPlus, auth: true, adminOnly: true },
   ].filter((link) => {
     if (link.auth && !isLoggedIn) return false;
     if (link.hideWhenAuth && isLoggedIn) return false;
+    if (link.adminOnly && userRole !== 'admin') return false;
     return true;
   });
 
@@ -76,6 +81,7 @@ export function AdminHeader() {
               <button
                 onClick={() => {
                   localStorage.removeItem('token');
+                  localStorage.removeItem('userRole');
                   setIsLoggedIn(false);
                   window.location.href = `/${locale}/login`;
                 }}

@@ -1,7 +1,14 @@
 {
   "dashboard": {
     "title": "Admin Dashboard",
-    "welcome": "Welcome back"
+    "welcome": "Welcome back",
+    "articleStats": "Article Statistics",
+    "totalArticles": "Total",
+    "draftArticles": "Drafts",
+    "publishedArticles": "Published",
+    "inReviewArticles": "In Review",
+    "rejectedArticles": "Rejected",
+    "archivedArticles": "Archived"
   },
   "toggleTheme": {
     "light": "Light",
@@ -14,7 +21,9 @@
     "articles": "Articles",
     "admin": "Vand Admin",
     "profile": "Profile",
-    "logout": "Logout"
+    "logout": "Logout",
+    "createUser": "Create User",
+    "users": "Users"
   },
   "user": {
     "profileTitle": "Admin User",
@@ -204,6 +213,38 @@
     "viewArticle": "View article",
     "editArticle": "Edit article",
     "profileNotFound": "Author profile not found",
+    "pageInfo": "Page {current} of {total}"
+  },
+  "createUser": {
+    "pageTitle": "Create User",
+    "pageSubtitle": "Add a new user to the platform",
+    "backToDashboard": "Back to Dashboard",
+    "fullNameLabel": "Full Name",
+    "fullNamePlaceholder": "Enter full name",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "Enter email address",
+    "phoneLabel": "Phone Number",
+    "phonePlaceholder": "Enter phone number",
+    "roleLabel": "Role",
+    "selectRole": "Select a role",
+    "loadingRoles": "Loading roles...",
+    "createButton": "Create User",
+    "creating": "Creating...",
+    "userCreated": "User created successfully!",
+    "userFailed": "Failed to create user. Please try again."
+  },
+  "users": {
+    "pageTitle": "Users",
+    "totalUsers": "{count} users",
+    "createNew": "New User",
+    "searchPlaceholder": "Search users...",
+    "allRoles": "All Roles",
+    "columnName": "Name",
+    "columnEmail": "Email",
+    "columnPhone": "Phone",
+    "columnRole": "Role",
+    "columnDate": "Joined",
+    "noUsers": "No users found",
     "pageInfo": "Page {current} of {total}"
   }
 }

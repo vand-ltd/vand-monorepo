@@ -6,3 +6,4 @@ export * from './services/articles';
 export * from './services/media';
 export * from './services/feed';
 export * from './services/authors';
+export * from './services/users';

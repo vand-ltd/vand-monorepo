@@ -1,7 +1,14 @@
 {
   "dashboard": {
     "title": "Ikibaho cya Admin",
-    "welcome": "Murakaza neza"
+    "welcome": "Murakaza neza",
+    "articleStats": "Imibare y'inyandiko",
+    "totalArticles": "Igiteranyo",
+    "draftArticles": "Impapuro",
+    "publishedArticles": "Zasohotse",
+    "inReviewArticles": "Zirasuzumwa",
+    "rejectedArticles": "Zanzwe",
+    "archivedArticles": "Zabitswe"
   },
   "toggleTheme": {
     "light": "Urumuri",
@@ -14,7 +21,9 @@
     "articles": "Inyandiko",
     "admin": "Vand Admin",
     "profile": "Umwirondoro",
-    "logout": "Gusohoka"
+    "logout": "Gusohoka",
+    "createUser": "Kora umukoresha",
+    "users": "Abakoresha"
   },
   "user": {
     "profileTitle": "Umukoresha wa Admin",
@@ -204,6 +213,38 @@
     "viewArticle": "Reba inkuru",
     "editArticle": "Hindura inkuru",
     "profileNotFound": "Umwirondoro w'umwanditsi ntibashije kuboneka",
+    "pageInfo": "Urupapuro {current} kuri {total}"
+  },
+  "createUser": {
+    "pageTitle": "Kora umukoresha",
+    "pageSubtitle": "Ongeraho umukoresha mushya ku rubuga",
+    "backToDashboard": "Subira ku kibaho",
+    "fullNameLabel": "Amazina yose",
+    "fullNamePlaceholder": "Andika amazina yose",
+    "emailLabel": "Aderesi ya imeyili",
+    "emailPlaceholder": "Andika aderesi ya imeyili",
+    "phoneLabel": "Numero ya telefoni",
+    "phonePlaceholder": "Andika numero ya telefoni",
+    "roleLabel": "Umurimo",
+    "selectRole": "Hitamo umurimo",
+    "loadingRoles": "Gutegura imirimo...",
+    "createButton": "Kora umukoresha",
+    "creating": "Biratunganywa...",
+    "userCreated": "Umukoresha yaremwe neza!",
+    "userFailed": "Kurema umukoresha byanze. Ongera ugerageze."
+  },
+  "users": {
+    "pageTitle": "Abakoresha",
+    "totalUsers": "Abakoresha {count}",
+    "createNew": "Umukoresha mushya",
+    "searchPlaceholder": "Shakisha abakoresha...",
+    "allRoles": "Imirimo yose",
+    "columnName": "Izina",
+    "columnEmail": "Imeyili",
+    "columnPhone": "Telefoni",
+    "columnRole": "Umurimo",
+    "columnDate": "Yinjiye",
+    "noUsers": "Nta mukoresha wabonetse",
     "pageInfo": "Urupapuro {current} kuri {total}"
   }
 }

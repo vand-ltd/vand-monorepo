@@ -25,6 +25,9 @@ export default function LoginPage() {
         if (payload.authorSlug) {
           localStorage.setItem('authorSlug', payload.authorSlug);
         }
+        if (payload.role) {
+          localStorage.setItem('userRole', payload.role);
+        }
       } catch {
         // JWT decode failed, continue without storing slug
       }

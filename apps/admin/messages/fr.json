@@ -1,7 +1,14 @@
 {
   "dashboard": {
     "title": "Tableau de bord Admin",
-    "welcome": "Bon retour"
+    "welcome": "Bon retour",
+    "articleStats": "Statistiques des articles",
+    "totalArticles": "Total",
+    "draftArticles": "Brouillons",
+    "publishedArticles": "Publiés",
+    "inReviewArticles": "En révision",
+    "rejectedArticles": "Rejetés",
+    "archivedArticles": "Archivés"
   },
   "toggleTheme": {
     "light": "Clair",
@@ -14,7 +21,9 @@
     "articles": "Articles",
     "admin": "Vand Admin",
     "profile": "Profil",
-    "logout": "Déconnexion"
+    "logout": "Déconnexion",
+    "createUser": "Créer un utilisateur",
+    "users": "Utilisateurs"
   },
   "user": {
     "profileTitle": "Utilisateur Admin",
@@ -204,6 +213,38 @@
     "viewArticle": "Voir l'article",
     "editArticle": "Modifier l'article",
     "profileNotFound": "Profil de l'auteur introuvable",
+    "pageInfo": "Page {current} sur {total}"
+  },
+  "createUser": {
+    "pageTitle": "Créer un utilisateur",
+    "pageSubtitle": "Ajouter un nouvel utilisateur à la plateforme",
+    "backToDashboard": "Retour au tableau de bord",
+    "fullNameLabel": "Nom complet",
+    "fullNamePlaceholder": "Entrez le nom complet",
+    "emailLabel": "Adresse e-mail",
+    "emailPlaceholder": "Entrez l'adresse e-mail",
+    "phoneLabel": "Numéro de téléphone",
+    "phonePlaceholder": "Entrez le numéro de téléphone",
+    "roleLabel": "Rôle",
+    "selectRole": "Sélectionner un rôle",
+    "loadingRoles": "Chargement des rôles...",
+    "createButton": "Créer l'utilisateur",
+    "creating": "Création en cours...",
+    "userCreated": "Utilisateur créé avec succès !",
+    "userFailed": "Échec de la création de l'utilisateur. Veuillez réessayer."
+  },
+  "users": {
+    "pageTitle": "Utilisateurs",
+    "totalUsers": "{count} utilisateurs",
+    "createNew": "Nouvel utilisateur",
+    "searchPlaceholder": "Rechercher des utilisateurs...",
+    "allRoles": "Tous les rôles",
+    "columnName": "Nom",
+    "columnEmail": "E-mail",
+    "columnPhone": "Téléphone",
+    "columnRole": "Rôle",
+    "columnDate": "Inscrit",
+    "noUsers": "Aucun utilisateur trouvé",
     "pageInfo": "Page {current} sur {total}"
   }
 }
