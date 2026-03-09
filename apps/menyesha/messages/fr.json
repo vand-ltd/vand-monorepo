@@ -19,5 +19,17 @@
   "article": {
     "backToHome": "Retour à l'accueil",
     "articleNotFound": "Article introuvable"
+  },
+  "sidebar": {
+    "trendingNow": "Tendances",
+    "todaysStats": "Statistiques du jour",
+    "articlesPublished": "Articles publiés",
+    "totalReaders": "Lecteurs totaux",
+    "breakingStories": "Dernières nouvelles",
+    "stayInformed": "Restez informé",
+    "newsletterDescription": "Recevez les dernières nouvelles et analyses exclusives dans votre boîte mail.",
+    "enterEmail": "Entrez votre e-mail",
+    "subscribeNow": "S'abonner",
+    "backToTop": "Retour en haut"
   }
 }

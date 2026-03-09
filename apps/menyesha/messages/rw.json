@@ -19,5 +19,17 @@
   "article": {
     "backToHome": "Subira ku rubuga",
     "articleNotFound": "Inyandiko ntibashije kuboneka"
+  },
+  "sidebar": {
+    "trendingNow": "Ibikunzwe",
+    "todaysStats": "Imibare y'uyu munsi",
+    "articlesPublished": "Inyandiko zatanzwe",
+    "totalReaders": "Abasomyi bose",
+    "breakingStories": "Amakuru y'ingenzi",
+    "stayInformed": "Komeza umenye",
+    "newsletterDescription": "Yakira amakuru mashya n'isesengura ryihariye mu ibahasha yawe.",
+    "enterEmail": "Andika imeyili yawe",
+    "subscribeNow": "Iyandikishe",
+    "backToTop": "Subira hejuru"
   }
 }

@@ -27,7 +27,7 @@ const Footer = () => {
           <div>
             <div className="mb-4">
               <Image
-                src="/vand.png"
+                src="/menyesha-logo.svg"
                 alt="Vand News"
                 width={120}
                 height={40}

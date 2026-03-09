@@ -19,5 +19,17 @@
   "article": {
     "backToHome": "Back to Home",
     "articleNotFound": "Article not found"
+  },
+  "sidebar": {
+    "trendingNow": "Trending Now",
+    "todaysStats": "Today's Stats",
+    "articlesPublished": "Articles Published",
+    "totalReaders": "Total Readers",
+    "breakingStories": "Breaking Stories",
+    "stayInformed": "Stay Informed",
+    "newsletterDescription": "Get breaking news and exclusive analysis delivered to your inbox.",
+    "enterEmail": "Enter your email",
+    "subscribeNow": "Subscribe Now",
+    "backToTop": "Back to Top"
   }
 }

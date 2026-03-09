@@ -5,7 +5,7 @@ import { TrendingUp, Clock, Eye, ArrowUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { getTrendingArticles } from "@org/api";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -36,6 +36,7 @@ function formatViews(count: number): string {
 
 const AsideBanner = ({ children }: AsideBannerProps) => {
   const locale = useLocale();
+  const t = useTranslations('sidebar');
 
   const { data: trendingData } = useQuery({
     queryKey: ['trending-sidebar', locale],
@@ -71,7 +72,7 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
               <div className="bg-brand-primary text-white p-4">
                 <div className="flex items-center space-x-2">
                   <TrendingUp className="h-5 w-5" />
-                  <h3 className="font-bold text-lg">Trending Now</h3>
+                  <h3 className="font-bold text-lg">{t('trendingNow')}</h3>
                 </div>
               </div>
               <CardContent className="p-0">
@@ -151,18 +152,18 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
             {/* Quick Stats */}
             <Card>
               <CardContent className="p-6">
-                <h3 className="font-bold text-lg mb-4">Today&apos;s Stats</h3>
+                <h3 className="font-bold text-lg mb-4">{t('todaysStats')}</h3>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Articles Published</span>
+                    <span className="text-sm text-muted-foreground">{t('articlesPublished')}</span>
                     <span className="font-bold text-success">47</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Total Readers</span>
+                    <span className="text-sm text-muted-foreground">{t('totalReaders')}</span>
                     <span className="font-bold text-brand-primary">2.4M</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Breaking Stories</span>
+                    <span className="text-sm text-muted-foreground">{t('breakingStories')}</span>
                     <span className="font-bold text-error">12</span>
                   </div>
                 </div>
@@ -208,18 +209,18 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
             {/* Newsletter Signup */}
             <Card className="bg-gradient-to-br from-blue-50 to-sky-50 dark:from-gray-800 dark:to-gray-800 border-brand-primary">
               <CardContent className="p-6">
-                <h3 className="font-bold text-lg mb-2 text-brand-primary dark:text-white">Stay Informed</h3>
+                <h3 className="font-bold text-lg mb-2 text-brand-primary dark:text-white">{t('stayInformed')}</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                  Get breaking news and exclusive analysis delivered to your inbox.
+                  {t('newsletterDescription')}
                 </p>
                 <div className="space-y-3">
                   <input
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder={t('enterEmail')}
                     className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
                   />
                   <button className="w-full bg-brand-primary hover:bg-brand-secondary text-white py-2 rounded-lg text-sm font-medium transition-colors">
-                    Subscribe Now
+                    {t('subscribeNow')}
                   </button>
                 </div>
               </CardContent>
@@ -263,7 +264,7 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
               className="w-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 py-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2"
             >
               <ArrowUp className="h-4 w-4" />
-              <span>Back to Top</span>
+              <span>{t('backToTop')}</span>
             </button>
           </aside>
         </div>

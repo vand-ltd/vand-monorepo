@@ -51,7 +51,7 @@ export default function LoginPage() {
           <div className="space-y-6">
             <div>
               <Image
-                src="/vand.png"
+                src="/menyesha-logo.svg"
                 alt="Vand News"
                 width={160}
                 height={50}
@@ -102,7 +102,7 @@ export default function LoginPage() {
               <div className="lg:hidden flex items-center justify-between mb-8">
                 <Link href="/" className="flex items-center">
                   <Image
-                    src="/vand.png"
+                    src="/menyesha-logo.svg"
                     alt="Vand News"
                     width={100}
                     height={34}
