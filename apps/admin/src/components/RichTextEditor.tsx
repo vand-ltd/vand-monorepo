@@ -38,7 +38,7 @@ import { useCallback, useState } from 'react';
 import { uploadMedia } from '@org/api';
 
 interface RichTextEditorProps {
-  content: string;
+  content: string | object;
   onChange: (content: string, json: object) => void;
   placeholder?: string;
 }
@@ -105,6 +105,9 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
       Color,
     ],
     content,
+    onCreate: ({ editor }) => {
+      onChange(editor.getHTML(), editor.getJSON());
+    },
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML(), editor.getJSON());
     },

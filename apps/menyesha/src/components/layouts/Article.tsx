@@ -7,6 +7,7 @@ import { MessageCircle, Clock, Eye, ArrowRight, BookmarkPlus, TrendingUp, Share2
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { getArticlesFeed, getCategories } from '@org/api';
 import { useLocale } from 'next-intl';
+import { useRouter } from 'next/navigation';
 
 // Keyed by category slug (language-independent) — uses inline styles to avoid !important conflicts
 const categoryStyles: Record<string, { lightBg: string; darkBg: string; lightText: string; darkText: string; dot: string }> = {
@@ -111,6 +112,26 @@ function AuthorAvatar({ author, size = 'md' }: { author: any; size?: 'sm' | 'md'
   return (
     <div className={`${sizeClasses[size]} bg-gradient-to-br from-brand-accent to-amber-400 rounded-full flex items-center justify-center ring-2 ring-white/30 dark:ring-white/20`}>
       <span className={`font-bold text-gray-900 ${textSizes[size]}`}>{initials}</span>
+    </div>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function AuthorLink({ author, children, className = '' }: { author: any; children: React.ReactNode; className?: string }) {
+  const locale = useLocale();
+  const router = useRouter();
+  const slug = author?.user?.slug;
+  if (!slug) return <div className={className}>{children}</div>;
+  return (
+    <div
+      className={`cursor-pointer ${className}`}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        router.push(`/${locale}/author/${slug}`);
+      }}
+    >
+      {children}
     </div>
   );
 }
@@ -252,10 +273,10 @@ const Article = () => {
                 </p>
 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
+                  <AuthorLink author={heroArticle.author} className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
                     <AuthorAvatar author={heroArticle.author} size="md" />
                     <span className="font-semibold text-sm">{heroArticle.author?.user?.fullName || 'Author'}</span>
-                  </div>
+                  </AuthorLink>
                   <div className="flex items-center space-x-1.5 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1 text-xs">
                     <Eye className="h-3.5 w-3.5" />
                     <span>{heroArticle.viewCount || 0}</span>
@@ -294,10 +315,10 @@ const Article = () => {
                       {article.title}
                     </h3>
                     <div className="flex items-center justify-between text-xs opacity-90">
-                      <div className="flex items-center space-x-2">
+                      <AuthorLink author={article.author} className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
                         <AuthorAvatar author={article.author} size="sm" />
                         <span>{article.author?.user?.fullName || 'Author'}</span>
-                      </div>
+                      </AuthorLink>
                       <div className="flex items-center space-x-1">
                         <Clock className="h-3 w-3" />
                         <span>{formatTimeAgo(article.createdAt)}</span>
@@ -355,10 +376,10 @@ const Article = () => {
                 <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base leading-relaxed mb-4 line-clamp-3">
                   {spotlightArticles[0].excerpt}
                 </p>
-                <div className="flex items-center space-x-3">
+                <AuthorLink author={spotlightArticles[0].author} className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
                   <AuthorAvatar author={spotlightArticles[0].author} size="md" />
                   <div className="font-semibold text-sm text-gray-900 dark:text-white">{spotlightArticles[0].author?.user?.fullName || 'Author'}</div>
-                </div>
+                </AuthorLink>
               </div>
             </div>
           </Link>
@@ -388,10 +409,10 @@ const Article = () => {
                         {article.excerpt}
                       </p>
                       <div className="flex items-center justify-between text-xs text-gray-400">
-                        <div className="flex items-center space-x-2">
+                        <AuthorLink author={article.author} className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
                           <AuthorAvatar author={article.author} size="sm" />
                           <span className="text-gray-600 dark:text-gray-300">{article.author?.user?.fullName || 'Author'}</span>
-                        </div>
+                        </AuthorLink>
                         <div className="flex items-center space-x-1">
                           <Clock className="h-3 w-3" />
                           <span>{formatTimeAgo(article.createdAt)}</span>
@@ -556,12 +577,12 @@ const Article = () => {
                         ? 'flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0'
                         : 'flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0'
                     }`}>
-                      <div className="flex items-center space-x-3">
+                      <AuthorLink author={article.author} className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
                         <AuthorAvatar author={article.author} size={viewMode === 'grid' ? 'sm' : 'md'} />
                         <div className={`font-semibold text-gray-900 dark:text-white ${
                           viewMode === 'grid' ? 'text-xs' : 'text-sm'
                         }`}>{article.author?.user?.fullName || 'Author'}</div>
-                      </div>
+                      </AuthorLink>
 
                       <div className={`flex items-center space-x-3 text-gray-400 ${
                         viewMode === 'grid' ? 'text-xs' : 'text-xs sm:text-sm'

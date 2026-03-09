@@ -288,7 +288,7 @@ export default function ArticlePage() {
         <div className="p-6 border-b">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
             {/* Author Info */}
-            <div className="flex items-center space-x-4">
+            <Link href={article.author?.user?.slug ? `/${locale}/author/${article.author.user.slug}` : '#'} className="flex items-center space-x-4 group">
               {article.author?.avatar ? (
                 <div className="relative w-12 h-12">
                   <Image
@@ -304,14 +304,14 @@ export default function ArticlePage() {
                 </div>
               )}
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">
+                <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-brand-primary dark:group-hover:text-brand-accent transition-colors">
                   {article.author?.user?.fullName || 'Unknown Author'}
                 </h3>
                 {article.author?.bio && (
                   <p className="text-sm text-gray-600 dark:text-gray-400">{article.author.bio}</p>
                 )}
               </div>
-            </div>
+            </Link>
 
             {/* Article Stats */}
             <div className="flex items-center space-x-6 text-sm text-gray-600 dark:text-gray-400">
@@ -358,7 +358,7 @@ export default function ArticlePage() {
       {article.author?.bio && (
         <Card className="mt-8">
           <CardContent className="p-6">
-            <div className="flex items-start space-x-4">
+            <Link href={article.author?.user?.slug ? `/${locale}/author/${article.author.user.slug}` : '#'} className="flex items-start space-x-4 group">
               {article.author?.avatar ? (
                 <div className="relative w-20 h-20 flex-shrink-0">
                   <Image
@@ -374,12 +374,12 @@ export default function ArticlePage() {
                 </div>
               )}
               <div className="flex-1">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-brand-primary dark:group-hover:text-brand-accent transition-colors">
                   {article.author.user?.fullName}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">{article.author.bio}</p>
               </div>
-            </div>
+            </Link>
           </CardContent>
         </Card>
       )}

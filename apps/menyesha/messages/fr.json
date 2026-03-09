@@ -20,6 +20,14 @@
     "backToHome": "Retour à l'accueil",
     "articleNotFound": "Article introuvable"
   },
+  "author": {
+    "backToHome": "Retour à l'accueil",
+    "notFound": "Auteur introuvable",
+    "joined": "Inscrit",
+    "totalArticles": "{count} articles",
+    "articles": "Articles",
+    "noArticles": "Aucun article trouvé"
+  },
   "sidebar": {
     "trendingNow": "Tendances",
     "todaysStats": "Statistiques du jour",

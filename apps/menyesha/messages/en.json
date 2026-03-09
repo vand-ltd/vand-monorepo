@@ -20,6 +20,14 @@
     "backToHome": "Back to Home",
     "articleNotFound": "Article not found"
   },
+  "author": {
+    "backToHome": "Back to Home",
+    "notFound": "Author not found",
+    "joined": "Joined",
+    "totalArticles": "{count} articles",
+    "articles": "Articles",
+    "noArticles": "No articles found"
+  },
   "sidebar": {
     "trendingNow": "Trending Now",
     "todaysStats": "Today's Stats",

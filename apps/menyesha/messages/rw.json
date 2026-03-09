@@ -20,6 +20,14 @@
     "backToHome": "Subira ku rubuga",
     "articleNotFound": "Inyandiko ntibashije kuboneka"
   },
+  "author": {
+    "backToHome": "Subira ku rubuga",
+    "notFound": "Umwanditsi ntibashije kuboneka",
+    "joined": "Yinjiye",
+    "totalArticles": "Inyandiko {count}",
+    "articles": "Inyandiko",
+    "noArticles": "Nta nyandiko zabonetse"
+  },
   "sidebar": {
     "trendingNow": "Ibikunzwe",
     "todaysStats": "Imibare y'uyu munsi",

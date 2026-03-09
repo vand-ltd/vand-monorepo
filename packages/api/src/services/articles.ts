@@ -14,9 +14,29 @@ export async function createArticle(articleData: {
   return data;
 }
 
-export async function getArticleBySlug(slug: string) {
-  const { data } = await api.get(`/api/menyesha/articles/slug/${slug}`);
+export async function getArticleBySlug(slug: string, language?: string) {
+  const { data } = await api.get(`/api/menyesha/articles/slug/${slug}`, {
+    params: language ? { language } : undefined,
+  });
   return data.data;
+}
+
+export async function updateArticle(
+  articleId: string,
+  articleData: {
+    title?: string;
+    excerpt?: string;
+    language?: string;
+    categoryId?: string;
+    content?: object;
+    thumbnailId?: string;
+    tagIds?: string[];
+    status?: string;
+    featuredType?: string | null;
+  }
+): Promise<any> {
+  const { data } = await api.patch(`/api/menyesha/articles/${articleId}`, articleData);
+  return data;
 }
 
 export async function getArticles(params: {
@@ -24,6 +44,7 @@ export async function getArticles(params: {
   page?: number;
   limit?: number;
   status?: string;
+  featuredType?: string;
 }) {
   const { data } = await api.get('/api/menyesha/articles', { params });
   return data.data;

@@ -22,7 +22,7 @@ import { getCategories, createArticle, uploadMedia } from '@org/api';
 import { useRouter } from '@/i18n/navigation';
 import { toast } from 'sonner';
 
-type ArticleStatus = 'Draft' | 'Published';
+type ArticleStatus = 'Draft' | 'InReview' | 'Published';
 
 export default function CreateArticlePage() {
   const t = useTranslations('createArticle');
@@ -88,8 +88,9 @@ export default function CreateArticlePage() {
       toast.success(t('articleCreated'));
       router.push('/');
     },
-    onError: () => {
-      toast.error(t('articleFailed'));
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || t('articleFailed');
+      toast.error(message);
     },
   })
 
@@ -122,7 +123,7 @@ export default function CreateArticlePage() {
                   {t('pageTitle')}
                 </h1>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {status === 'Draft' ? t('statusDraft') : t('statusPublished')}
+                  {status === 'Draft' ? t('statusDraft') : status === 'InReview' ? t('statusInReview') : t('statusPublished')}
                 </p>
               </div>
             </div>
@@ -138,17 +139,26 @@ export default function CreateArticlePage() {
               </button>
               <button
                 type="button"
-                  onClick={() => handleSubmit('Draft')}
-                  disabled={articleMutation.isPending}
+                onClick={() => handleSubmit('Draft')}
+                disabled={articleMutation.isPending}
                 className="flex items-center gap-1.5 px-3 h-9 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
               >
                 {articleMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                  {t('saveDraft')}
+                {t('saveDraft')}
               </button>
               <button
                 type="button"
-                  onClick={() => handleSubmit('Published')}
-                  disabled={articleMutation.isPending}
+                onClick={() => handleSubmit('InReview')}
+                disabled={articleMutation.isPending}
+                className="flex items-center gap-1.5 px-3 h-9 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm"
+              >
+                {articleMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                {t('submitForReview')}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSubmit('Published')}
+                disabled={articleMutation.isPending}
                 className="flex items-center gap-1.5 px-4 h-9 text-sm font-semibold text-white bg-gradient-to-r from-[#003153] to-[#005F73] rounded-lg hover:opacity-90 transition-all shadow-sm"
               >
                 {articleMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}

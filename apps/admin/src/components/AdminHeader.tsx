@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import { ToggleMode } from './ToggleMode';
 import { LanguageSwitcher } from './LanguageSwitcher';
-import { LayoutDashboard, LogIn, LogOut, FileText, Menu, X } from 'lucide-react';
+import { LayoutDashboard, LogIn, LogOut, FileText, List, Menu, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 export function AdminHeader() {
@@ -22,6 +22,7 @@ export function AdminHeader() {
   const navLinks = [
     { href: '/' as const, label: t('dashboard'), icon: LayoutDashboard, auth: false },
     { href: '/login' as const, label: t('login'), icon: LogIn, auth: false, hideWhenAuth: true },
+    { href: '/articles' as const, label: t('articles'), icon: List, auth: true },
     { href: '/create-article' as const, label: t('createArticle'), icon: FileText, auth: true },
   ].filter((link) => {
     if (link.auth && !isLoggedIn) return false;

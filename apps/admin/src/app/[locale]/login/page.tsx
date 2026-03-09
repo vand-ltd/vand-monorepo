@@ -18,8 +18,16 @@ export default function LoginPage() {
   const loginMutation = useMutation({
     mutationFn: ({ email, password }: { email: string; password: string }) => login(email, password),
     onSuccess: (data) => {
-      console.log('Login successful:', data);
       localStorage.setItem('token', data.data.accessToken);
+      // Decode JWT payload to store author slug
+      try {
+        const payload = JSON.parse(atob(data.data.accessToken.split('.')[1]));
+        if (payload.authorSlug) {
+          localStorage.setItem('authorSlug', payload.authorSlug);
+        }
+      } catch {
+        // JWT decode failed, continue without storing slug
+      }
       router.push(`/create-article`);
     },
     onError: (error) => {
