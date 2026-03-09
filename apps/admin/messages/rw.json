@@ -8,7 +8,20 @@
     "publishedArticles": "Zasohotse",
     "inReviewArticles": "Zirasuzumwa",
     "rejectedArticles": "Zanzwe",
-    "archivedArticles": "Zabitswe"
+    "archivedArticles": "Zabitswe",
+    "myArticles": "Inyandiko Zanjye",
+    "searchPlaceholder": "Shakisha inyandiko...",
+    "allStatuses": "Imiterere Yose",
+    "noArticles": "Nta nyandiko zabonetse",
+    "columnTitle": "Umutwe",
+    "columnCategory": "Icyiciro",
+    "columnStatus": "Imiterere",
+    "columnViews": "Abasomye",
+    "columnDate": "Itariki",
+    "columnActions": "Ibikorwa",
+    "submitForReview": "Ohereza gusuzumwa",
+    "viewArticle": "Reba inyandiko",
+    "pageInfo": "Urupapuro {current} kuri {total}"
   },
   "toggleTheme": {
     "light": "Urumuri",

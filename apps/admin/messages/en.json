@@ -8,7 +8,20 @@
     "publishedArticles": "Published",
     "inReviewArticles": "In Review",
     "rejectedArticles": "Rejected",
-    "archivedArticles": "Archived"
+    "archivedArticles": "Archived",
+    "myArticles": "My Articles",
+    "searchPlaceholder": "Search articles...",
+    "allStatuses": "All Statuses",
+    "noArticles": "No articles found",
+    "columnTitle": "Title",
+    "columnCategory": "Category",
+    "columnStatus": "Status",
+    "columnViews": "Views",
+    "columnDate": "Date",
+    "columnActions": "Actions",
+    "submitForReview": "Submit for Review",
+    "viewArticle": "View article",
+    "pageInfo": "Page {current} of {total}"
   },
   "toggleTheme": {
     "light": "Light",

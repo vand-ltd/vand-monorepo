@@ -8,7 +8,20 @@
     "publishedArticles": "Publiés",
     "inReviewArticles": "En révision",
     "rejectedArticles": "Rejetés",
-    "archivedArticles": "Archivés"
+    "archivedArticles": "Archivés",
+    "myArticles": "Mes Articles",
+    "searchPlaceholder": "Rechercher des articles...",
+    "allStatuses": "Tous les statuts",
+    "noArticles": "Aucun article trouvé",
+    "columnTitle": "Titre",
+    "columnCategory": "Catégorie",
+    "columnStatus": "Statut",
+    "columnViews": "Vues",
+    "columnDate": "Date",
+    "columnActions": "Actions",
+    "submitForReview": "Soumettre pour révision",
+    "viewArticle": "Voir l'article",
+    "pageInfo": "Page {current} sur {total}"
   },
   "toggleTheme": {
     "light": "Clair",

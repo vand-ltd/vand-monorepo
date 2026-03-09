@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Link, useRouter } from '@/i18n/navigation';
 import { Mail, Lock, Eye, EyeOff, Shield, LayoutDashboard, FileText } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-import { login } from '@org/api';
+import { login, getMe } from '@org/api';
 
 export default function LoginPage() {
   const t = useTranslations('login');
@@ -17,7 +17,7 @@ export default function LoginPage() {
 
   const loginMutation = useMutation({
     mutationFn: ({ email, password }: { email: string; password: string }) => login(email, password),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       localStorage.setItem('token', data.data.accessToken);
       // Decode JWT payload to store author slug
       try {
@@ -25,13 +25,20 @@ export default function LoginPage() {
         if (payload.authorSlug) {
           localStorage.setItem('authorSlug', payload.authorSlug);
         }
-        if (payload.role) {
-          localStorage.setItem('userRole', payload.role);
-        }
       } catch {
         // JWT decode failed, continue without storing slug
       }
-      router.push(`/create-article`);
+      // Fetch user profile to store role
+      try {
+        const me = await getMe();
+        const roleName = me?.internalProfile?.role?.name;
+        if (roleName) {
+          localStorage.setItem('userRole', roleName);
+        }
+      } catch {
+        // Profile fetch failed, continue without role
+      }
+      router.push('/');
     },
     onError: (error) => {
       console.error('Login failed:', error);

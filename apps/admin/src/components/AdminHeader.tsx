@@ -24,14 +24,14 @@ export function AdminHeader() {
   const navLinks = [
     { href: '/' as const, label: t('dashboard'), icon: LayoutDashboard, auth: true },
     { href: '/login' as const, label: t('login'), icon: LogIn, auth: false, hideWhenAuth: true },
-    { href: '/articles' as const, label: t('articles'), icon: List, auth: true },
+    { href: '/articles' as const, label: t('articles'), icon: List, auth: true, adminOnly: true },
     { href: '/create-article' as const, label: t('createArticle'), icon: FileText, auth: true },
     { href: '/users' as const, label: t('users'), icon: Users, auth: true, adminOnly: true },
     { href: '/create-user' as const, label: t('createUser'), icon: UserPlus, auth: true, adminOnly: true },
   ].filter((link) => {
     if (link.auth && !isLoggedIn) return false;
     if (link.hideWhenAuth && isLoggedIn) return false;
-    if (link.adminOnly && userRole !== 'admin') return false;
+    if (link.adminOnly && userRole.toLowerCase() !== 'admin') return false;
     return true;
   });
 

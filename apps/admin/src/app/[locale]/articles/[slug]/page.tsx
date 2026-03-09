@@ -85,6 +85,11 @@ export default function EditArticlePage() {
   const [isPreview, setIsPreview] = useState(false);
   const [language, setLanguage] = useState(locale);
   const [initialized, setInitialized] = useState(false);
+  const [userRole, setUserRole] = useState('');
+
+  useEffect(() => {
+    setUserRole(localStorage.getItem('userRole') || '');
+  }, []);
 
   const { data: article, isLoading: articleLoading } = useQuery({
     queryKey: ['article', slug, locale],
@@ -195,6 +200,8 @@ export default function EditArticlePage() {
     );
   }
 
+  const isReporterReadOnly = userRole === 'reporter' && (status === 'InReview' || status === 'Published');
+
   if (!article) {
     return (
       <AuthGuard>
@@ -221,7 +228,7 @@ export default function EditArticlePage() {
             <div className="flex items-center justify-between h-14">
               <div className="flex items-center gap-3">
                 <Link
-                  href="/articles"
+                  href={isReporterReadOnly ? '/' : '/articles'}
                   className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   <ArrowLeft className="w-4 h-4 text-gray-600 dark:text-gray-300" />
@@ -241,45 +248,57 @@ export default function EditArticlePage() {
               </div>
 
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsPreview(!isPreview)}
-                  className="flex items-center gap-1.5 px-3 h-9 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-                >
-                  <Eye className="w-4 h-4" />
-                  {isPreview ? t('editMode') : t('preview')}
-                </button>
-                {/* Save (keeps current status) */}
-                <button
-                  type="button"
-                  onClick={() => handleSubmit(status)}
-                  disabled={updateMutation.isPending}
-                  className="flex items-center gap-1.5 px-3 h-9 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-                >
-                  {updateMutation.isPending ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Save className="w-4 h-4" />
-                  )}
-                  {t('save')}
-                </button>
-                {/* Workflow transition buttons */}
-                {getTransitions(status).map((transition) => (
+                {isReporterReadOnly ? (
                   <button
-                    key={transition.status}
                     type="button"
-                    onClick={() => handleSubmit(transition.status)}
-                    disabled={updateMutation.isPending}
-                    className={`flex items-center gap-1.5 px-3 h-9 text-sm font-medium rounded-lg transition-all shadow-sm ${transition.style}`}
+                    className="flex items-center gap-1.5 px-3 h-9 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg cursor-default"
                   >
-                    {updateMutation.isPending ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Send className="w-4 h-4" />
-                    )}
-                    {transition.label}
+                    <Eye className="w-4 h-4" />
+                    {t('preview')}
                   </button>
-                ))}
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setIsPreview(!isPreview)}
+                      className="flex items-center gap-1.5 px-3 h-9 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                    >
+                      <Eye className="w-4 h-4" />
+                      {isPreview ? t('editMode') : t('preview')}
+                    </button>
+                    {/* Save (keeps current status) */}
+                    <button
+                      type="button"
+                      onClick={() => handleSubmit(status)}
+                      disabled={updateMutation.isPending}
+                      className="flex items-center gap-1.5 px-3 h-9 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                    >
+                      {updateMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Save className="w-4 h-4" />
+                      )}
+                      {t('save')}
+                    </button>
+                    {/* Workflow transition buttons */}
+                    {getTransitions(status).map((transition) => (
+                      <button
+                        key={transition.status}
+                        type="button"
+                        onClick={() => handleSubmit(transition.status)}
+                        disabled={updateMutation.isPending}
+                        className={`flex items-center gap-1.5 px-3 h-9 text-sm font-medium rounded-lg transition-all shadow-sm ${transition.style}`}
+                      >
+                        {updateMutation.isPending ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Send className="w-4 h-4" />
+                        )}
+                        {transition.label}
+                      </button>
+                    ))}
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -289,7 +308,7 @@ export default function EditArticlePage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main content area */}
             <div className="lg:col-span-2 space-y-6">
-              {isPreview ? (
+              {(isPreview || isReporterReadOnly) ? (
                 <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
                   {coverImage && (
                     <div className="aspect-video w-full overflow-hidden">
@@ -411,6 +430,8 @@ export default function EditArticlePage() {
 
             {/* Sidebar */}
             <div className="space-y-6">
+              {isReporterReadOnly ? null : (
+              <>
               {/* Article settings */}
               <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
                 <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
@@ -567,6 +588,8 @@ export default function EditArticlePage() {
                   </div>
                 </div>
               </div>
+              </>
+              )}
             </div>
           </div>
         </div>

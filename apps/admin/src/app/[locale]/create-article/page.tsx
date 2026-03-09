@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import {
   FileText,
@@ -41,6 +41,11 @@ export default function CreateArticlePage() {
   const [status, setStatus] = useState<ArticleStatus>('Draft');
   const [isPreview, setIsPreview] = useState(false);
   const [language, setLanguage] = useState(locale);
+  const [userRole, setUserRole] = useState('');
+
+  useEffect(() => {
+    setUserRole(localStorage.getItem('userRole') || '');
+  }, []);
 
   const { data: categories = [], isLoading: categoriesLoading } = useQuery({
     queryKey: ['categories', language],
@@ -146,24 +151,28 @@ export default function CreateArticlePage() {
                 {articleMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 {t('saveDraft')}
               </button>
-              <button
-                type="button"
-                onClick={() => handleSubmit('InReview')}
-                disabled={articleMutation.isPending}
-                className="flex items-center gap-1.5 px-3 h-9 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm"
-              >
-                {articleMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                {t('submitForReview')}
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSubmit('Published')}
-                disabled={articleMutation.isPending}
-                className="flex items-center gap-1.5 px-4 h-9 text-sm font-semibold text-white bg-gradient-to-r from-[#003153] to-[#005F73] rounded-lg hover:opacity-90 transition-all shadow-sm"
-              >
-                {articleMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                {t('publish')}
-              </button>
+              {userRole !== 'reporter' && (
+                <button
+                  type="button"
+                  onClick={() => handleSubmit('InReview')}
+                  disabled={articleMutation.isPending}
+                  className="flex items-center gap-1.5 px-3 h-9 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm"
+                >
+                  {articleMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  {t('submitForReview')}
+                </button>
+              )}
+              {userRole !== 'reporter' && (
+                <button
+                  type="button"
+                  onClick={() => handleSubmit('Published')}
+                  disabled={articleMutation.isPending}
+                  className="flex items-center gap-1.5 px-4 h-9 text-sm font-semibold text-white bg-gradient-to-r from-[#003153] to-[#005F73] rounded-lg hover:opacity-90 transition-all shadow-sm"
+                >
+                  {articleMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  {t('publish')}
+                </button>
+              )}
             </div>
           </div>
         </div>
