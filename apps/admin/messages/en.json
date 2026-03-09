@@ -256,8 +256,25 @@
     "columnEmail": "Email",
     "columnPhone": "Phone",
     "columnRole": "Role",
+    "columnActive": "Active",
+    "columnDeleted": "Deleted",
+    "active": "Active",
+    "inactive": "Inactive",
+    "deleted": "Deleted",
+    "notDeleted": "No",
     "columnDate": "Joined",
+    "columnActions": "Actions",
     "noUsers": "No users found",
-    "pageInfo": "Page {current} of {total}"
+    "pageInfo": "Page {current} of {total}",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "delete": "Delete",
+    "confirmDeleteTitle": "Delete User",
+    "confirmDelete": "Are you sure you want to delete {name}? This action cannot be undone.",
+    "cancel": "Cancel",
+    "userActivated": "User activated successfully",
+    "userDeactivated": "User deactivated successfully",
+    "userDeleted": "User deleted successfully",
+    "userActionFailed": "Action failed. Please try again."
   }
 }

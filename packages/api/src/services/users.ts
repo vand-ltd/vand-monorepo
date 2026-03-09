@@ -24,3 +24,18 @@ export async function createUser(userData: {
   const { data } = await api.post('/api/admin/users/create', userData);
   return data.data;
 }
+
+export async function activateUser(userId: string) {
+  const { data } = await api.patch(`/api/admin/users/${userId}/activate`);
+  return data.data;
+}
+
+export async function deactivateUser(userId: string) {
+  const { data } = await api.patch(`/api/admin/users/${userId}/deactivate`);
+  return data.data;
+}
+
+export async function deleteUser(userId: string) {
+  const { data } = await api.delete(`/api/admin/users/${userId}`);
+  return data.data;
+}

@@ -1,11 +1,23 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { getUsers, getRoles } from '@org/api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getUsers, getRoles, activateUser, deactivateUser, deleteUser } from '@org/api';
+import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { AdminGuard } from '@/components/AdminGuard';
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog';
 import {
   ChevronLeft,
   ChevronRight,
@@ -17,15 +29,47 @@ import {
   Mail,
   Phone,
   Shield,
+  CheckCircle,
+  XCircle,
+  Power,
+  Trash2,
 } from 'lucide-react';
 
 export default function UsersPage() {
   const t = useTranslations('users');
 
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [roleFilter, setRoleFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const activateMutation = useMutation({
+    mutationFn: activateUser,
+    onSuccess: () => {
+      toast.success(t('userActivated'));
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+    onError: () => toast.error(t('userActionFailed')),
+  });
+
+  const deactivateMutation = useMutation({
+    mutationFn: deactivateUser,
+    onSuccess: () => {
+      toast.success(t('userDeactivated'));
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+    onError: () => toast.error(t('userActionFailed')),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteUser,
+    onSuccess: () => {
+      toast.success(t('userDeleted'));
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+    onError: () => toast.error(t('userActionFailed')),
+  });
 
   const { data: roles = [] } = useQuery({
     queryKey: ['roles'],
@@ -145,8 +189,17 @@ export default function UsersPage() {
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       {t('columnRole')}
                     </th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      {t('columnActive')}
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      {t('columnDeleted')}
+                    </th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">
                       {t('columnDate')}
+                    </th>
+                    <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      {t('columnActions')}
                     </th>
                   </tr>
                 </thead>
@@ -206,11 +259,91 @@ export default function UsersPage() {
                         </span>
                       </td>
 
+                      {/* Active */}
+                      <td className="px-4 py-3">
+                        {user.isActive ? (
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                            <CheckCircle className="h-3 w-3" />
+                            <span>{t('active')}</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+                            <XCircle className="h-3 w-3" />
+                            <span>{t('inactive')}</span>
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Deleted */}
+                      <td className="px-4 py-3">
+                        {user.deletedAt ? (
+                          <span className="text-xs text-red-600 dark:text-red-400">
+                            {formatDate(user.deletedAt)}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-400 dark:text-gray-500">—</span>
+                        )}
+                      </td>
+
                       {/* Date */}
                       <td className="px-4 py-3 hidden lg:table-cell">
                         <span className="text-sm text-gray-500 dark:text-gray-400">
                           {user.createdAt ? formatDate(user.createdAt) : '—'}
                         </span>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end space-x-1">
+                          {user.isActive ? (
+                            <button
+                              onClick={() => deactivateMutation.mutate(user.id)}
+                              disabled={deactivateMutation.isPending}
+                              className="p-1.5 rounded-lg text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors disabled:opacity-50"
+                              title={t('deactivate')}
+                            >
+                              <Power className="h-4 w-4" />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => activateMutation.mutate(user.id)}
+                              disabled={activateMutation.isPending}
+                              className="p-1.5 rounded-lg text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors disabled:opacity-50"
+                              title={t('activate')}
+                            >
+                              <Power className="h-4 w-4" />
+                            </button>
+                          )}
+                          {!user.deletedAt && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <button
+                                  disabled={deleteMutation.isPending}
+                                  className="p-1.5 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
+                                  title={t('delete')}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>{t('confirmDeleteTitle')}</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    {t('confirmDelete', { name: user.fullName })}
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => deleteMutation.mutate(user.id)}
+                                  >
+                                    {t('delete')}
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

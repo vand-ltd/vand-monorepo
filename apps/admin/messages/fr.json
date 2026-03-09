@@ -256,8 +256,25 @@
     "columnEmail": "E-mail",
     "columnPhone": "Téléphone",
     "columnRole": "Rôle",
+    "columnActive": "Actif",
+    "columnDeleted": "Supprimé",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "deleted": "Supprimé",
+    "notDeleted": "Non",
     "columnDate": "Inscrit",
+    "columnActions": "Actions",
     "noUsers": "Aucun utilisateur trouvé",
-    "pageInfo": "Page {current} sur {total}"
+    "pageInfo": "Page {current} sur {total}",
+    "activate": "Activer",
+    "deactivate": "Désactiver",
+    "delete": "Supprimer",
+    "confirmDeleteTitle": "Supprimer l'utilisateur",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer {name} ? Cette action est irréversible.",
+    "cancel": "Annuler",
+    "userActivated": "Utilisateur activé avec succès",
+    "userDeactivated": "Utilisateur désactivé avec succès",
+    "userDeleted": "Utilisateur supprimé avec succès",
+    "userActionFailed": "L'action a échoué. Veuillez réessayer."
   }
 }

@@ -256,8 +256,25 @@
     "columnEmail": "Imeyili",
     "columnPhone": "Telefoni",
     "columnRole": "Umurimo",
+    "columnActive": "Arakora",
+    "columnDeleted": "Yasibwe",
+    "active": "Arakora",
+    "inactive": "Ntakora",
+    "deleted": "Yasibwe",
+    "notDeleted": "Oya",
     "columnDate": "Yinjiye",
+    "columnActions": "Ibikorwa",
     "noUsers": "Nta mukoresha wabonetse",
-    "pageInfo": "Urupapuro {current} kuri {total}"
+    "pageInfo": "Urupapuro {current} kuri {total}",
+    "activate": "Gukora",
+    "deactivate": "Guhagarika",
+    "delete": "Gusiba",
+    "confirmDeleteTitle": "Siba Umukoresha",
+    "confirmDelete": "Uzi neza ko ushaka gusiba {name}? Iki gikorwa ntigishobora gusubirwamo.",
+    "cancel": "Hagarika",
+    "userActivated": "Umukoresha yakoreshejwe neza",
+    "userDeactivated": "Umukoresha yahagaritswe neza",
+    "userDeleted": "Umukoresha yasibwe neza",
+    "userActionFailed": "Igikorwa cyanze. Ongera ugerageze."
   }
 }
