@@ -20,6 +20,13 @@
     "columnDate": "Date",
     "columnActions": "Actions",
     "submitForReview": "Soumettre pour révision",
+    "submitSuccess": "Article soumis pour révision avec succès !",
+    "submitFailed": "Échec de la soumission de l'article. Veuillez réessayer.",
+    "assignTagsTitle": "Attribuer des tags",
+    "assignTagsDescription": "Cet article n'a pas de tags. Veuillez attribuer au moins un tag avant de soumettre pour révision.",
+    "searchTags": "Rechercher des tags...",
+    "assignAndSubmit": "Attribuer et soumettre",
+    "cancel": "Annuler",
     "viewArticle": "Voir l'article",
     "pageInfo": "Page {current} sur {total}"
   },
@@ -112,7 +119,8 @@
       "rw": "Kinyarwanda"
     },
     "articleCreated": "Article créé avec succès !",
-    "articleFailed": "Échec de la création de l'article. Veuillez réessayer."
+    "articleFailed": "Échec de la création de l'article. Veuillez réessayer.",
+    "languageMismatch": "La langue sélectionnée ne correspond pas à votre locale actuelle. Veuillez changer de locale ou modifier la langue de l'article."
   },
   "articles": {
     "pageTitle": "Articles",

@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getMe, getAuthorArticles, updateArticle } from '@org/api';
+import { getMe, getAuthorArticles, updateArticle, getTags, assignArticleTags } from '@org/api';
+import { toast } from 'sonner';
 import Image from 'next/image';
 import { Link } from '@/i18n/navigation';
 import {
@@ -23,8 +24,19 @@ import {
   Filter,
   ChevronLeft,
   ChevronRight,
+  Tag,
+  X,
 } from 'lucide-react';
 import { AuthGuard } from '@/components/AuthGuard';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog';
 
 type ArticleStatus = 'Draft' | 'InReview' | 'Published' | 'Rejected' | 'Archived';
 
@@ -54,12 +66,41 @@ export default function DashboardPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [userRole, setUserRole] = useState('');
+  const [tagDialogOpen, setTagDialogOpen] = useState(false);
+  const [tagDialogArticleId, setTagDialogArticleId] = useState<string | null>(null);
+  const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; label: string; translations: { label: string; language: string }[] }[]>([]);
+  const [tagInput, setTagInput] = useState('');
+  const [showTagDropdown, setShowTagDropdown] = useState(false);
+  const [assigningTags, setAssigningTags] = useState(false);
 
+  const tagDropdownRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
     setUserRole(localStorage.getItem('userRole') || '');
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (tagDropdownRef.current && !tagDropdownRef.current.contains(e.target as Node)) {
+        setShowTagDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const { data: availableTags = [] } = useQuery({
+    queryKey: ['tags', locale],
+    queryFn: () => getTags(locale),
+    enabled: tagDialogOpen,
+  });
+
+  const filteredTags = availableTags.filter(
+    (tag: any) =>
+      tag.label.toLowerCase().includes(tagInput.toLowerCase()) &&
+      !selectedTags.some((t) => t.id === tag.id)
+  );
 
   const submitForReview = useMutation({
     mutationFn: (articleId: string) =>
@@ -67,8 +108,43 @@ export default function DashboardPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-articles'] });
       queryClient.invalidateQueries({ queryKey: ['me'] });
+      toast.success(t('submitSuccess'));
+    },
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || t('submitFailed');
+      toast.error(Array.isArray(message) ? message.join(', ') : message);
     },
   });
+
+  const handleSubmitForReview = (article: any) => {
+    if (!article.tags || article.tags.length === 0) {
+      setTagDialogArticleId(article.id);
+      setSelectedTags([]);
+      setTagInput('');
+      setTagDialogOpen(true);
+    } else {
+      submitForReview.mutate(article.id);
+    }
+  };
+
+  const handleAssignTagsAndSubmit = async () => {
+    if (!tagDialogArticleId || selectedTags.length === 0) return;
+    setAssigningTags(true);
+    try {
+      const tagsPayload = selectedTags.map((tag) => ({
+        name: tag.name,
+        translations: tag.translations,
+      }));
+      await assignArticleTags(tagDialogArticleId, tagsPayload);
+      submitForReview.mutate(tagDialogArticleId);
+      setTagDialogOpen(false);
+    } catch (error: any) {
+      const message = error?.response?.data?.message || t('submitFailed');
+      toast.error(Array.isArray(message) ? message.join(', ') : message);
+    } finally {
+      setAssigningTags(false);
+    }
+  };
 
   const { data: me, isLoading } = useQuery({
     queryKey: ['me'],
@@ -406,7 +482,7 @@ export default function DashboardPage() {
                               <div className="flex items-center justify-end space-x-1">
                                 {userRole === 'reporter' && article.status === 'Draft' && (
                                   <button
-                                    onClick={() => submitForReview.mutate(article.id)}
+                                    onClick={() => handleSubmitForReview(article)}
                                     disabled={submitForReview.isPending}
                                     className="px-2.5 py-1 rounded-lg text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors inline-flex items-center space-x-1 disabled:opacity-50"
                                     title={t('submitForReview')}
@@ -485,6 +561,83 @@ export default function DashboardPage() {
           </>
         ) : null}
       </div>
+
+      {/* Tag Assignment Dialog */}
+      <AlertDialog open={tagDialogOpen} onOpenChange={setTagDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('assignTagsTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('assignTagsDescription')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="relative" ref={tagDropdownRef}>
+              <input
+                type="text"
+                value={tagInput}
+                onChange={(e) => {
+                  setTagInput(e.target.value);
+                  setShowTagDropdown(true);
+                }}
+                onFocus={() => setShowTagDropdown(true)}
+                placeholder={t('searchTags')}
+                className="w-full h-10 px-3 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#003153]"
+              />
+              {showTagDropdown && filteredTags.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  {filteredTags.map((tag: any) => (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedTags([...selectedTags, { id: tag.id, name: tag.name, label: tag.label, translations: tag.translations }]);
+                        setTagInput('');
+                        setShowTagDropdown(false);
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors first:rounded-t-lg last:rounded-b-lg"
+                    >
+                      {tag.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            {selectedTags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {selectedTags.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-[#003153]/10 dark:bg-[#F59E0B]/10 text-[#003153] dark:text-[#F59E0B] rounded-full"
+                  >
+                    {tag.label}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTags(selectedTags.filter((t) => t.id !== tag.id))}
+                      className="hover:text-red-500 transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+            <button
+              onClick={handleAssignTagsAndSubmit}
+              disabled={selectedTags.length === 0 || assigningTags}
+              className="inline-flex h-10 items-center justify-center rounded-lg bg-[#003153] px-4 py-2 text-sm font-medium text-white hover:bg-[#003153]/90 focus:outline-none focus:ring-2 focus:ring-[#003153] focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 transition-colors"
+            >
+              {assigningTags ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <Tag className="w-4 h-4 mr-2" />
+              )}
+              {t('assignAndSubmit')}
+            </button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AuthGuard>
   );
 }

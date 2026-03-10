@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import {
   FileText,
@@ -18,7 +18,7 @@ import {
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { AuthGuard } from '@/components/AuthGuard';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { getCategories, createArticle, uploadMedia } from '@org/api';
+import { getCategories, createArticle, uploadMedia, getTags } from '@org/api';
 import { useRouter } from '@/i18n/navigation';
 import { toast } from 'sonner';
 
@@ -34,8 +34,9 @@ export default function CreateArticlePage() {
   const [content, setContent] = useState('');
   const [contentJson, setContentJson] = useState({});
   const [category, setCategory] = useState('');
-  const [tags, setTags] = useState<string[]>([]);
+  const [tags, setTags] = useState<{ id: string; label: string }[]>([]);
   const [tagInput, setTagInput] = useState('');
+  const [showTagDropdown, setShowTagDropdown] = useState(false);
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [thumbnailId, setThumbnailId] = useState<string | null>(null);
   const [status, setStatus] = useState<ArticleStatus>('Draft');
@@ -43,8 +44,20 @@ export default function CreateArticlePage() {
   const [language, setLanguage] = useState(locale);
   const [userRole, setUserRole] = useState('');
 
+  const tagDropdownRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     setUserRole(localStorage.getItem('userRole') || '');
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (tagDropdownRef.current && !tagDropdownRef.current.contains(e.target as Node)) {
+        setShowTagDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const { data: categories = [], isLoading: categoriesLoading } = useQuery({
@@ -52,20 +65,26 @@ export default function CreateArticlePage() {
     queryFn: () => getCategories(language),
   });
 
+  const { data: availableTags = [] } = useQuery({
+    queryKey: ['tags', language],
+    queryFn: () => getTags(language),
+  });
 
+  const filteredTags = availableTags.filter(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (tag: any) =>
+      tag.label.toLowerCase().includes(tagInput.toLowerCase()) &&
+      !tags.some((t) => t.id === tag.id)
+  );
 
-  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && tagInput.trim()) {
-      e.preventDefault();
-      if (!tags.includes(tagInput.trim())) {
-        setTags([...tags, tagInput.trim()]);
-      }
-      setTagInput('');
-    }
+  const addTag = (tag: { id: string; label: string }) => {
+    setTags([...tags, tag]);
+    setTagInput('');
+    setShowTagDropdown(false);
   };
 
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter((tag) => tag !== tagToRemove));
+  const removeTag = (tagId: string) => {
+    setTags(tags.filter((tag) => tag.id !== tagId));
   };
 
   const handleCoverImage = () => {
@@ -107,7 +126,7 @@ export default function CreateArticlePage() {
       categoryId: category,
       content: contentJson,
       ...(thumbnailId ? { thumbnailId } : {}),
-      tagIds: tags,
+      tagIds: tags.map((t) => t.id),
       status: articleStatus,
     });
   };
@@ -210,7 +229,7 @@ export default function CreateArticlePage() {
                     {tags.length > 0 && (
                       <div className="flex items-center gap-1.5">
                         <Tag className="w-4 h-4" />
-                        {tags.join(', ')}
+                        {tags.map((t) => t.label).join(', ')}
                       </div>
                     )}
                   </div>
@@ -286,8 +305,9 @@ export default function CreateArticlePage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Article settings card */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+            {!isPreview && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+              <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 rounded-t-xl">
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
                   {t('articleSettings')}
                 </h3>
@@ -328,7 +348,14 @@ export default function CreateArticlePage() {
                   <div className="relative">
                     <select
                       value={language}
-                      onChange={(e) => setLanguage(e.target.value)}
+                      onChange={(e) => {
+                        const selected = e.target.value;
+                        if (selected !== locale) {
+                          toast.error(t('languageMismatch'));
+                          return;
+                        }
+                        setLanguage(selected);
+                      }}
                       className="w-full h-10 px-3 pr-8 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003153] appearance-none"
                     >
                       <option value="en">{t('languages.en')}</option>
@@ -345,23 +372,43 @@ export default function CreateArticlePage() {
                     <Tag className="w-4 h-4" />
                     {t('tagsLabel')}
                   </label>
-                  <input
-                    type="text"
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    onKeyDown={handleAddTag}
-                    placeholder={t('tagsPlaceholder')}
-                    className="w-full h-10 px-3 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#003153]"
-                  />
+                  <div className="relative" ref={tagDropdownRef}>
+                    <input
+                      type="text"
+                      value={tagInput}
+                      onChange={(e) => {
+                        setTagInput(e.target.value);
+                        setShowTagDropdown(true);
+                      }}
+                      onFocus={() => setShowTagDropdown(true)}
+                      placeholder={t('tagsPlaceholder')}
+                      className="w-full h-10 px-3 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#003153]"
+                    />
+                    {showTagDropdown && filteredTags.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                        {filteredTags.map((tag: any) => (
+                          <button
+                            key={tag.id}
+                            type="button"
+                            onClick={() => addTag({ id: tag.id, label: tag.label })}
+                            className="w-full text-left px-3 py-2 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors first:rounded-t-lg last:rounded-b-lg"
+                          >
+                            {tag.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   {tags.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-2">
                       {tags.map((tag) => (
                         <span
-                          key={tag}
+                          key={tag.id}
                           className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-[#003153]/10 dark:bg-[#F59E0B]/10 text-[#003153] dark:text-[#F59E0B] rounded-full"
                         >
-                          {tag}
-                          <button type="button" onClick={() => removeTag(tag)} className="hover:text-red-500 transition-colors">
+                          {tag.label}
+                          <button type="button" onClick={() => removeTag(tag.id)} className="hover:text-red-500 transition-colors">
                             <X className="w-3 h-3" />
                           </button>
                         </span>
@@ -371,6 +418,7 @@ export default function CreateArticlePage() {
                 </div>
               </div>
             </div>
+            )}
 
             {/* Publishing tips */}
             <div className="bg-gradient-to-br from-[#003153]/5 to-[#005F73]/5 dark:from-[#003153]/20 dark:to-[#005F73]/20 rounded-xl border border-[#003153]/10 dark:border-[#003153]/30 p-5">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import {
@@ -26,6 +26,7 @@ import {
   getCategories,
   updateArticle,
   uploadMedia,
+  getTags,
 } from '@org/api';
 import { Link } from '@/i18n/navigation';
 import { toast } from 'sonner';
@@ -46,8 +47,9 @@ export default function EditArticlePage() {
   const [contentHtml, setContentHtml] = useState('');
   const [contentJson, setContentJson] = useState<object | null>(null);
   const [category, setCategory] = useState('');
-  const [tags, setTags] = useState<string[]>([]);
+  const [tags, setTags] = useState<{ id: string; label: string }[]>([]);
   const [tagInput, setTagInput] = useState('');
+  const [showTagDropdown, setShowTagDropdown] = useState(false);
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [thumbnailId, setThumbnailId] = useState<string | null>(null);
   const [status, setStatus] = useState<ArticleStatus>('Draft');
@@ -102,6 +104,29 @@ export default function EditArticlePage() {
     queryFn: () => getCategories(language),
   });
 
+  const { data: availableTags = [] } = useQuery({
+    queryKey: ['tags', language],
+    queryFn: () => getTags(language),
+  });
+
+  const tagDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (tagDropdownRef.current && !tagDropdownRef.current.contains(e.target as Node)) {
+        setShowTagDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filteredTags = availableTags.filter(
+    (tag: any) =>
+      tag.label.toLowerCase().includes(tagInput.toLowerCase()) &&
+      !tags.some((t) => t.id === tag.id)
+  );
+
   // Populate form when article loads
   useEffect(() => {
     if (article && !initialized) {
@@ -113,7 +138,10 @@ export default function EditArticlePage() {
       setLanguage(article.language || locale);
       setCoverImage(article.thumbnail?.url || null);
       setThumbnailId(article.thumbnail?.id || article.thumbnailId || null);
-      setTags(article.tags?.map((t: any) => t.id || t) || []);
+      setTags(article.tags?.map((t: any) => ({
+        id: t.tag.id,
+        label: t.tag.translations?.find((tr: any) => tr.language === (article.language || locale))?.label || t.tag.name,
+      })) || []);
 
       // Set content from article (RichTextEditor accepts both string and object)
       if (article.content) {
@@ -144,18 +172,15 @@ export default function EditArticlePage() {
     },
   });
 
-  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && tagInput.trim()) {
-      e.preventDefault();
-      if (!tags.includes(tagInput.trim())) {
-        setTags([...tags, tagInput.trim()]);
-      }
-      setTagInput('');
+  const addTag = (tag: { id: string; label: string }) => {
+    if (!tags.some((t) => t.id === tag.id)) {
+      setTags([...tags, tag]);
     }
+    setTagInput('');
   };
 
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter((tag) => tag !== tagToRemove));
+  const removeTag = (tagId: string) => {
+    setTags(tags.filter((tag) => tag.id !== tagId));
   };
 
   const handleCoverImage = () => {
@@ -184,7 +209,7 @@ export default function EditArticlePage() {
       categoryId: category,
       content: contentJson || {},
       ...(thumbnailId ? { thumbnailId } : {}),
-      tagIds: tags,
+      ...(tags.length > 0 ? { tagIds: tags.map((t) => t.id) } : {}),
       status: articleStatus,
       ...(featuredType ? { featuredType } : { featuredType: null }),
     });
@@ -336,7 +361,7 @@ export default function EditArticlePage() {
                       {tags.length > 0 && (
                         <div className="flex items-center gap-1.5">
                           <Tag className="w-4 h-4" />
-                          {tags.join(', ')}
+                          {tags.map((t) => t.label).join(', ')}
                         </div>
                       )}
                     </div>
@@ -517,25 +542,45 @@ export default function EditArticlePage() {
                       <Tag className="w-4 h-4" />
                       {t('tagsLabel')}
                     </label>
-                    <input
-                      type="text"
-                      value={tagInput}
-                      onChange={(e) => setTagInput(e.target.value)}
-                      onKeyDown={handleAddTag}
-                      placeholder={t('tagsPlaceholder')}
-                      className="w-full h-10 px-3 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#003153]"
-                    />
+                    <div className="relative" ref={tagDropdownRef}>
+                      <input
+                        type="text"
+                        value={tagInput}
+                        onChange={(e) => {
+                          setTagInput(e.target.value);
+                          setShowTagDropdown(true);
+                        }}
+                        onFocus={() => setShowTagDropdown(true)}
+                        placeholder={t('tagsPlaceholder')}
+                        className="w-full h-10 px-3 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#003153]"
+                      />
+                      {showTagDropdown && filteredTags.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                          {filteredTags.map((tag: any) => (
+                            <button
+                              key={tag.id}
+                              type="button"
+                              onClick={() => addTag({ id: tag.id, label: tag.label })}
+                              className="w-full text-left px-3 py-2 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors first:rounded-t-lg last:rounded-b-lg"
+                            >
+                              {tag.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     {tags.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mt-2">
                         {tags.map((tag) => (
                           <span
-                            key={tag}
+                            key={tag.id}
                             className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-[#003153]/10 dark:bg-[#F59E0B]/10 text-[#003153] dark:text-[#F59E0B] rounded-full"
                           >
-                            {tag}
+                            {tag.label}
                             <button
                               type="button"
-                              onClick={() => removeTag(tag)}
+                              onClick={() => removeTag(tag.id)}
                               className="hover:text-red-500 transition-colors"
                             >
                               <X className="w-3 h-3" />

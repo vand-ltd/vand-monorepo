@@ -55,6 +55,21 @@ export async function toggleFeaturedArticle(articleId: string) {
   return data.data;
 }
 
+export async function getTags(language?: string) {
+  const { data } = await api.get('/api/menyesha/tags', {
+    params: language ? { language } : undefined,
+  });
+  return data.data;
+}
+
+export async function assignArticleTags(
+  articleId: string,
+  tags: { name: string; translations: { label: string; language: string }[] }[]
+): Promise<any> {
+  const { data } = await api.post(`/api/menyesha/articles/${articleId}/tags/bulk`, { tags });
+  return data.data;
+}
+
 export async function getTrendingArticles(params: {
   limit?: number;
   language?: string;

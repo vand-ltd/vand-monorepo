@@ -20,6 +20,13 @@
     "columnDate": "Itariki",
     "columnActions": "Ibikorwa",
     "submitForReview": "Ohereza gusuzumwa",
+    "submitSuccess": "Inkuru yoherejwe gusuzumwa neza!",
+    "submitFailed": "Kohereza inkuru gusuzumwa byanze. Ongera ugerageze.",
+    "assignTagsTitle": "Shyiraho amagambo",
+    "assignTagsDescription": "Iyi nkuru nta magambo ifite. Shyiraho nibura ijambo rimwe mbere yo kohereza gusuzumwa.",
+    "searchTags": "Shakisha amagambo...",
+    "assignAndSubmit": "Shyiraho uhereze",
+    "cancel": "Hagarika",
     "viewArticle": "Reba inyandiko",
     "pageInfo": "Urupapuro {current} kuri {total}"
   },
@@ -112,7 +119,8 @@
       "rw": "Ikinyarwanda"
     },
     "articleCreated": "Inkuru yanditswe neza!",
-    "articleFailed": "Kwandika inkuru byanze. Ongera ugerageze."
+    "articleFailed": "Kwandika inkuru byanze. Ongera ugerageze.",
+    "languageMismatch": "Ururimi wahisemo ntiruhura n'ururimi rw'urubuga rwawe. Hindura ururimi rw'urubuga cyangwa uhindure ururimi rw'inkuru."
   },
   "articles": {
     "pageTitle": "Inyandiko",
