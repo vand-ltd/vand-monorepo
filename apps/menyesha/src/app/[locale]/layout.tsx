@@ -45,17 +45,17 @@ export default async function LocaleLayout({
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-        <div className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}>
-          <Header />
-          <div className="flex-1">
-            <QueryProvider>
+        <QueryProvider>
+          <div className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}>
+            <Header />
+            <div className="flex-1">
               <AsideBanner>
                 {children}
               </AsideBanner>
-            </QueryProvider>
+            </div>
+            <Footer />
           </div>
-          <Footer />
-        </div>
+        </QueryProvider>
       </ThemeProvider>
     </NextIntlClientProvider>
   );

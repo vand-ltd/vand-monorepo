@@ -1,7 +1,7 @@
 'use client'
 
 import React, { ReactNode } from "react";
-import { TrendingUp, Clock, Eye, ArrowUp } from "lucide-react";
+import { TrendingUp, Clock, Eye, ArrowUp, Flame } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { getTrendingArticles } from "@org/api";
@@ -61,73 +61,91 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
       <main className='w-full bg-gray-50 dark:bg-gray-900/50 overflow-hidden'>
         <div className='max-w-screen-xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8'>
           {/* Main Content */}
-          <div className='w-full max-w-full bg-white dark:bg-gray-900 rounded-lg shadow-sm border p-6 overflow-hidden'>
+          <div className='w-full max-w-full min-w-0'>
             {children}
           </div>
 
           {/* Enhanced Sidebar */}
           <aside className='space-y-6'>
             {/* Trending Stories */}
-            <Card className="overflow-hidden">
-              <div className="bg-brand-primary text-white p-4">
-                <div className="flex items-center space-x-2">
-                  <TrendingUp className="h-5 w-5" />
-                  <h3 className="font-bold text-lg">{t('trendingNow')}</h3>
+            <Card className="overflow-hidden !py-0 !gap-0">
+              <div
+                className="relative overflow-hidden text-white px-4 py-3"
+                style={{ background: 'linear-gradient(to right, var(--color-brand-primary), var(--color-brand-secondary), var(--color-brand-primary))' }}
+              >
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_50%,rgba(245,158,11,0.2),transparent_60%)]" />
+                <div className="relative flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="p-1 rounded-md" style={{ backgroundColor: 'rgba(245,158,11,0.2)' }}>
+                      <Flame className="h-4 w-4" style={{ color: 'var(--color-brand-accent)' }} />
+                    </div>
+                    <h3 className="font-bold text-white">{t('trendingNow')}</h3>
+                  </div>
+                  <TrendingUp className="h-4 w-4 text-white/40" />
                 </div>
               </div>
-              <CardContent className="p-0">
+              <CardContent className="p-0 divide-y divide-gray-100 dark:divide-gray-800">
                 {trendingStories.length === 0 && (
-                  <div className="p-4 space-y-4">
+                  <div className="p-4 space-y-3">
                     {[...Array(3)].map((_, i) => (
-                      <div key={i} className="flex items-start space-x-3 animate-pulse">
-                        <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full flex-shrink-0" />
-                        <div className="w-16 h-12 bg-gray-200 dark:bg-gray-700 rounded flex-shrink-0" />
-                        <div className="flex-1 space-y-2">
-                          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full" />
-                          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
-                        </div>
+                      <div key={i} className="animate-pulse space-y-2">
+                        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full" />
+                        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
                       </div>
                     ))}
                   </div>
                 )}
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 {trendingStories.map((story: any, index: number) => (
                   <Link
                     key={story.id}
-                    href={`/article/${story.slug}`}
-                    className="block p-4 border-b last:border-b-0 hover:bg-brand-secondary dark:hover:bg-brand-secondary hover:text-white dark:hover:text-white transition-colors cursor-pointer group"
+                    href={`/${locale}/article/${story.slug}`}
+                    className="flex gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group"
                   >
-                    <div className="flex items-start space-x-3">
-                      <div className="flex-shrink-0 w-8 h-8 bg-brand-light dark:bg-brand-primary/30 text-brand-primary dark:text-brand-accent rounded-full flex items-center justify-center text-sm font-bold group-hover:text-white dark:group-hover:text-white">
-                        {index + 1}
-                      </div>
-                      <div className="relative w-16 h-12 flex-shrink-0 rounded overflow-hidden">
-                        {story.thumbnail?.url ? (
-                          <img
-                            src={story.thumbnail.url}
-                            alt={story.title}
-                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                            <Image src="/favicon.svg" alt="" width={24} height={24} className="object-contain" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-medium line-clamp-2 group-hover:text-white dark:group-hover:text-white transition-colors leading-tight">
-                          {story.title}
-                        </h4>
-                        <div className="flex items-center space-x-3 mt-2 text-xs text-muted-foreground group-hover:text-white dark:group-hover:text-white">
-                          <span className="text-brand-primary dark:text-brand-accent font-medium group-hover:text-white dark:group-hover:text-white">{story.category?.name || 'General'}</span>
-                          <div className="flex items-center space-x-1">
-                            <Eye className="h-3 w-3" />
-                            <span>{formatViews(story.viewCount || 0)}</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <Clock className="h-3 w-3" />
-                            <span>{formatTimeAgo(story.createdAt)}</span>
-                          </div>
+                    {/* Rank */}
+                    <span className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                      index === 0
+                        ? 'bg-brand-accent text-white'
+                        : index === 1
+                          ? 'bg-brand-primary/15 text-brand-primary dark:bg-brand-accent/20 dark:text-brand-accent'
+                          : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+                    }`}>
+                      {index + 1}
+                    </span>
+
+                    {/* Thumbnail */}
+                    <div className="relative w-20 h-14 shrink-0 rounded-md overflow-hidden">
+                      {story.thumbnail?.url ? (
+                        <Image
+                          src={story.thumbnail.url}
+                          alt={story.title}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          sizes="80px"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                          <Image src="/favicon.svg" alt="" width={20} height={20} />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-medium leading-tight line-clamp-2 group-hover:text-brand-primary dark:group-hover:text-brand-accent transition-colors">
+                        {story.title}
+                      </h4>
+                      <div className="flex items-center gap-2 mt-1.5 text-[11px] text-muted-foreground">
+                        <span className="text-brand-primary dark:text-brand-accent font-medium truncate">
+                          {story.category?.name || 'General'}
+                        </span>
+                        <span className="text-gray-300 dark:text-gray-600">|</span>
+                        <div className="flex items-center gap-0.5">
+                          <Eye className="h-3 w-3" />
+                          <span>{formatViews(story.viewCount || 0)}</span>
+                        </div>
+                        <div className="flex items-center gap-0.5">
+                          <Clock className="h-3 w-3" />
+                          <span>{formatTimeAgo(story.createdAt)}</span>
                         </div>
                       </div>
                     </div>

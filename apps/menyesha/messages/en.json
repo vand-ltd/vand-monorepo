@@ -9,8 +9,17 @@
   },
   "nav": {
     "home": "Home",
+    "sports": "Sports",
+    "entertainment": "Entertainment",
+    "technology": "Technology",
+    "business": "Business",
+    "news": "News",
     "about": "About",
     "contact": "Contact"
+  },
+  "breakingNews": {
+    "label": "BREAKING",
+    "readMore": "Read more"
   },
   "toggleTheme": {
     "light": "Light",
@@ -18,7 +27,8 @@
   },
   "article": {
     "backToHome": "Back to Home",
-    "articleNotFound": "Article not found"
+    "articleNotFound": "Article not found",
+    "relatedArticles": "Related Articles"
   },
   "author": {
     "backToHome": "Back to Home",
@@ -27,6 +37,25 @@
     "totalArticles": "{count} articles",
     "articles": "Articles",
     "noArticles": "No articles found"
+  },
+  "comments": {
+    "title": "Comments",
+    "namePlaceholder": "Your name",
+    "emailPlaceholder": "Your email",
+    "commentPlaceholder": "Write a comment...",
+    "submit": "Post Comment",
+    "submitting": "Posting...",
+    "noComments": "Be the first to comment on this article.",
+    "justNow": "Just now",
+    "minutesAgo": "{count}m ago",
+    "hoursAgo": "{count}h ago",
+    "daysAgo": "{count}d ago"
+  },
+  "share": {
+    "share": "Share",
+    "shareVia": "Share via",
+    "copyLink": "Copy link",
+    "copied": "Copied!"
   },
   "sidebar": {
     "trendingNow": "Trending Now",

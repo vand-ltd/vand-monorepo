@@ -8,7 +8,8 @@ import { ToggleMode } from "./ToggleMode"
 import { SearchInput } from "./SearchInput"
 import LanguageSwitcher from "./LanguageSwitcher"
 import { Button } from "@/components/ui/button"
-import { Menu, Bell, User, TrendingUp } from "lucide-react"
+import { Menu, User } from "lucide-react"
+import { BreakingNewsTicker } from "./BreakingNewsTicker"
 import { useTranslations, useLocale } from "next-intl"
 import { usePathname } from "next/navigation"
 import { useClientDateTime } from "@/hooks/useClientDateTime"
@@ -28,12 +29,11 @@ export const Header = () => {
 
   const navLinks = [
     { href: '/', label: t('home') },
-    { href: '/politics', label: 'Politics' },
-    { href: '/business', label: 'Business' },
-    { href: '/technology', label: 'Technology' },
-    { href: '/sports', label: 'Sports' },
-    { href: '/world', label: 'World' },
-    { href: '/about', label: t('about') },
+    { href: '/sports', label: t('sports') },
+    { href: '/entertainment', label: t('entertainment') },
+    { href: '/technology', label: t('technology') },
+    { href: '/business', label: t('business') },
+    { href: '/news', label: t('news') },
   ]
 
   const normalizePath = (path: string) =>
@@ -43,19 +43,7 @@ export const Header = () => {
   return (
     <>
       {/* Breaking News Ticker */}
-      <div className="bg-gradient-breaking-news text-white py-2 overflow-hidden">
-        <div className="max-w-screen-xl mx-auto px-4 flex items-center">
-          <div className="flex items-center space-x-2 mr-4 whitespace-nowrap">
-            <TrendingUp className="h-4 w-4" />
-            <span className="font-bold text-sm">BREAKING</span>
-          </div>
-          <div className="overflow-hidden">
-            <div className="animate-marquee whitespace-nowrap text-sm">
-              Major economic summit reaches historic agreement • AI breakthrough announced by tech giants • Climate summit yields promising results • Sports championship breaks viewership records
-            </div>
-          </div>
-        </div>
-      </div>
+      <BreakingNewsTicker />
 
       <header className="w-full bg-background border-b shadow-sm sticky top-0 z-50">
         <div className="max-w-screen-xl mx-auto px-4 py-4">
@@ -79,10 +67,6 @@ export const Header = () => {
 
             {/* Actions */}
             <div className="flex items-center space-x-3">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 h-3 w-3 bg-error rounded-full"></span>
-              </Button>
               <Link href={`/${locale}/login`}>
                 <Button variant="ghost" size="icon">
                   <User className="h-5 w-5" />
@@ -129,17 +113,13 @@ export const Header = () => {
             </div>
             
             <div className="flex items-center space-x-4 text-xs text-muted-foreground">
-              <div className="flex items-center space-x-1">
-                <div className="h-2 w-2 bg-success rounded-full animate-pulse"></div>
-                <span>Live</span>
-              </div>
               {mounted && (
                 <>
                   <span>{currentDate}</span>
                   <span>{currentTime}</span>
                 </>
               )}
-              <div className="flex items-center space-x-1 text-brand-primary">
+              <div className="flex items-center space-x-1 text-gray-700 dark:text-gray-300">
                 <span>☀️</span>
                 <span className="font-medium">24°C</span>
                 <span className="opacity-75">Kigali</span>

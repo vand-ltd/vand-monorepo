@@ -156,9 +156,9 @@ function ArticleThumbnail({ article, className = '', imageClassName = '' }: { ar
   );
 }
 
-const Article = () => {
+const Article = ({ categorySlug }: { categorySlug?: string }) => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(categorySlug || null);
   const locale = useLocale();
 
   const { data: categories } = useQuery({
@@ -389,9 +389,9 @@ const Article = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {spotlightArticles.slice(1).map((article: any) => (
-                <Link key={article.id} href={`/article/${article.slug}`} className="group block">
-                  <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg hover:border-brand-primary/40 transition-all duration-300">
-                    <div className="relative h-[180px]">
+                <Link key={article.id} href={`/article/${article.slug}`} className="group block h-full">
+                  <div className="h-full flex flex-col bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg hover:border-brand-primary/40 transition-all duration-300">
+                    <div className="relative h-[180px] flex-shrink-0">
                       <ArticleThumbnail
                         article={article}
                         className="absolute inset-0"
@@ -401,11 +401,11 @@ const Article = () => {
                         <CategoryBadge slug={article.category?.slug} name={article.category?.name} />
                       </div>
                     </div>
-                    <div className="p-4">
-                      <h4 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white leading-tight mb-2 group-hover:text-brand-primary dark:group-hover:text-brand-accent transition-colors line-clamp-2">
+                    <div className="p-4 flex flex-col flex-1">
+                      <h4 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white leading-tight mb-2 group-hover:text-brand-primary dark:group-hover:text-brand-accent transition-colors line-clamp-2 min-h-[2.5rem]">
                         {article.title}
                       </h4>
-                      <p className="text-gray-500 dark:text-gray-400 text-xs leading-relaxed mb-3 line-clamp-2">
+                      <p className="text-gray-500 dark:text-gray-400 text-xs leading-relaxed mb-3 line-clamp-2 min-h-[2rem]">
                         {article.excerpt}
                       </p>
                       <div className="flex items-center justify-between text-xs text-gray-400">
@@ -508,11 +508,11 @@ const Article = () => {
               <Link
                 key={article.id}
                 href={`/article/${article.slug}`}
-                className="group block"
+                className={`group block ${viewMode === 'grid' ? 'h-full' : ''}`}
               >
                 <article className={`relative ${
                   viewMode === 'grid'
-                    ? 'flex flex-col space-y-4 p-4 sm:p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:border-brand-primary/40 transition-all duration-300 transform hover:-translate-y-1'
+                    ? 'h-full flex flex-col space-y-4 p-4 sm:p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:border-brand-primary/40 transition-all duration-300 transform hover:-translate-y-1'
                     : 'flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-6 lg:space-x-8 p-4 sm:p-5 lg:p-6 bg-white dark:bg-gray-800 rounded-xl lg:rounded-2xl border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:border-brand-primary/40 transition-all duration-300 transform hover:-translate-y-1'
                 }`}>
                   {/* Article Image */}
@@ -557,7 +557,7 @@ const Article = () => {
 
                       <h3 className={`font-bold text-gray-900 dark:text-white group-hover:text-brand-primary dark:group-hover:text-brand-accent transition-colors leading-tight ${
                         viewMode === 'grid'
-                          ? 'text-base sm:text-lg mb-2'
+                          ? 'text-base sm:text-lg mb-2 line-clamp-2 min-h-[3rem]'
                           : 'text-lg sm:text-xl lg:text-2xl mb-3'
                       }`}>
                         {article.title}
@@ -565,7 +565,7 @@ const Article = () => {
 
                       <p className={`text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-2 ${
                         viewMode === 'grid'
-                          ? 'text-sm mb-3'
+                          ? 'text-sm mb-3 min-h-[2.5rem]'
                           : 'text-sm sm:text-base mb-4 sm:line-clamp-3'
                       }`}>
                         {article.excerpt}

@@ -9,8 +9,17 @@
   },
   "nav": {
     "home": "Ahabanza",
+    "sports": "Siporo",
+    "entertainment": "Kwidagadura",
+    "technology": "Ikoranabuhanga",
+    "business": "Ubucuruzi",
+    "news": "Amakuru",
     "about": "Abo turi bo",
     "contact": "Twandikire"
+  },
+  "breakingNews": {
+    "label": "BREAKING",
+    "readMore": "Soma byinshi"
   },
   "toggleTheme": {
     "light": "Umucyo",
@@ -18,7 +27,8 @@
   },
   "article": {
     "backToHome": "Subira ku rubuga",
-    "articleNotFound": "Inyandiko ntibashije kuboneka"
+    "articleNotFound": "Inyandiko ntibashije kuboneka",
+    "relatedArticles": "Inyandiko zijyanye"
   },
   "author": {
     "backToHome": "Subira ku rubuga",
@@ -27,6 +37,25 @@
     "totalArticles": "Inyandiko {count}",
     "articles": "Inyandiko",
     "noArticles": "Nta nyandiko zabonetse"
+  },
+  "comments": {
+    "title": "Ibitekerezo",
+    "namePlaceholder": "Izina ryawe",
+    "emailPlaceholder": "Imeyili yawe",
+    "commentPlaceholder": "Andika igitekerezo...",
+    "submit": "Ohereza",
+    "submitting": "Birimo koherezwa...",
+    "noComments": "Ba uwa mbere gutanga igitekerezo kuri iyi nyandiko.",
+    "justNow": "Ubu nyine",
+    "minutesAgo": "hashize {count}m",
+    "hoursAgo": "hashize {count}h",
+    "daysAgo": "hashize {count}d"
+  },
+  "share": {
+    "share": "Sangiza",
+    "shareVia": "Sangiza ukoresheje",
+    "copyLink": "Gukoporora umuhora",
+    "copied": "Byakopowe!"
   },
   "sidebar": {
     "trendingNow": "Ibikunzwe",

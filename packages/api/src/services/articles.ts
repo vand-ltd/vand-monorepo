@@ -70,6 +70,18 @@ export async function assignArticleTags(
   return data.data;
 }
 
+export async function getRelatedArticles(slug: string) {
+  const { data } = await api.get(`/api/menyesha/articles/slug/${slug}/related`);
+  return data.data;
+}
+
+export async function getBreakingNews(language?: string) {
+  const { data } = await api.get('/api/menyesha/articles/breaking', {
+    params: language ? { language } : undefined,
+  });
+  return data.data;
+}
+
 export async function getTrendingArticles(params: {
   limit?: number;
   language?: string;

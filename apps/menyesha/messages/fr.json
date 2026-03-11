@@ -9,8 +9,17 @@
   },
   "nav": {
     "home": "Accueil",
+    "sports": "Sports",
+    "entertainment": "Divertissement",
+    "technology": "Technologie",
+    "business": "Affaires",
+    "news": "Actualités",
     "about": "À propos",
     "contact": "Contact"
+  },
+  "breakingNews": {
+    "label": "BREAKING",
+    "readMore": "Lire la suite"
   },
   "toggleTheme": {
     "light": "Clair",
@@ -18,7 +27,8 @@
   },
   "article": {
     "backToHome": "Retour à l'accueil",
-    "articleNotFound": "Article introuvable"
+    "articleNotFound": "Article introuvable",
+    "relatedArticles": "Articles similaires"
   },
   "author": {
     "backToHome": "Retour à l'accueil",
@@ -27,6 +37,25 @@
     "totalArticles": "{count} articles",
     "articles": "Articles",
     "noArticles": "Aucun article trouvé"
+  },
+  "comments": {
+    "title": "Commentaires",
+    "namePlaceholder": "Votre nom",
+    "emailPlaceholder": "Votre e-mail",
+    "commentPlaceholder": "Écrire un commentaire...",
+    "submit": "Publier",
+    "submitting": "Publication...",
+    "noComments": "Soyez le premier à commenter cet article.",
+    "justNow": "À l'instant",
+    "minutesAgo": "il y a {count}m",
+    "hoursAgo": "il y a {count}h",
+    "daysAgo": "il y a {count}j"
+  },
+  "share": {
+    "share": "Partager",
+    "shareVia": "Partager via",
+    "copyLink": "Copier le lien",
+    "copied": "Copié !"
   },
   "sidebar": {
     "trendingNow": "Tendances",

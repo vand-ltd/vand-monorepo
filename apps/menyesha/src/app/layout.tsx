@@ -82,7 +82,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Vand News" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
-      <body className={`min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased ${inter.className} overflow-x-hidden`}>
+      <body className={`min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased ${inter.className} overflow-x-hidden`} suppressHydrationWarning>
         {children}
       </body>
     </html>
