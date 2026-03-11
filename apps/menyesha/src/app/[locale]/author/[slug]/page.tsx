@@ -199,14 +199,19 @@ export default function AuthorPage() {
                       className="object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                      <Image
-                        src="/favicon.svg"
-                        alt={article.title}
-                        width={48}
-                        height={48}
-                        className="object-contain"
-                      />
+                    <div
+                      className="w-full h-full relative overflow-hidden"
+                      style={{
+                        background: 'light-dark(linear-gradient(145deg, #f3f4f6, #fff), linear-gradient(145deg, rgba(0,49,83,0.3), #1f2937))',
+                      }}
+                    >
+                      <span className="absolute -bottom-4 -right-2 font-black select-none leading-none opacity-[0.07]" style={{ fontSize: '10rem' }}>
+                        {(article.category?.name || 'M')[0]}
+                      </span>
+                      <div className="absolute top-0 left-0 w-1.5 h-full" style={{ backgroundColor: '#F59E0B' }} />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Image src="/favicon.svg" alt="" width={48} height={48} className="object-contain opacity-50" />
+                      </div>
                     </div>
                   )}
                   {article.category?.name && (

@@ -15,7 +15,10 @@
     "business": "Business",
     "news": "News",
     "about": "About",
-    "contact": "Contact"
+    "contact": "Contact",
+    "africa": "Africa",
+    "europe": "Europe",
+    "international": "International"
   },
   "breakingNews": {
     "label": "BREAKING",
@@ -49,7 +52,9 @@
     "justNow": "Just now",
     "minutesAgo": "{count}m ago",
     "hoursAgo": "{count}h ago",
-    "daysAgo": "{count}d ago"
+    "daysAgo": "{count}d ago",
+    "viewMore": "View more ({count})",
+    "showLess": "Show less"
   },
   "share": {
     "share": "Share",

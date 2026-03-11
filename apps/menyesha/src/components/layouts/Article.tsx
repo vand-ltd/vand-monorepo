@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useMemo, useState } from "react";
-import { MessageCircle, Clock, Eye, ArrowRight, BookmarkPlus, TrendingUp, Share2, Heart, Grid, List, Zap, Loader2, ChevronDown, Star } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { MessageCircle, Clock, Eye, ArrowRight, TrendingUp, Heart, Grid, List, Zap, Loader2, ChevronDown, Star } from "lucide-react";
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { getArticlesFeed, getCategories } from '@org/api';
 import { useLocale } from 'next-intl';
@@ -24,6 +24,14 @@ const categoryStyles: Record<string, { lightBg: string; darkBg: string; lightTex
   business:        { lightBg: "#dcfce7", darkBg: "rgba(21,128,61,0.3)", lightText: "#15803d", darkText: "#86efac", dot: "#22c55e" },
   sports:          { lightBg: "#fee2e2", darkBg: "rgba(185,28,28,0.3)", lightText: "#b91c1c", darkText: "#fca5a5", dot: "#ef4444" },
   politics:        { lightBg: "#f3f4f6", darkBg: "#374151", lightText: "#374151", darkText: "#d1d5db", dot: "#6b7280" },
+  // Subcategories (regions)
+  africa:          { lightBg: "#fef3c7", darkBg: "rgba(180,83,9,0.3)", lightText: "#92400e", darkText: "#fcd34d", dot: "#f59e0b" },
+  afrique:         { lightBg: "#fef3c7", darkBg: "rgba(180,83,9,0.3)", lightText: "#92400e", darkText: "#fcd34d", dot: "#f59e0b" },
+  afurika:         { lightBg: "#fef3c7", darkBg: "rgba(180,83,9,0.3)", lightText: "#92400e", darkText: "#fcd34d", dot: "#f59e0b" },
+  europe:          { lightBg: "#dbeafe", darkBg: "rgba(29,78,216,0.3)", lightText: "#1e40af", darkText: "#93c5fd", dot: "#3b82f6" },
+  uburayi:         { lightBg: "#dbeafe", darkBg: "rgba(29,78,216,0.3)", lightText: "#1e40af", darkText: "#93c5fd", dot: "#3b82f6" },
+  international:   { lightBg: "#e0e7ff", darkBg: "rgba(67,56,202,0.3)", lightText: "#4338ca", darkText: "#a5b4fc", dot: "#6366f1" },
+  mpuzamahanga:    { lightBg: "#e0e7ff", darkBg: "rgba(67,56,202,0.3)", lightText: "#4338ca", darkText: "#a5b4fc", dot: "#6366f1" },
 };
 
 const defaultCategoryStyle = { lightBg: "#f3f4f6", darkBg: "#374151", lightText: "#374151", darkText: "#d1d5db", dot: "#6b7280" };
@@ -40,6 +48,22 @@ function CategoryBadge({ slug, name, className = "" }: { slug?: string; name?: s
     >
       {name || "General"}
     </span>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function CategoryBadges({ article, className = "" }: { article: any; className?: string }) {
+  const parent = article.category?.parent;
+  const category = article.category;
+  if (!category) return null;
+
+  return (
+    <div className={`flex flex-wrap items-center gap-1.5 ${className}`}>
+      {parent && (
+        <CategoryBadge slug={parent.slug} name={parent.name} />
+      )}
+      <CategoryBadge slug={category.slug} name={category.name} />
+    </div>
   );
 }
 
@@ -139,6 +163,9 @@ function AuthorLink({ author, children, className = '' }: { author: any; childre
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ArticleThumbnail({ article, className = '', imageClassName = '' }: { article: any; className?: string; imageClassName?: string }) {
   const hasThumb = !!article.thumbnail?.url;
+  const categorySlug = article.category?.slug || '';
+  const style = categoryStyles[categorySlug] || defaultCategoryStyle;
+
   return (
     <div className={`overflow-hidden ${className}`}>
       {hasThumb ? (
@@ -148,23 +175,82 @@ function ArticleThumbnail({ article, className = '', imageClassName = '' }: { ar
           className={`w-full h-full object-cover ${imageClassName}`}
         />
       ) : (
-        <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-          <Image src="/favicon.svg" alt={article.title} width={64} height={64} className="object-contain" />
+        <div
+          className="w-full h-full relative overflow-hidden"
+          style={{
+            background: `light-dark(
+              linear-gradient(145deg, ${style.lightBg}, #fff),
+              linear-gradient(145deg, ${style.darkBg}, #1f2937)
+            )`,
+          }}
+        >
+          {/* Large faded category initial watermark */}
+          <span
+            className="absolute -bottom-4 -right-2 font-black select-none leading-none opacity-[0.07]"
+            style={{ fontSize: '10rem' }}
+          >
+            {(article.category?.name || 'M')[0]}
+          </span>
+          {/* Accent stripe */}
+          <div
+            className="absolute top-0 left-0 w-1.5 h-full"
+            style={{ backgroundColor: style.dot }}
+          />
+          {/* Logo */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Image src="/favicon.svg" alt="" width={48} height={48} className="object-contain opacity-60" />
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-const Article = ({ categorySlug }: { categorySlug?: string }) => {
+const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCategoryKey?: string }) => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(categorySlug || null);
   const locale = useLocale();
 
+  // Fetch categories for current locale AND English to build slug mapping
   const { data: categories } = useQuery({
     queryKey: ['categories', locale],
     queryFn: () => getCategories(locale),
   });
+
+  const { data: enCategories } = useQuery({
+    queryKey: ['categories', 'en'],
+    queryFn: () => getCategories('en'),
+    enabled: locale !== 'en' && !!categoryKey,
+  });
+
+  // Resolve English URL key to locale-specific API slug
+  const resolvedCategorySlug = useMemo(() => {
+    if (!categoryKey) return null;
+    if (locale === 'en') return categoryKey;
+    if (!enCategories || !categories) return null; // still loading
+    const enCat = enCategories.find((c: any) => c.slug === categoryKey);
+    if (!enCat) return categoryKey;
+    const localeCat = categories.find((c: any) => c.id === enCat.id);
+    return localeCat?.slug || categoryKey;
+  }, [categoryKey, locale, enCategories, categories]);
+
+  const resolvedSubCategorySlug = useMemo(() => {
+    if (!subCategoryKey) return null;
+    if (locale === 'en') return subCategoryKey;
+    if (!enCategories || !categories) return null;
+    const enCat = enCategories.find((c: any) => c.slug === subCategoryKey);
+    if (!enCat) return subCategoryKey;
+    const localeCat = categories.find((c: any) => c.id === enCat.id);
+    return localeCat?.slug || subCategoryKey;
+  }, [subCategoryKey, locale, enCategories, categories]);
+
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  // Sync selectedCategory when resolved slug becomes available
+  useEffect(() => {
+    if (resolvedCategorySlug) {
+      setSelectedCategory(resolvedCategorySlug);
+    }
+  }, [resolvedCategorySlug]);
 
   const {
     data,
@@ -173,14 +259,16 @@ const Article = ({ categorySlug }: { categorySlug?: string }) => {
     isFetchingNextPage,
     isLoading,
   } = useInfiniteQuery({
-    queryKey: ['articles-feed', locale, selectedCategory],
+    queryKey: ['articles-feed', locale, selectedCategory, resolvedSubCategorySlug],
     queryFn: ({ pageParam }) =>
       getArticlesFeed({
         cursor: pageParam,
         language: locale,
         ...(selectedCategory ? { categorySlug: selectedCategory } : {}),
+        ...(resolvedSubCategorySlug ? { subCategorySlug: resolvedSubCategorySlug } : {}),
         status: 'Published',
       }),
+    enabled: !categoryKey || !!resolvedCategorySlug, // wait for slug resolution
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) =>
       lastPage.meta.hasMore ? lastPage.meta.nextCursor : undefined,
@@ -253,11 +341,7 @@ const Article = ({ categorySlug }: { categorySlug?: string }) => {
 
               <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 lg:p-8 text-white">
                 <div className="flex items-center space-x-3 mb-4">
-                  <CategoryBadge
-                    slug={heroArticle.category?.slug}
-                    name={heroArticle.category?.name}
-                    className="px-3 py-1.5 shadow-lg"
-                  />
+                  <CategoryBadges article={heroArticle} />
                   <div className="flex items-center space-x-1.5 text-xs opacity-90">
                     <Clock className="h-3.5 w-3.5" />
                     <span>{formatTimeAgo(heroArticle.createdAt)}</span>
@@ -306,11 +390,7 @@ const Article = ({ categorySlug }: { categorySlug?: string }) => {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
 
                   <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                    <CategoryBadge
-                      slug={article.category?.slug}
-                      name={article.category?.name}
-                      className="mb-2 inline-block"
-                    />
+                    <CategoryBadges article={article} className="mb-2" />
                     <h3 className="font-bold text-base sm:text-lg leading-tight mb-2 group-hover:text-brand-accent transition-colors line-clamp-2">
                       {article.title}
                     </h3>
@@ -355,7 +435,7 @@ const Article = ({ categorySlug }: { categorySlug?: string }) => {
                   imageClassName="group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute top-3 left-3">
-                  <CategoryBadge slug={spotlightArticles[0].category?.slug} name={spotlightArticles[0].category?.name} />
+                  <CategoryBadges article={spotlightArticles[0]} />
                 </div>
               </div>
               <div className="flex-1 p-5 sm:p-6 lg:p-8 flex flex-col justify-center">
@@ -398,7 +478,7 @@ const Article = ({ categorySlug }: { categorySlug?: string }) => {
                         imageClassName="group-hover:scale-105 transition-transform duration-500"
                       />
                       <div className="absolute top-3 left-3">
-                        <CategoryBadge slug={article.category?.slug} name={article.category?.name} />
+                        <CategoryBadges article={article} />
                       </div>
                     </div>
                     <div className="p-4 flex flex-col flex-1">
@@ -528,15 +608,7 @@ const Article = ({ categorySlug }: { categorySlug?: string }) => {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     <div className="absolute top-3 left-3">
-                      <CategoryBadge slug={article.category?.slug} name={article.category?.name} />
-                    </div>
-                    <div className="absolute top-3 right-3 flex space-x-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <button className="p-1.5 bg-white/90 hover:bg-brand-primary hover:text-white rounded-full transition-colors shadow-sm">
-                        <BookmarkPlus className="h-3.5 w-3.5" />
-                      </button>
-                      <button className="p-1.5 bg-white/90 hover:bg-brand-primary hover:text-white rounded-full transition-colors shadow-sm">
-                        <Share2 className="h-3.5 w-3.5" />
-                      </button>
+                      <CategoryBadges article={article} />
                     </div>
                   </div>
 

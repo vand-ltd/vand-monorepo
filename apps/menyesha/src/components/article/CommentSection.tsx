@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getComments, createComment, getMe } from '@org/api';
 import { useTranslations } from 'next-intl';
-import { MessageCircle, Send, User } from 'lucide-react';
+import { MessageCircle, Send, User, Smile, ChevronDown, ChevronUp } from 'lucide-react';
+import EmojiPicker, { Theme, EmojiClickData } from 'emoji-picker-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 export function CommentSection({ articleId }: { articleId: string }) {
   const t = useTranslations('comments');
@@ -13,6 +15,27 @@ export function CommentSection({ articleId }: { articleId: string }) {
   const [content, setContent] = useState('');
   const [authorName, setAuthorName] = useState('');
   const [authorEmail, setAuthorEmail] = useState('');
+  const [emojiOpen, setEmojiOpen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(3);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const onEmojiClick = (emojiData: EmojiClickData) => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const newContent = content.slice(0, start) + emojiData.emoji + content.slice(end);
+      setContent(newContent);
+      // Restore cursor position after emoji
+      requestAnimationFrame(() => {
+        const newPos = start + emojiData.emoji.length;
+        textarea.setSelectionRange(newPos, newPos);
+        textarea.focus();
+      });
+    } else {
+      setContent((prev) => prev + emojiData.emoji);
+    }
+  };
 
   const { data: user } = useQuery({
     queryKey: ['me'],
@@ -94,14 +117,42 @@ export function CommentSection({ articleId }: { articleId: string }) {
               />
             </div>
           )}
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder={t('commentPlaceholder')}
-            required
-            rows={3}
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand-primary/50 dark:focus:ring-brand-accent/50"
-          />
+          <div className="relative">
+            <textarea
+              ref={textareaRef}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder={t('commentPlaceholder')}
+              required
+              rows={3}
+              className="w-full px-4 py-3 pr-12 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand-primary/50 dark:focus:ring-brand-accent/50"
+            />
+            <Popover open={emojiOpen} onOpenChange={setEmojiOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="absolute right-3 top-3 text-gray-400 hover:text-brand-primary dark:hover:text-brand-accent transition-colors"
+                  aria-label="Emoji picker"
+                >
+                  <Smile className="h-5 w-5" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                align="end"
+                side="top"
+                className="w-auto p-0 border-none shadow-xl"
+              >
+                <EmojiPicker
+                  onEmojiClick={onEmojiClick}
+                  theme={Theme.AUTO}
+                  width={320}
+                  height={400}
+                  searchPlaceHolder="Search emoji..."
+                  lazyLoadEmojis
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
           <div className="flex justify-end">
             <button
               type="submit"
@@ -136,7 +187,7 @@ export function CommentSection({ articleId }: { articleId: string }) {
         </div>
       ) : (
         <div className="space-y-4">
-          {comments.map((comment: any) => (
+          {comments.slice(0, visibleCount).map((comment: any) => (
             <div
               key={comment.id}
               className="flex gap-3 p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
@@ -159,6 +210,31 @@ export function CommentSection({ articleId }: { articleId: string }) {
               </div>
             </div>
           ))}
+
+          {/* View More / Show Less */}
+          {comments.length > 3 && (
+            <div className="flex justify-center pt-2">
+              {visibleCount < comments.length ? (
+                <button
+                  type="button"
+                  onClick={() => setVisibleCount((prev) => Math.min(prev + 5, comments.length))}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-brand-primary dark:text-brand-accent hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  <ChevronDown className="h-4 w-4" />
+                  {t('viewMore', { count: comments.length - visibleCount })}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setVisibleCount(3)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-brand-primary dark:text-brand-accent hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  <ChevronUp className="h-4 w-4" />
+                  {t('showLess')}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

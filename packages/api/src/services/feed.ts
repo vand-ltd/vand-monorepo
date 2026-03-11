@@ -5,6 +5,7 @@ export async function getArticlesFeed(parms: {
   limit?: number;
   language?: string;
   categorySlug?: string;
+  subCategorySlug?: string;
   status?: string;
   featuredType?: string;
 }) {

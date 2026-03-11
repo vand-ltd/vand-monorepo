@@ -15,7 +15,10 @@
     "business": "Ubucuruzi",
     "news": "Amakuru",
     "about": "Abo turi bo",
-    "contact": "Twandikire"
+    "contact": "Twandikire",
+    "africa": "Afurika",
+    "europe": "Uburayi",
+    "international": "Mpuzamahanga"
   },
   "breakingNews": {
     "label": "BREAKING",
@@ -49,7 +52,9 @@
     "justNow": "Ubu nyine",
     "minutesAgo": "hashize {count}m",
     "hoursAgo": "hashize {count}h",
-    "daysAgo": "hashize {count}d"
+    "daysAgo": "hashize {count}d",
+    "viewMore": "Reba ibindi ({count})",
+    "showLess": "Erekana bike"
   },
   "share": {
     "share": "Sangiza",

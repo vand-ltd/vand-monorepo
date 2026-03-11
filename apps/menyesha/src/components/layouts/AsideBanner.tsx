@@ -123,8 +123,19 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
                           sizes="80px"
                         />
                       ) : (
-                        <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                          <Image src="/favicon.svg" alt="" width={20} height={20} />
+                        <div
+                          className="w-full h-full relative overflow-hidden"
+                          style={{
+                            background: 'light-dark(linear-gradient(145deg, #f3f4f6, #fff), linear-gradient(145deg, rgba(0,49,83,0.3), #1f2937))',
+                          }}
+                        >
+                          <span className="absolute -bottom-1 -right-0.5 font-black select-none leading-none opacity-[0.07]" style={{ fontSize: '3.5rem' }}>
+                            {(story.category?.name || 'M')[0]}
+                          </span>
+                          <div className="absolute top-0 left-0 w-0.5 h-full" style={{ backgroundColor: '#F59E0B' }} />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <Image src="/favicon.svg" alt="" width={16} height={16} className="object-contain opacity-50" />
+                          </div>
                         </div>
                       )}
                     </div>

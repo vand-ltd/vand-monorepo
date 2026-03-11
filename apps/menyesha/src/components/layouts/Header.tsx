@@ -2,43 +2,87 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useTheme } from "next-themes"
 import { ToggleMode } from "./ToggleMode"
 import { SearchInput } from "./SearchInput"
 import LanguageSwitcher from "./LanguageSwitcher"
 import { Button } from "@/components/ui/button"
-import { Menu, User } from "lucide-react"
+import { Menu, User, ChevronDown, ChevronRight } from "lucide-react"
 import { BreakingNewsTicker } from "./BreakingNewsTicker"
 import { useTranslations, useLocale } from "next-intl"
 import { usePathname } from "next/navigation"
 import { useClientDateTime } from "@/hooks/useClientDateTime"
 
+type SubCategory = {
+  key: string;
+  href: string;
+};
+
+type NavLink = {
+  href: string;
+  label: string;
+  subcategories?: SubCategory[];
+};
+
+const SUB_CATEGORIES: SubCategory[] = [
+  { key: 'africa', href: '/africa' },
+  { key: 'europe', href: '/europe' },
+  { key: 'international', href: '/international' },
+];
 
 export const Header = () => {
   const [isOpen, setIsOpen] = useState(false)
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
+  const [expandedMobile, setExpandedMobile] = useState<string | null>(null)
   const { currentDate, currentTime, mounted } = useClientDateTime()
   const { resolvedTheme } = useTheme()
   const [logoMounted, setLogoMounted] = useState(false)
+  const dropdownTimeout = useRef<NodeJS.Timeout | null>(null)
+  const navRef = useRef<HTMLElement>(null)
+
   useEffect(() => setLogoMounted(true), [])
-  
+
   const t = useTranslations('nav')
   const locale = useLocale();
   const pathname = usePathname();
 
-
-  const navLinks = [
+  const navLinks: NavLink[] = [
     { href: '/', label: t('home') },
-    { href: '/sports', label: t('sports') },
-    { href: '/entertainment', label: t('entertainment') },
-    { href: '/technology', label: t('technology') },
-    { href: '/business', label: t('business') },
-    { href: '/news', label: t('news') },
+    { href: '/sports', label: t('sports'), subcategories: SUB_CATEGORIES },
+    { href: '/entertainment', label: t('entertainment'), subcategories: SUB_CATEGORIES },
+    { href: '/technology', label: t('technology'), subcategories: SUB_CATEGORIES },
+    { href: '/business', label: t('business'), subcategories: SUB_CATEGORIES },
+    { href: '/news', label: t('news'), subcategories: SUB_CATEGORIES },
   ]
 
   const normalizePath = (path: string) =>
     path.endsWith('/') && path !== '/' ? path.slice(0, -1) : path;
 
+  const handleMouseEnter = (href: string) => {
+    if (dropdownTimeout.current) {
+      clearTimeout(dropdownTimeout.current)
+      dropdownTimeout.current = null
+    }
+    setActiveDropdown(href)
+  }
+
+  const handleMouseLeave = () => {
+    dropdownTimeout.current = setTimeout(() => {
+      setActiveDropdown(null)
+    }, 150)
+  }
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+        setActiveDropdown(null)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   return (
     <>
@@ -74,9 +118,9 @@ export const Header = () => {
               </Link>
               <ToggleMode />
               <LanguageSwitcher />
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 className="md:hidden"
                 onClick={() => setIsOpen(!isOpen)}
               >
@@ -86,32 +130,72 @@ export const Header = () => {
           </div>
 
           {/* Navigation Bar */}
-          <nav className="hidden md:flex items-center justify-between border-t pt-3">
+          <nav ref={navRef} className="hidden md:flex items-center justify-between border-t pt-3">
             <div className="flex items-center space-x-8">
               {navLinks.map((link) => {
-                const isActive = normalizePath(pathname) === `/${locale}${link.href}` || 
+                const isActive = normalizePath(pathname) === `/${locale}${link.href}` ||
                                 (link.href === '/' && normalizePath(pathname) === `/${locale}`);
-                
+                const hasDropdown = !!link.subcategories;
+                const isDropdownOpen = activeDropdown === link.href;
+
                 return (
-                  <Link
+                  <div
                     key={link.href}
-                    href={`/${locale}${link.href}`}
-                    className={`text-sm font-medium transition-colors relative group ${
-                      isActive
-                        ? 'text-brand-primary dark:text-brand-accent'
-                        : 'text-muted-foreground hover:text-brand-primary dark:hover:text-brand-accent'
-                    }`}
+                    className="relative"
+                    onMouseEnter={() => hasDropdown ? handleMouseEnter(link.href) : undefined}
+                    onMouseLeave={hasDropdown ? handleMouseLeave : undefined}
                   >
-                    {link.label}
-                    {isActive && (
-                      <div className="absolute -bottom-3 left-0 right-0 h-0.5 bg-brand-primary dark:bg-brand-accent"></div>
+                    <Link
+                      href={`/${locale}${link.href}`}
+                      className={`text-sm font-medium transition-colors relative group flex items-center gap-1 ${
+                        isActive
+                          ? 'text-brand-primary dark:text-brand-accent'
+                          : 'text-muted-foreground hover:text-brand-primary dark:hover:text-brand-accent'
+                      }`}
+                    >
+                      {link.label}
+                      {hasDropdown && (
+                        <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                      )}
+                      {isActive && (
+                        <div className="absolute -bottom-3 left-0 right-0 h-0.5 bg-brand-primary dark:bg-brand-accent"></div>
+                      )}
+                      <div className="absolute -bottom-3 left-0 right-0 h-0.5 bg-brand-primary dark:bg-brand-accent scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
+                    </Link>
+
+                    {/* Dropdown */}
+                    {hasDropdown && isDropdownOpen && (
+                      <div
+                        className="absolute top-full left-0 mt-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl py-1 min-w-[180px] z-50 animate-in fade-in slide-in-from-top-2 duration-150"
+                        onMouseEnter={() => handleMouseEnter(link.href)}
+                        onMouseLeave={handleMouseLeave}
+                      >
+                        {/* All (parent category) */}
+                        <Link
+                          href={`/${locale}${link.href}`}
+                          className="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors font-medium"
+                          onClick={() => setActiveDropdown(null)}
+                        >
+                          {link.label}
+                        </Link>
+                        <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
+                        {link.subcategories!.map((sub) => (
+                          <Link
+                            key={sub.key}
+                            href={`/${locale}${link.href}${sub.href}`}
+                            className="flex items-center px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-brand-primary dark:hover:text-brand-accent transition-colors"
+                            onClick={() => setActiveDropdown(null)}
+                          >
+                            {t(sub.key)}
+                          </Link>
+                        ))}
+                      </div>
                     )}
-                    <div className="absolute -bottom-3 left-0 right-0 h-0.5 bg-brand-primary dark:bg-brand-accent scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
-                  </Link>
+                  </div>
                 );
               })}
             </div>
-            
+
             <div className="flex items-center space-x-4 text-xs text-muted-foreground">
               {mounted && (
                 <>
@@ -136,27 +220,56 @@ export const Header = () => {
         {/* Mobile Navigation */}
         <div
           className={`md:hidden border-t bg-background overflow-hidden transition-all duration-300 ease-in-out ${
-            isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 border-t-0'
+            isOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0 border-t-0'
           }`}
         >
           <nav className="max-w-screen-xl mx-auto px-4 py-4 space-y-1">
             {navLinks.map((link) => {
               const isActive = normalizePath(pathname) === `/${locale}${link.href}` ||
                               (link.href === '/' && normalizePath(pathname) === `/${locale}`);
+              const hasDropdown = !!link.subcategories;
+              const isExpanded = expandedMobile === link.href;
 
               return (
-                <Link
-                  key={link.href}
-                  href={`/${locale}${link.href}`}
-                  className={`block text-sm font-medium py-3 px-4 rounded-lg transition-colors ${
-                    isActive
-                      ? 'bg-brand-primary/10 text-brand-primary dark:text-brand-accent font-semibold'
-                      : 'text-muted-foreground hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-brand-primary dark:hover:text-brand-accent'
-                  }`}
-                  onClick={() => setIsOpen(false)}
-                >
-                  {link.label}
-                </Link>
+                <div key={link.href}>
+                  <div className="flex items-center">
+                    <Link
+                      href={`/${locale}${link.href}`}
+                      className={`flex-1 text-sm font-medium py-3 px-4 rounded-lg transition-colors ${
+                        isActive
+                          ? 'bg-brand-primary/10 text-brand-primary dark:text-brand-accent font-semibold'
+                          : 'text-muted-foreground hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-brand-primary dark:hover:text-brand-accent'
+                      }`}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {link.label}
+                    </Link>
+                    {hasDropdown && (
+                      <button
+                        onClick={() => setExpandedMobile(isExpanded ? null : link.href)}
+                        className="p-3 text-muted-foreground hover:text-brand-primary dark:hover:text-brand-accent transition-colors"
+                      >
+                        <ChevronRight className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Mobile Subcategories */}
+                  {hasDropdown && isExpanded && (
+                    <div className="ml-4 pl-4 border-l-2 border-gray-200 dark:border-gray-700 space-y-1 mb-2">
+                      {link.subcategories!.map((sub) => (
+                        <Link
+                          key={sub.key}
+                          href={`/${locale}${link.href}${sub.href}`}
+                          className="block text-sm py-2.5 px-4 rounded-lg text-muted-foreground hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-brand-primary dark:hover:text-brand-accent transition-colors"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          {t(sub.key)}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </nav>

@@ -31,6 +31,14 @@ const categoryColorMap: Record<string, { lightBg: string; darkBg: string; lightT
   business:        { lightBg: '#dcfce7', darkBg: 'rgba(21,128,61,0.3)', lightText: '#15803d', darkText: '#86efac' },
   sports:          { lightBg: '#fee2e2', darkBg: 'rgba(185,28,28,0.3)', lightText: '#b91c1c', darkText: '#fca5a5' },
   politics:        { lightBg: '#f3f4f6', darkBg: '#374151', lightText: '#374151', darkText: '#d1d5db' },
+  // Subcategories (regions)
+  africa:          { lightBg: '#fef3c7', darkBg: 'rgba(180,83,9,0.3)', lightText: '#92400e', darkText: '#fcd34d' },
+  afrique:         { lightBg: '#fef3c7', darkBg: 'rgba(180,83,9,0.3)', lightText: '#92400e', darkText: '#fcd34d' },
+  afurika:         { lightBg: '#fef3c7', darkBg: 'rgba(180,83,9,0.3)', lightText: '#92400e', darkText: '#fcd34d' },
+  europe:          { lightBg: '#dbeafe', darkBg: 'rgba(29,78,216,0.3)', lightText: '#1e40af', darkText: '#93c5fd' },
+  uburayi:         { lightBg: '#dbeafe', darkBg: 'rgba(29,78,216,0.3)', lightText: '#1e40af', darkText: '#93c5fd' },
+  international:   { lightBg: '#e0e7ff', darkBg: 'rgba(67,56,202,0.3)', lightText: '#4338ca', darkText: '#a5b4fc' },
+  mpuzamahanga:    { lightBg: '#e0e7ff', darkBg: 'rgba(67,56,202,0.3)', lightText: '#4338ca', darkText: '#a5b4fc' },
 };
 
 function getCategoryColors(slug: string) {
@@ -237,6 +245,8 @@ export default function ArticleView({ slug }: { slug: string }) {
   const categoryName = article.category?.name || '';
   const categorySlug = article.category?.slug || '';
   const catColors = getCategoryColors(categorySlug);
+  const parentCategory = article.category?.parent;
+  const parentColors = parentCategory ? getCategoryColors(parentCategory.slug) : null;
 
   return (
     <div className="w-full max-w-4xl mx-auto">
@@ -264,18 +274,40 @@ export default function ArticleView({ slug }: { slug: string }) {
       <article className="bg-white dark:bg-gray-900 rounded-lg shadow-lg overflow-hidden">
         {/* Hero Image */}
         <div className="relative h-96 md:h-[500px]">
-          <Image
-            src={article.thumbnail?.url || '/favicon.svg'}
-            alt={article.title}
-            fill
-            className={article.thumbnail?.url ? 'object-cover' : 'object-contain p-16 bg-gray-100 dark:bg-gray-800'}
-            priority
-          />
+          {article.thumbnail?.url ? (
+            <Image src={article.thumbnail.url} alt={article.title} fill className="object-cover" priority />
+          ) : (
+            <div
+              className="w-full h-full relative overflow-hidden"
+              style={{
+                background: `light-dark(
+                  linear-gradient(145deg, ${catColors.backgroundColor}, #fff),
+                  linear-gradient(145deg, rgba(0,49,83,0.4), #1f2937)
+                )`,
+              }}
+            >
+              <span className="absolute -bottom-6 -right-4 font-black select-none leading-none opacity-[0.07]" style={{ fontSize: '14rem' }}>
+                {(categoryName || 'M')[0]}
+              </span>
+              <div className="absolute top-0 left-0 w-2 h-full" style={{ backgroundColor: '#F59E0B' }} />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Image src="/favicon.svg" alt="" width={80} height={80} className="object-contain opacity-50" />
+              </div>
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
 
-          {/* Category Badge */}
+          {/* Category Badges */}
           {categoryName && (
-            <div className="absolute top-6 left-6">
+            <div className="absolute top-6 left-6 flex flex-wrap items-center gap-2">
+              {parentCategory && (
+                <span
+                  className="px-4 py-2 rounded-full text-sm font-semibold uppercase tracking-wide"
+                  style={parentColors!}
+                >
+                  {parentCategory.name}
+                </span>
+              )}
               <span
                 className="px-4 py-2 rounded-full text-sm font-semibold uppercase tracking-wide"
                 style={catColors}
@@ -355,7 +387,13 @@ export default function ArticleView({ slug }: { slug: string }) {
         {/* Article Content - Tiptap JSON */}
         <div className="p-6 md:p-8">
           <div className="prose prose-lg max-w-none dark:prose-invert">
-            {article.content && renderTiptapNode(article.content, 0)}
+            {article.content && (
+              typeof article.content === 'string'
+                ? article.content.split('\n').map((paragraph: string, i: number) => (
+                    paragraph.trim() ? <p key={i} className="mb-4 leading-relaxed text-gray-700 dark:text-gray-300">{paragraph}</p> : null
+                  ))
+                : renderTiptapNode(article.content, 0)
+            )}
           </div>
 
           {/* Share — after content */}
@@ -438,24 +476,54 @@ export default function ArticleView({ slug }: { slug: string }) {
                 className="group"
               >
                 <Card className="overflow-hidden h-full hover:shadow-lg transition-shadow">
-                  <div className="relative h-40">
-                    <Image
-                      src={related.thumbnail?.url || '/favicon.svg'}
-                      alt={related.title}
-                      fill
-                      className={related.thumbnail?.url ? 'object-cover group-hover:scale-105 transition-transform duration-300' : 'object-contain p-6 bg-gray-100 dark:bg-gray-800'}
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    />
+                  <div className="relative h-40 overflow-hidden">
+                    {related.thumbnail?.url ? (
+                      <Image
+                        src={related.thumbnail.url}
+                        alt={related.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      />
+                    ) : (
+                      <div
+                        className="w-full h-full relative"
+                        style={{
+                          background: `light-dark(
+                            linear-gradient(145deg, ${getCategoryColors(related.category?.slug || '').backgroundColor}, #fff),
+                            linear-gradient(145deg, rgba(0,49,83,0.3), #1f2937)
+                          )`,
+                        }}
+                      >
+                        <span className="absolute -bottom-3 -right-1 font-black select-none leading-none opacity-[0.07]" style={{ fontSize: '8rem' }}>
+                          {(related.category?.name || 'M')[0]}
+                        </span>
+                        <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: '#F59E0B' }} />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Image src="/favicon.svg" alt="" width={36} height={36} className="object-contain opacity-50" />
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <CardContent className="p-3">
-                    {related.category?.name && (
-                      <span
-                        className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold mb-2"
-                        style={getCategoryColors(related.category?.slug || '')}
-                      >
-                        {related.category.name}
-                      </span>
-                    )}
+                    <div className="flex flex-wrap items-center gap-1 mb-2">
+                      {related.category?.parent && (
+                        <span
+                          className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
+                          style={getCategoryColors(related.category.parent.slug || '')}
+                        >
+                          {related.category.parent.name}
+                        </span>
+                      )}
+                      {related.category?.name && (
+                        <span
+                          className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
+                          style={getCategoryColors(related.category?.slug || '')}
+                        >
+                          {related.category.name}
+                        </span>
+                      )}
+                    </div>
                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2 group-hover:text-brand-primary dark:group-hover:text-brand-accent transition-colors">
                       {related.title}
                     </h3>
