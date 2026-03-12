@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { useTheme } from "next-themes"
 import { ToggleMode } from "./ToggleMode"
 import { SearchInput } from "./SearchInput"
@@ -13,10 +13,13 @@ import { BreakingNewsTicker } from "./BreakingNewsTicker"
 import { useTranslations, useLocale } from "next-intl"
 import { usePathname } from "next/navigation"
 import { useClientDateTime } from "@/hooks/useClientDateTime"
+import { useQuery } from "@tanstack/react-query"
+import { getCategories } from "@org/api"
 
 type SubCategory = {
   key: string;
   href: string;
+  name: string;
 };
 
 type NavLink = {
@@ -24,12 +27,6 @@ type NavLink = {
   label: string;
   subcategories?: SubCategory[];
 };
-
-const SUB_CATEGORIES: SubCategory[] = [
-  { key: 'africa', href: '/africa' },
-  { key: 'europe', href: '/europe' },
-  { key: 'international', href: '/international' },
-];
 
 export const Header = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -47,14 +44,40 @@ export const Header = () => {
   const locale = useLocale();
   const pathname = usePathname();
 
-  const navLinks: NavLink[] = [
-    { href: '/', label: t('home') },
-    { href: '/sports', label: t('sports'), subcategories: SUB_CATEGORIES },
-    { href: '/entertainment', label: t('entertainment'), subcategories: SUB_CATEGORIES },
-    { href: '/technology', label: t('technology'), subcategories: SUB_CATEGORIES },
-    { href: '/business', label: t('business'), subcategories: SUB_CATEGORIES },
-    { href: '/news', label: t('news'), subcategories: SUB_CATEGORIES },
-  ]
+  // Fetch categories from API to get locale-specific slugs
+  const { data: categories } = useQuery({
+    queryKey: ['categories', locale],
+    queryFn: () => getCategories(locale),
+  });
+
+  // Build nav links dynamically from API categories
+  const navLinks: NavLink[] = useMemo(() => {
+    const links: NavLink[] = [{ href: '/', label: t('home') }];
+
+    if (categories) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      categories.forEach((cat: any) => {
+        const subcategories: SubCategory[] = (cat.children || []).map((child: any) => ({
+          key: child.slug,
+          href: `/${child.slug}`,
+          name: child.name,
+        }));
+        links.push({
+          href: `/${cat.slug}`,
+          label: cat.name,
+          subcategories: subcategories.length > 0 ? subcategories : undefined,
+        });
+      });
+    } else {
+      // Fallback while loading — use English keys with translation labels
+      const fallbackCategories = ['sports', 'entertainment', 'technology', 'business', 'news'];
+      fallbackCategories.forEach((key) => {
+        links.push({ href: `/${key}`, label: t(key) });
+      });
+    }
+
+    return links;
+  }, [categories, t]);
 
   const normalizePath = (path: string) =>
     path.endsWith('/') && path !== '/' ? path.slice(0, -1) : path;
@@ -186,7 +209,7 @@ export const Header = () => {
                             className="flex items-center px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-brand-primary dark:hover:text-brand-accent transition-colors"
                             onClick={() => setActiveDropdown(null)}
                           >
-                            {t(sub.key)}
+                            {sub.name}
                           </Link>
                         ))}
                       </div>
@@ -264,7 +287,7 @@ export const Header = () => {
                           className="block text-sm py-2.5 px-4 rounded-lg text-muted-foreground hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-brand-primary dark:hover:text-brand-accent transition-colors"
                           onClick={() => setIsOpen(false)}
                         >
-                          {t(sub.key)}
+                          {sub.name}
                         </Link>
                       ))}
                     </div>

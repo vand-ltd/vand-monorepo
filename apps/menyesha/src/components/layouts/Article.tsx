@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import { MessageCircle, Clock, Eye, ArrowRight, TrendingUp, Heart, Grid, List, Zap, Loader2, ChevronDown, Star } from "lucide-react";
+import { MessageCircle, Clock, Eye, ArrowRight, TrendingUp, Grid, List, Zap, Loader2, ChevronDown, Star } from "lucide-react";
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { getArticlesFeed, getCategories } from '@org/api';
 import { useLocale } from 'next-intl';
@@ -210,47 +210,18 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const locale = useLocale();
 
-  // Fetch categories for current locale AND English to build slug mapping
+  // Fetch categories for current locale
   const { data: categories } = useQuery({
     queryKey: ['categories', locale],
     queryFn: () => getCategories(locale),
   });
 
-  const { data: enCategories } = useQuery({
-    queryKey: ['categories', 'en'],
-    queryFn: () => getCategories('en'),
-    enabled: locale !== 'en' && !!categoryKey,
-  });
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(categoryKey || null);
 
-  // Resolve English URL key to locale-specific API slug
-  const resolvedCategorySlug = useMemo(() => {
-    if (!categoryKey) return null;
-    if (locale === 'en') return categoryKey;
-    if (!enCategories || !categories) return null; // still loading
-    const enCat = enCategories.find((c: any) => c.slug === categoryKey);
-    if (!enCat) return categoryKey;
-    const localeCat = categories.find((c: any) => c.id === enCat.id);
-    return localeCat?.slug || categoryKey;
-  }, [categoryKey, locale, enCategories, categories]);
-
-  const resolvedSubCategorySlug = useMemo(() => {
-    if (!subCategoryKey) return null;
-    if (locale === 'en') return subCategoryKey;
-    if (!enCategories || !categories) return null;
-    const enCat = enCategories.find((c: any) => c.slug === subCategoryKey);
-    if (!enCat) return subCategoryKey;
-    const localeCat = categories.find((c: any) => c.id === enCat.id);
-    return localeCat?.slug || subCategoryKey;
-  }, [subCategoryKey, locale, enCategories, categories]);
-
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-
-  // Sync selectedCategory when resolved slug becomes available
+  // Sync selectedCategory when categoryKey prop changes
   useEffect(() => {
-    if (resolvedCategorySlug) {
-      setSelectedCategory(resolvedCategorySlug);
-    }
-  }, [resolvedCategorySlug]);
+    setSelectedCategory(categoryKey || null);
+  }, [categoryKey]);
 
   const {
     data,
@@ -259,16 +230,15 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
     isFetchingNextPage,
     isLoading,
   } = useInfiniteQuery({
-    queryKey: ['articles-feed', locale, selectedCategory, resolvedSubCategorySlug],
+    queryKey: ['articles-feed', locale, selectedCategory, subCategoryKey],
     queryFn: ({ pageParam }) =>
       getArticlesFeed({
         cursor: pageParam,
         language: locale,
         ...(selectedCategory ? { categorySlug: selectedCategory } : {}),
-        ...(resolvedSubCategorySlug ? { subCategorySlug: resolvedSubCategorySlug } : {}),
+        ...(subCategoryKey ? { subCategorySlug: subCategoryKey } : {}),
         status: 'Published',
       }),
-    enabled: !categoryKey || !!resolvedCategorySlug, // wait for slug resolution
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) =>
       lastPage.meta.hasMore ? lastPage.meta.nextCursor : undefined,
@@ -620,11 +590,6 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
                           <Clock className="h-3 w-3" />
                           <span>{formatTimeAgo(article.createdAt)}</span>
                         </div>
-                        <span>·</span>
-                        <div className="flex items-center space-x-1">
-                          <Heart className="h-3 w-3" />
-                          <span>{article.viewCount || 0}</span>
-                        </div>
                       </div>
 
                       <h3 className={`font-bold text-gray-900 dark:text-white group-hover:text-brand-primary dark:group-hover:text-brand-accent transition-colors leading-tight ${
@@ -665,7 +630,7 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
                         </div>
                         <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 rounded-full px-2.5 py-1">
                           <MessageCircle className="h-3 w-3" />
-                          <span>{article.tags?.length || 0}</span>
+                          <span>{article._count?.comments || 0}</span>
                         </div>
                       </div>
                     </div>

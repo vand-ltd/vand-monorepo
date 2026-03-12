@@ -6,22 +6,39 @@ type Props = {
   params: Promise<{ locale: string; page: string[] }>;
 };
 
-const CATEGORY_PAGES = new Set([
-  'sports', 'entertainment', 'technology', 'business', 'news',
-]);
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://menyesha.vand.rw';
 
-const VALID_SUB_CATEGORIES = new Set([
-  'africa', 'europe', 'international',
-]);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function fetchCategories(locale: string): Promise<any[]> {
+  try {
+    const res = await fetch(`${API_URL}/api/menyesha/categories?language=${locale}`, {
+      headers: { 'Content-Type': 'application/json', Origin: SITE_URL },
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json.data || [];
+  } catch {
+    return [];
+  }
+}
 
 export default async function DynamicPage(props: Props) {
-  const { page } = await props.params;
+  const { locale, page } = await props.params;
   const [mainPage, subPage] = page;
 
-  // Category with optional subcategory: /sports, /sports/africa
-  if (CATEGORY_PAGES.has(mainPage)) {
-    if (subPage && !VALID_SUB_CATEGORIES.has(subPage)) {
-      return notFound();
+  // Fetch categories to validate locale-specific slugs
+  const categories = await fetchCategories(locale);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const parentCategory = categories.find((c: any) => c.slug === mainPage);
+
+  if (parentCategory) {
+    // Validate subcategory if present
+    if (subPage) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const validChild = (parentCategory.children || []).some((child: any) => child.slug === subPage);
+      if (!validChild) return notFound();
     }
     return (
       <div className="w-full max-w-full bg-gray-50 dark:bg-gray-900">
@@ -48,14 +65,19 @@ export default async function DynamicPage(props: Props) {
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
-  const { page } = await props.params;
-  // locale available via params if needed in the future
+  const { locale, page } = await props.params;
   const [mainPage, subPage] = page;
 
-  if (CATEGORY_PAGES.has(mainPage)) {
-    const title = mainPage.charAt(0).toUpperCase() + mainPage.slice(1);
-    const sub = subPage ? ` - ${subPage.charAt(0).toUpperCase() + subPage.slice(1)}` : '';
-    return { title: `${title}${sub} - Menyesha` };
+  const categories = await fetchCategories(locale);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const parentCategory = categories.find((c: any) => c.slug === mainPage);
+
+  if (parentCategory) {
+    const sub = subPage
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ? ` - ${(parentCategory.children || []).find((c: any) => c.slug === subPage)?.name || subPage}`
+      : '';
+    return { title: `${parentCategory.name}${sub} - Menyesha` };
   }
 
   if (page.length === 1) {
