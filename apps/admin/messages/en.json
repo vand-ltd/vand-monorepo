@@ -43,7 +43,9 @@
     "profile": "Profile",
     "logout": "Logout",
     "createUser": "Create User",
-    "users": "Users"
+    "users": "Users",
+    "collapse": "Collapse",
+    "breakingNews": "Breaking News"
   },
   "user": {
     "profileTitle": "Admin User",
@@ -284,5 +286,34 @@
     "userDeactivated": "User deactivated successfully",
     "userDeleted": "User deleted successfully",
     "userActionFailed": "Action failed. Please try again."
+  },
+  "breakingNews": {
+    "pageTitle": "Create Breaking News",
+    "breakingLabel": "Breaking News",
+    "breakingBadge": "This article will be published as breaking news and appear in the ticker",
+    "publish": "Publish Now",
+    "created": "Breaking news published successfully!",
+    "failed": "Failed to publish breaking news. Please try again.",
+    "titleRequired": "Title is required",
+    "categoryRequired": "Category is required",
+    "contentRequired": "Content is required",
+    "titleLabel": "Headline",
+    "titlePlaceholder": "Breaking news headline...",
+    "excerptLabel": "Summary",
+    "excerptPlaceholder": "Brief summary of the breaking news...",
+    "contentLabel": "Full Story",
+    "contentPlaceholder": "Write the full breaking news story...",
+    "settings": "Settings",
+    "categoryLabel": "Category",
+    "selectCategory": "Select a category",
+    "languageLabel": "Language",
+    "breakingUntilLabel": "Breaking Until",
+    "breakingUntilHint": "Leave empty to keep as breaking indefinitely",
+    "infoTitle": "Breaking News Guidelines",
+    "infoTips": {
+      "0": "Breaking news is published immediately and appears in the ticker",
+      "1": "Keep headlines short and factual",
+      "2": "Set an expiry time to automatically remove from the ticker"
+    }
   }
 }

@@ -43,7 +43,9 @@
     "profile": "Umwirondoro",
     "logout": "Gusohoka",
     "createUser": "Kora umukoresha",
-    "users": "Abakoresha"
+    "users": "Abakoresha",
+    "collapse": "Gufunga",
+    "breakingNews": "Amakuru y'ingutu"
   },
   "user": {
     "profileTitle": "Umukoresha wa Admin",
@@ -284,5 +286,34 @@
     "userDeactivated": "Umukoresha yahagaritswe neza",
     "userDeleted": "Umukoresha yasibwe neza",
     "userActionFailed": "Igikorwa cyanze. Ongera ugerageze."
+  },
+  "breakingNews": {
+    "pageTitle": "Andika amakuru y'ingutu",
+    "breakingLabel": "Amakuru y'ingutu",
+    "breakingBadge": "Iyi nkuru izasohoka nk'amakuru y'ingutu kandi igaragare mu rubanza rw'amakuru",
+    "publish": "Sohereza nonaha",
+    "created": "Amakuru y'ingutu yasohowe neza!",
+    "failed": "Ntibashije gusohora amakuru y'ingutu. Ongera ugerageze.",
+    "titleRequired": "Umutwe warabuze",
+    "categoryRequired": "Icyiciro gisabwa",
+    "contentRequired": "Ibikubiyemo bisabwa",
+    "titleLabel": "Umutwe",
+    "titlePlaceholder": "Umutwe w'amakuru y'ingutu...",
+    "excerptLabel": "Incamake",
+    "excerptPlaceholder": "Incamake ngufi y'amakuru y'ingutu...",
+    "contentLabel": "Inkuru yose",
+    "contentPlaceholder": "Andika inkuru yose y'amakuru y'ingutu...",
+    "settings": "Igenamiterere",
+    "categoryLabel": "Icyiciro",
+    "selectCategory": "Hitamo icyiciro",
+    "languageLabel": "Ururimi",
+    "breakingUntilLabel": "Kugeza ryari",
+    "breakingUntilHint": "Siga ubusa kugirango igume nk'amakuru y'ingutu",
+    "infoTitle": "Amabwiriza y'amakuru y'ingutu",
+    "infoTips": {
+      "0": "Amakuru y'ingutu asohoka ako kanya kandi agaragara mu rubanza",
+      "1": "Imutwe igomba kuba igufi kandi y'ukuri",
+      "2": "Shyiraho igihe cyo kurangira kugirango ikurwe mu rubanza mu buryo bwikora"
+    }
   }
 }

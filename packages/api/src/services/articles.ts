@@ -5,10 +5,12 @@ export async function createArticle(articleData: {
   excerpt?: string;
   language: string;
   categoryId: string;
-  content: object;
+  content: object | string;
   thumbnailId?: string;
   tagIds?: string[];
-  status: String;
+  status?: string;
+  isBreaking?: boolean;
+  breakingUntil?: string;
 }): Promise<any> {
   const { data } = await api.post('/api/menyesha/articles', articleData);
   return data;

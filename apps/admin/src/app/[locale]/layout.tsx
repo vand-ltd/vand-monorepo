@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { routing } from '@/i18n/routing';
 import { ThemeProvider } from "@org/ui";
 import { AdminHeader } from '@/components/AdminHeader';
+import { AdminSidebar } from '@/components/AdminSidebar';
 import { QueryProvider } from '@org/api';
 import { Toaster } from 'sonner';
 
@@ -29,11 +30,14 @@ export default async function LocaleLayout({
     <NextIntlClientProvider locale={locale} messages={messages}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
         <QueryProvider>
-          <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-            <AdminHeader />
-            <main className="flex-1">{children}</main>
-            <Toaster richColors position="top-right" />
+          <div className="min-h-screen flex bg-gray-50 dark:bg-gray-900">
+            <AdminSidebar />
+            <div className="flex-1 flex flex-col min-w-0">
+              <AdminHeader />
+              <main className="flex-1">{children}</main>
+            </div>
           </div>
+          <Toaster richColors position="top-right" />
         </QueryProvider>
       </ThemeProvider>
     </NextIntlClientProvider>

@@ -43,7 +43,9 @@
     "profile": "Profil",
     "logout": "Déconnexion",
     "createUser": "Créer un utilisateur",
-    "users": "Utilisateurs"
+    "users": "Utilisateurs",
+    "collapse": "Réduire",
+    "breakingNews": "Flash Info"
   },
   "user": {
     "profileTitle": "Utilisateur Admin",
@@ -284,5 +286,34 @@
     "userDeactivated": "Utilisateur désactivé avec succès",
     "userDeleted": "Utilisateur supprimé avec succès",
     "userActionFailed": "L'action a échoué. Veuillez réessayer."
+  },
+  "breakingNews": {
+    "pageTitle": "Créer un Flash Info",
+    "breakingLabel": "Flash Info",
+    "breakingBadge": "Cet article sera publié comme flash info et apparaîtra dans le bandeau défilant",
+    "publish": "Publier maintenant",
+    "created": "Flash info publié avec succès !",
+    "failed": "Échec de la publication du flash info. Veuillez réessayer.",
+    "titleRequired": "Le titre est requis",
+    "categoryRequired": "La catégorie est requise",
+    "contentRequired": "Le contenu est requis",
+    "titleLabel": "Titre",
+    "titlePlaceholder": "Titre du flash info...",
+    "excerptLabel": "Résumé",
+    "excerptPlaceholder": "Bref résumé du flash info...",
+    "contentLabel": "Article complet",
+    "contentPlaceholder": "Rédigez le flash info complet...",
+    "settings": "Paramètres",
+    "categoryLabel": "Catégorie",
+    "selectCategory": "Sélectionner une catégorie",
+    "languageLabel": "Langue",
+    "breakingUntilLabel": "Flash jusqu'au",
+    "breakingUntilHint": "Laisser vide pour garder comme flash indéfiniment",
+    "infoTitle": "Directives Flash Info",
+    "infoTips": {
+      "0": "Les flash info sont publiés immédiatement et apparaissent dans le bandeau",
+      "1": "Gardez les titres courts et factuels",
+      "2": "Définissez une date d'expiration pour retirer automatiquement du bandeau"
+    }
   }
 }
