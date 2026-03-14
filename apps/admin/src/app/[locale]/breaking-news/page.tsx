@@ -33,12 +33,6 @@ export default function CreateBreakingNewsPage() {
     queryFn: () => getCategories(language),
   });
 
-  // Flatten parent + children for category select
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const allCategories = categories.flatMap((cat: any) => [
-    cat,
-    ...(cat.children || []),
-  ]);
 
   const articleMutation = useMutation({
     mutationFn: createArticle,
@@ -193,10 +187,20 @@ export default function CreateBreakingNewsPage() {
                         className="w-full h-10 px-3 pr-8 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 appearance-none"
                       >
                         <option value="">{t('selectCategory')}</option>
-                        {allCategories.map((cat: { id: string; name: string; parentGroupId?: string }) => (
-                          <option key={cat.id} value={cat.id}>
-                            {cat.parentGroupId ? `  └ ${cat.name}` : cat.name}
-                          </option>
+                        {categories.map((cat: any) => (
+                          cat.children?.length > 0 ? (
+                            <optgroup key={cat.id} label={cat.name}>
+                              {cat.children.map((sub: any) => (
+                                <option key={sub.id} value={sub.id}>
+                                  {sub.name}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ) : (
+                            <option key={cat.id} value={cat.id}>
+                              {cat.name}
+                            </option>
+                          )
                         ))}
                       </select>
                       {categoriesLoading && (

@@ -125,6 +125,9 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
   });
 
   const [uploading, setUploading] = useState(false);
+  const [pendingImageUrl, setPendingImageUrl] = useState('');
+  const [imageCaption, setImageCaption] = useState('');
+  const [showCaptionInput, setShowCaptionInput] = useState(false);
 
   const addImage = useCallback(() => {
     if (!editor) return;
@@ -139,7 +142,9 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
       setUploading(true);
       try {
         const media = await uploadMedia(file);
-        editor.chain().focus().setImage({ src: media.url }).run();
+        setPendingImageUrl(media.url);
+        setImageCaption('');
+        setShowCaptionInput(true);
       } catch (error) {
         console.error('Failed to upload image:', error);
       } finally {
@@ -148,6 +153,23 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
     };
     input.click();
   }, [editor]);
+
+  const insertImageWithCaption = useCallback(() => {
+    if (!editor || !pendingImageUrl) return;
+    editor.chain().focus().setImage({
+      src: pendingImageUrl,
+      ...(imageCaption ? { title: imageCaption } : {}),
+    }).run();
+    setPendingImageUrl('');
+    setImageCaption('');
+    setShowCaptionInput(false);
+  }, [editor, pendingImageUrl, imageCaption]);
+
+  const cancelImageInsert = useCallback(() => {
+    setPendingImageUrl('');
+    setImageCaption('');
+    setShowCaptionInput(false);
+  }, []);
 
   const toggleLink = useCallback(() => {
     if (!editor) return;
@@ -281,8 +303,12 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
           <ToolbarButton onClick={toggleLink} isActive={editor.isActive('link')} title="Link">
             <LinkIcon className="w-4 h-4" />
           </ToolbarButton>
-          <ToolbarButton onClick={addImage} title="Image">
-            <ImageIcon className="w-4 h-4" />
+          <ToolbarButton onClick={addImage} disabled={uploading} title="Image">
+            {uploading ? (
+              <span className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin inline-block" />
+            ) : (
+              <ImageIcon className="w-4 h-4" />
+            )}
           </ToolbarButton>
 
           <ToolbarDivider />
@@ -314,6 +340,41 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
             <button type="button" onClick={() => { setShowLinkInput(false); setLinkUrl(''); }} className="h-8 px-3 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
               Cancel
             </button>
+          </div>
+        )}
+
+        {/* Caption input for image */}
+        {showCaptionInput && (
+          <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex items-start gap-3">
+              <img
+                src={pendingImageUrl}
+                alt="Preview"
+                className="w-20 h-20 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
+              />
+              <div className="flex-1 space-y-2">
+                <input
+                  type="text"
+                  value={imageCaption}
+                  onChange={(e) => setImageCaption(e.target.value)}
+                  placeholder="Add a caption (optional)"
+                  className="w-full h-8 px-3 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003153]"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); insertImageWithCaption(); }
+                    if (e.key === 'Escape') { cancelImageInsert(); }
+                  }}
+                  autoFocus
+                />
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={insertImageWithCaption} className="h-8 px-3 text-sm font-medium text-white bg-[#003153] rounded-lg hover:opacity-90">
+                    Insert
+                  </button>
+                  <button type="button" onClick={cancelImageInsert} className="h-8 px-3 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

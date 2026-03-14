@@ -22,7 +22,7 @@ import { getCategories, createArticle, uploadMedia, getTags } from '@org/api';
 import { useRouter } from '@/i18n/navigation';
 import { toast } from 'sonner';
 
-type ArticleStatus = 'Draft' | 'InReview' | 'Published';
+
 
 export default function CreateArticlePage() {
   const t = useTranslations('createArticle');
@@ -39,7 +39,6 @@ export default function CreateArticlePage() {
   const [showTagDropdown, setShowTagDropdown] = useState(false);
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [thumbnailId, setThumbnailId] = useState<string | null>(null);
-  const [status, setStatus] = useState<ArticleStatus>('Draft');
   const [isPreview, setIsPreview] = useState(false);
   const [language, setLanguage] = useState(locale);
   const [userRole, setUserRole] = useState('');
@@ -118,7 +117,7 @@ export default function CreateArticlePage() {
     },
   })
 
-  const handleSubmit = (articleStatus: ArticleStatus) => {
+  const handleSubmit = () => {
     articleMutation.mutate({
       title,
       excerpt: subtitle,
@@ -127,7 +126,6 @@ export default function CreateArticlePage() {
       content: contentJson,
       ...(thumbnailId ? { thumbnailId } : {}),
       tagIds: tags.map((t) => t.id),
-      status: articleStatus,
     });
   };
 
@@ -147,7 +145,7 @@ export default function CreateArticlePage() {
                   {t('pageTitle')}
                 </h1>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {status === 'Draft' ? t('statusDraft') : status === 'InReview' ? t('statusInReview') : t('statusPublished')}
+                  {t('statusDraft')}
                 </p>
               </div>
             </div>
@@ -163,7 +161,7 @@ export default function CreateArticlePage() {
               </button>
               <button
                 type="button"
-                onClick={() => handleSubmit('Draft')}
+                onClick={() => handleSubmit()}
                 disabled={articleMutation.isPending}
                 className="flex items-center gap-1.5 px-3 h-9 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
               >
@@ -173,7 +171,7 @@ export default function CreateArticlePage() {
               {userRole !== 'reporter' && (
                 <button
                   type="button"
-                  onClick={() => handleSubmit('InReview')}
+                  onClick={() => handleSubmit()}
                   disabled={articleMutation.isPending}
                   className="flex items-center gap-1.5 px-3 h-9 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm"
                 >
@@ -184,7 +182,7 @@ export default function CreateArticlePage() {
               {userRole !== 'reporter' && (
                 <button
                   type="button"
-                  onClick={() => handleSubmit('Published')}
+                  onClick={() => handleSubmit()}
                   disabled={articleMutation.isPending}
                   className="flex items-center gap-1.5 px-4 h-9 text-sm font-semibold text-white bg-gradient-to-r from-[#003153] to-[#005F73] rounded-lg hover:opacity-90 transition-all shadow-sm"
                 >
@@ -326,15 +324,25 @@ export default function CreateArticlePage() {
                       className="w-full h-10 px-3 pr-8 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003153] appearance-none"
                     >
                       <option value="">{t('selectCategory')}</option>
-                        {categories.map((cat: { id: string; name: string }) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </option>
+                      {categories.map((cat: any) => (
+                        cat.children?.length > 0 ? (
+                          <optgroup key={cat.id} label={cat.name}>
+                            {cat.children.map((sub: any) => (
+                              <option key={sub.id} value={sub.id}>
+                                {sub.name}
+                              </option>
+                            ))}
+                          </optgroup>
+                        ) : (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </option>
+                        )
                       ))}
-                      </select>
-                      {categoriesLoading && (
-                        <Loader2 className="absolute right-8 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 animate-spin" />
-                      )}
+                    </select>
+                    {categoriesLoading && (
+                      <Loader2 className="absolute right-8 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 animate-spin" />
+                    )}
                     <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                   </div>
                 </div>

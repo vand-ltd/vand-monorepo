@@ -8,7 +8,6 @@ export async function createArticle(articleData: {
   content: object | string;
   thumbnailId?: string;
   tagIds?: string[];
-  status?: string;
   isBreaking?: boolean;
   breakingUntil?: string;
 }): Promise<any> {
