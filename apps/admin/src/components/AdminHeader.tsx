@@ -16,6 +16,7 @@ import {
   UserPlus,
   Users,
   Zap,
+  FolderPlus,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -40,6 +41,7 @@ export function AdminHeader() {
     { href: '/articles' as const, label: t('articles'), icon: List, auth: true, adminOnly: true },
     { href: '/create-article' as const, label: t('createArticle'), icon: FileText, auth: true },
     { href: '/breaking-news' as const, label: t('breakingNews'), icon: Zap, auth: true },
+    { href: '/categories' as const, label: t('categories'), icon: FolderPlus, auth: true, adminOnly: true },
     { href: '/users' as const, label: t('users'), icon: Users, auth: true, adminOnly: true },
     { href: '/create-user' as const, label: t('createUser'), icon: UserPlus, auth: true, adminOnly: true },
   ].filter((link) => {

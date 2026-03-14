@@ -72,6 +72,31 @@
     "newsletterDescription": "Get breaking news and exclusive analysis delivered to your inbox.",
     "enterEmail": "Enter your email",
     "subscribeNow": "Subscribe Now",
-    "backToTop": "Back to Top"
+    "backToTop": "Back to Top",
+    "advertiseTitle": "Advertise With Us",
+    "advertiseDescription": "Reach thousands of engaged readers across Rwanda and beyond. Premium ad placements for your brand.",
+    "advertiseReach": "100K+ monthly readers",
+    "advertiseGrowth": "Growing audience",
+    "adSpaceAvailable": "Your Ad Here",
+    "advertiseContact": "Contact Us",
+    "advertiseEmailSubject": "Advertising Inquiry - Menyesha",
+    "adLeaderboard": "Leaderboard",
+    "adSidebar": "Sidebar"
+  },
+  "search": {
+    "placeholder": "Search articles...",
+    "title": "Search Results",
+    "resultsFor": "Results for \"{query}\"",
+    "noResults": "No articles found for \"{query}\"",
+    "tryAgain": "Try different keywords or browse our categories."
+  },
+  "footer": {
+    "description": "Delivering accurate, unbiased news and in-depth analysis from Rwanda and around the world.",
+    "contact": "Contact",
+    "legal": "Legal",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "cookiePolicy": "Cookie Policy",
+    "allRightsReserved": "All rights reserved."
   }
 }

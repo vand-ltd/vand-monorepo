@@ -18,21 +18,7 @@ import {
   Loader2,
   FileText,
 } from 'lucide-react';
-
-function formatTimeAgo(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMinutes = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMinutes < 1) return 'Just now';
-  if (diffMinutes < 60) return `${diffMinutes} min ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString();
-}
+import { formatTimeAgo } from '@/lib/timeago';
 
 export default function AuthorPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -229,7 +215,7 @@ export default function AuthorPage() {
                     <div className="flex items-center gap-3 mb-2 text-xs text-gray-400">
                       <div className="flex items-center space-x-1">
                         <Clock className="h-3 w-3" />
-                        <span>{formatTimeAgo(article.createdAt)}</span>
+                        <span>{formatTimeAgo(article.createdAt, locale)}</span>
                       </div>
                       {article.viewCount > 0 && (
                         <>

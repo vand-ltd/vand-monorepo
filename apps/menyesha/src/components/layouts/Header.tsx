@@ -55,8 +55,13 @@ export const Header = () => {
     const links: NavLink[] = [{ href: '/', label: t('home') }];
 
     if (categories) {
+      // Sort by createdAt ascending (first created comes first)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      categories.forEach((cat: any) => {
+      const sorted = [...categories].sort((a: any, b: any) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sorted.forEach((cat: any) => {
         const subcategories: SubCategory[] = (cat.children || []).map((child: any) => ({
           key: child.slug,
           href: `/${child.slug}`,

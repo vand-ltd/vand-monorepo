@@ -45,7 +45,8 @@
     "createUser": "Créer un utilisateur",
     "users": "Utilisateurs",
     "collapse": "Réduire",
-    "breakingNews": "Flash Info"
+    "breakingNews": "Flash Info",
+    "categories": "Catégories"
   },
   "user": {
     "profileTitle": "Utilisateur Admin",
@@ -315,5 +316,23 @@
       "1": "Gardez les titres courts et factuels",
       "2": "Définissez une date d'expiration pour retirer automatiquement du bandeau"
     }
+  },
+  "categories": {
+    "pageTitle": "Catégories",
+    "pageSubtitle": "Gérer les catégories et sous-catégories d'articles",
+    "addCategory": "Ajouter",
+    "cancel": "Annuler",
+    "newCategory": "Nouvelle catégorie",
+    "parentCategory": "Catégorie parente",
+    "noParent": "Aucune (catégorie principale)",
+    "parentHint": "Sélectionnez un parent pour créer une sous-catégorie",
+    "namePlaceholder": "Nom de la catégorie",
+    "create": "Créer",
+    "created": "Catégorie créée avec succès !",
+    "failed": "Échec de la création de la catégorie",
+    "allLanguagesRequired": "Veuillez remplir les noms pour toutes les langues",
+    "existingCategories": "Catégories existantes",
+    "noCategories": "Aucune catégorie",
+    "subcategories": "sous-catégories"
   }
 }

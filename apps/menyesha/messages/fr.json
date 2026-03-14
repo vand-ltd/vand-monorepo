@@ -72,6 +72,31 @@
     "newsletterDescription": "Recevez les dernières nouvelles et analyses exclusives dans votre boîte mail.",
     "enterEmail": "Entrez votre e-mail",
     "subscribeNow": "S'abonner",
-    "backToTop": "Retour en haut"
+    "backToTop": "Retour en haut",
+    "advertiseTitle": "Annoncez Chez Nous",
+    "advertiseDescription": "Touchez des milliers de lecteurs engag\u00e9s au Rwanda et au-del\u00e0. Emplacements publicitaires premium pour votre marque.",
+    "advertiseReach": "100K+ lecteurs/mois",
+    "advertiseGrowth": "Audience croissante",
+    "adSpaceAvailable": "Votre Pub Ici",
+    "advertiseContact": "Contactez-nous",
+    "advertiseEmailSubject": "Demande publicitaire - Menyesha",
+    "adLeaderboard": "Banni\u00e8re",
+    "adSidebar": "Barre lat\u00e9rale"
+  },
+  "search": {
+    "placeholder": "Rechercher des articles...",
+    "title": "R\u00e9sultats de recherche",
+    "resultsFor": "R\u00e9sultats pour \"{query}\"",
+    "noResults": "Aucun article trouv\u00e9 pour \"{query}\"",
+    "tryAgain": "Essayez d'autres mots-cl\u00e9s ou parcourez nos cat\u00e9gories."
+  },
+  "footer": {
+    "description": "Des informations pr\u00e9cises et impartiales et des analyses approfondies du Rwanda et du monde entier.",
+    "contact": "Contact",
+    "legal": "Mentions l\u00e9gales",
+    "privacyPolicy": "Politique de confidentialit\u00e9",
+    "termsOfService": "Conditions d'utilisation",
+    "cookiePolicy": "Politique des cookies",
+    "allRightsReserved": "Tous droits r\u00e9serv\u00e9s."
   }
 }

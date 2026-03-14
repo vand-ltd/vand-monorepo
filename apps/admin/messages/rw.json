@@ -45,7 +45,8 @@
     "createUser": "Kora umukoresha",
     "users": "Abakoresha",
     "collapse": "Gufunga",
-    "breakingNews": "Amakuru y'ingutu"
+    "breakingNews": "Amakuru y'ingutu",
+    "categories": "Ibyiciro"
   },
   "user": {
     "profileTitle": "Umukoresha wa Admin",
@@ -315,5 +316,23 @@
       "1": "Imutwe igomba kuba igufi kandi y'ukuri",
       "2": "Shyiraho igihe cyo kurangira kugirango ikurwe mu rubanza mu buryo bwikora"
     }
+  },
+  "categories": {
+    "pageTitle": "Ibyiciro",
+    "pageSubtitle": "Gucunga ibyiciro n'ibyiciro bito by'inkuru",
+    "addCategory": "Ongeraho",
+    "cancel": "Hagarika",
+    "newCategory": "Icyiciro gishya",
+    "parentCategory": "Icyiciro nyamukuru",
+    "noParent": "Ntayo (icyiciro cy'umurongo wa mbere)",
+    "parentHint": "Hitamo umubyeyi kugirango ukore icyiciro gito",
+    "namePlaceholder": "Izina ry'icyiciro",
+    "create": "Kora",
+    "created": "Icyiciro cyakozwe neza!",
+    "failed": "Gukora icyiciro byanze",
+    "allLanguagesRequired": "Uzuza amazina mu ndimi zose",
+    "existingCategories": "Ibyiciro bihari",
+    "noCategories": "Nta byiciro birahari",
+    "subcategories": "ibyiciro bito"
   }
 }

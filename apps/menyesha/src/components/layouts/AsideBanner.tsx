@@ -1,32 +1,18 @@
 'use client'
 
 import React, { ReactNode } from "react";
-import { TrendingUp, Clock, Eye, ArrowUp, Flame } from "lucide-react";
+import { TrendingUp, Clock, Eye, ArrowUp, Flame, Megaphone, Mail } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { getTrendingArticles } from "@org/api";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import Image from "next/image";
+import { formatTimeAgo } from "@/lib/timeago";
 
 type AsideBannerProps = {
   children: ReactNode;
 };
-
-function formatTimeAgo(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMinutes = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMinutes < 1) return 'Just now';
-  if (diffMinutes < 60) return `${diffMinutes}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString();
-}
 
 function formatViews(count: number): string {
   if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`;
@@ -49,11 +35,11 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
     <>
       {/* Top Banner Ad */}
       <div className='bg-background border-b px-4'>
-        <div className="my-4 w-full max-w-[728px] mx-auto h-[120px] bg-gradient-to-r from-gray-100 to-gray-200 border border-gray-300 rounded-lg flex items-center justify-center text-sm text-gray-600 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-purple-50 opacity-50"></div>
-          <div className="relative text-center">
-            <div className="text-lg font-semibold text-gray-700 mb-1">Premium Advertisement Space</div>
-            <span className="text-xs text-gray-500">728 × 90 (Desktop) / 320 × 100 (Mobile)</span>
+        <div className="my-4 w-full max-w-[728px] mx-auto h-[100px] rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 flex items-center justify-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+          <Megaphone className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+          <div className="text-center">
+            <p className="text-xs font-medium">{t('adSpaceAvailable')}</p>
+            <p className="text-[10px] text-gray-400 dark:text-gray-500">728 x 90 · {t('adLeaderboard')}</p>
           </div>
         </div>
       </div>
@@ -156,7 +142,7 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
                         </div>
                         <div className="flex items-center gap-0.5">
                           <Clock className="h-3 w-3" />
-                          <span>{formatTimeAgo(story.createdAt)}</span>
+                          <span>{formatTimeAgo(story.createdAt, locale)}</span>
                         </div>
                       </div>
                     </div>
@@ -165,126 +151,70 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
               </CardContent>
             </Card>
 
-            {/* Side Advertisement */}
-            <Card>
-              <CardContent className="p-4">
-                <div className="w-full h-[300px] bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 border border-purple-200 dark:border-purple-700 rounded-lg flex items-center justify-center text-sm text-purple-600 dark:text-purple-300 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-pink-50 opacity-50"></div>
-                  <div className="relative text-center">
-                    <div className="text-base font-semibold mb-1">Advertisement</div>
-                    <span className="text-xs">300 × 250 Sidebar Ad</span>
+            {/* Advertise With Us CTA */}
+            <Card className="overflow-hidden !p-0 !gap-0">
+              <div
+                className="relative text-white px-5 py-4"
+                style={{ background: 'linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-secondary))' }}
+              >
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(245,158,11,0.15),transparent_60%)]" />
+                <div className="relative space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+                      <Megaphone className="h-4 w-4 text-brand-accent" />
+                    </div>
+                    <h3 className="font-bold text-sm">{t('advertiseTitle')}</h3>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Stats */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="font-bold text-lg mb-4">{t('todaysStats')}</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">{t('articlesPublished')}</span>
-                    <span className="font-bold text-success">47</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">{t('totalReaders')}</span>
-                    <span className="font-bold text-brand-primary">2.4M</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">{t('breakingStories')}</span>
-                    <span className="font-bold text-error">12</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Company Advertisement Section */}
-            <Card className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border-purple-200 dark:border-purple-700">
-              <CardContent className="p-4">
-                <div className="text-center space-y-3">
-                  <div className="text-xs text-brand-secondary dark:text-brand-secondary font-medium uppercase tracking-wide">
-                    Sponsored Content
-                  </div>
-                  <div className="relative aspect-square w-24 mx-auto rounded-lg overflow-hidden bg-white dark:bg-gray-800 p-2">
-                    <img
-                      src="https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=96&h=96&fit=crop"
-                      alt="Company Logo"
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-gray-900 dark:text-white text-sm mb-1">
-                      TechCorp Solutions
-                    </h4>
-                    <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
-                      Revolutionizing business automation with AI-powered solutions. 
-                      Join 10,000+ companies worldwide.
-                    </p>
-                  </div>
-                  <button className="w-full bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold py-2 px-4 rounded-lg transition-colors duration-200">
-                    Learn More
-                  </button>
-                  <div className="flex items-center justify-center space-x-1 text-xs text-gray-500">
-                    <span>⭐</span>
-                    <span>4.9/5</span>
-                    <span>•</span>
-                    <span>Trusted by 10K+ companies</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Newsletter Signup */}
-            <Card className="bg-gradient-to-br from-blue-50 to-sky-50 dark:from-gray-800 dark:to-gray-800 border-brand-primary">
-              <CardContent className="p-6">
-                <h3 className="font-bold text-lg mb-2 text-brand-primary dark:text-white">{t('stayInformed')}</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                  {t('newsletterDescription')}
-                </p>
-                <div className="space-y-3">
-                  <input
-                    type="email"
-                    placeholder={t('enterEmail')}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
-                  />
-                  <button className="w-full bg-brand-primary hover:bg-brand-secondary text-white py-2 rounded-lg text-sm font-medium transition-colors">
-                    {t('subscribeNow')}
-                  </button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Alternative Advertisement Layout */}
-            <Card className="overflow-hidden">
-              <div className="relative aspect-[4/3] bg-gradient-to-br from-green-400 to-blue-500">
-                <img
-                  src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=320&h=240&fit=crop"
-                  alt="Business Advertisement"
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-                <div className="absolute top-2 right-2">
-                  <span className="bg-black/50 text-white text-xs px-2 py-1 rounded">
-                    Ad
-                  </span>
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-                  <h4 className="text-white font-bold text-sm mb-1">
-                    Growth Marketing Platform
-                  </h4>
-                  <p className="text-gray-200 text-xs line-clamp-2">
-                    Scale your business with data-driven marketing strategies
+                  <p className="text-xs text-white/80 leading-relaxed">
+                    {t('advertiseDescription')}
                   </p>
+                  <div className="grid grid-cols-2 gap-2 text-[10px] text-white/70">
+                    <div className="flex items-center gap-1">
+                      <Eye className="h-3 w-3 text-brand-accent" />
+                      <span>{t('advertiseReach')}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <TrendingUp className="h-3 w-3 text-brand-accent" />
+                      <span>{t('advertiseGrowth')}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">MarketGrow Inc.</span>
-                  <button className="bg-success hover:bg-green-700 text-white text-xs font-medium px-3 py-1 rounded transition-colors">
-                    Try Free
-                  </button>
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  <div className="w-full h-[200px] rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center text-center p-4">
+                    <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-2">
+                      <Megaphone className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{t('adSpaceAvailable')}</p>
+                    <p className="text-[10px] text-gray-400 dark:text-gray-500">300 x 250</p>
+                  </div>
+                  <a
+                    href={`mailto:ads@menyesha.com?subject=${encodeURIComponent(t('advertiseEmailSubject'))}`}
+                    className="w-full flex items-center justify-center gap-1.5 bg-brand-primary hover:bg-brand-secondary text-white text-xs font-semibold py-2.5 px-4 rounded-lg transition-colors duration-200"
+                  >
+                    <Mail className="h-3.5 w-3.5" />
+                    {t('advertiseContact')}
+                  </a>
                 </div>
               </CardContent>
+            </Card>
+
+            {/* Second Ad Slot */}
+            <Card className="overflow-hidden !p-0 !gap-0">
+              <div className="w-full h-[250px] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex flex-col items-center justify-center text-center p-6 border-b border-gray-200 dark:border-gray-700">
+                <div className="w-12 h-12 rounded-xl bg-brand-primary/10 dark:bg-brand-accent/10 flex items-center justify-center mb-3">
+                  <Megaphone className="h-6 w-6 text-brand-primary dark:text-brand-accent" />
+                </div>
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{t('adSpaceAvailable')}</p>
+                <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-3">300 x 250 · {t('adSidebar')}</p>
+                <a
+                  href={`mailto:ads@menyesha.com?subject=${encodeURIComponent(t('advertiseEmailSubject'))}`}
+                  className="text-xs font-medium text-brand-primary dark:text-brand-accent hover:underline"
+                >
+                  {t('advertiseContact')}
+                </a>
+              </div>
             </Card>
 
             {/* Back to Top */}

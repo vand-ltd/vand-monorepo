@@ -8,6 +8,7 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { getArticlesFeed, getCategories } from '@org/api';
 import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
+import { formatTimeAgo } from '@/lib/timeago';
 
 // Keyed by category slug (language-independent) — uses inline styles to avoid !important conflicts
 const categoryStyles: Record<string, { lightBg: string; darkBg: string; lightText: string; darkText: string; dot: string }> = {
@@ -35,6 +36,28 @@ const categoryStyles: Record<string, { lightBg: string; darkBg: string; lightTex
 };
 
 const defaultCategoryStyle = { lightBg: "#f3f4f6", darkBg: "#374151", lightText: "#374151", darkText: "#d1d5db", dot: "#6b7280" };
+
+const featuredTypeStyles: Record<string, { bg: string; text: string; darkBg: string; darkText: string; icon: string }> = {
+  Hero:      { bg: '#dc2626', text: '#ffffff', darkBg: '#dc2626', darkText: '#ffffff', icon: '🔥' },
+  Secondary: { bg: '#003153', text: '#ffffff', darkBg: '#F59E0B', darkText: '#1f2937', icon: '⚡' },
+  Spotlight: { bg: '#7c3aed', text: '#ffffff', darkBg: '#a78bfa', darkText: '#1f2937', icon: '✨' },
+};
+
+function FeaturedBadge({ type, className = "" }: { type?: string; className?: string }) {
+  if (!type || !featuredTypeStyles[type]) return null;
+  const style = featuredTypeStyles[type];
+  return (
+    <span
+      className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-1 ${className}`}
+      style={{
+        backgroundColor: `light-dark(${style.bg}, ${style.darkBg})`,
+        color: `light-dark(${style.text}, ${style.darkText})`,
+      }}
+    >
+      {style.icon} {type}
+    </span>
+  );
+}
 
 function CategoryBadge({ slug, name, className = "" }: { slug?: string; name?: string; className?: string }) {
   const style = categoryStyles[slug || ""] || defaultCategoryStyle;
@@ -105,20 +128,7 @@ function ArticleSkeleton({ viewMode }: { viewMode: 'grid' | 'list' }) {
   );
 }
 
-function formatTimeAgo(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMinutes = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMinutes < 1) return 'Just now';
-  if (diffMinutes < 60) return `${diffMinutes} min ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString();
-}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function AuthorAvatar({ author, size = 'md' }: { author: any; size?: 'sm' | 'md' | 'lg' }) {
@@ -163,6 +173,7 @@ function AuthorLink({ author, children, className = '' }: { author: any; childre
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ArticleThumbnail({ article, className = '', imageClassName = '' }: { article: any; className?: string; imageClassName?: string }) {
   const hasThumb = !!article.thumbnail?.url;
+  const isBreaking = !!article.isBreaking;
   const categorySlug = article.category?.slug || '';
   const style = categoryStyles[categorySlug] || defaultCategoryStyle;
 
@@ -173,6 +184,13 @@ function ArticleThumbnail({ article, className = '', imageClassName = '' }: { ar
           src={article.thumbnail.url}
           alt={article.title}
           className={`w-full h-full object-cover ${imageClassName}`}
+        />
+      ) : isBreaking ? (
+        <Image
+          src="/breaking-news-banner.svg"
+          alt="Breaking News"
+          fill
+          className={`object-cover ${imageClassName}`}
         />
       ) : (
         <div
@@ -309,12 +327,17 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 
+              {/* Category badges — top-left */}
+              <div className="absolute top-3 left-3 sm:top-4 sm:left-4 lg:top-6 lg:left-6 flex items-center gap-1.5">
+                <FeaturedBadge type={heroArticle.featuredType} />
+                <CategoryBadges article={heroArticle} />
+              </div>
+
               <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 lg:p-8 text-white">
                 <div className="flex items-center space-x-3 mb-4">
-                  <CategoryBadges article={heroArticle} />
                   <div className="flex items-center space-x-1.5 text-xs opacity-90">
                     <Clock className="h-3.5 w-3.5" />
-                    <span>{formatTimeAgo(heroArticle.createdAt)}</span>
+                    <span>{formatTimeAgo(heroArticle.createdAt, locale)}</span>
                   </div>
                 </div>
 
@@ -359,8 +382,13 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
 
+                  {/* Category badges — top-left */}
+                  <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                    <FeaturedBadge type={article.featuredType} />
+                    <CategoryBadges article={article} />
+                  </div>
+
                   <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                    <CategoryBadges article={article} className="mb-2" />
                     <h3 className="font-bold text-base sm:text-lg leading-tight mb-2 group-hover:text-brand-accent transition-colors line-clamp-2">
                       {article.title}
                     </h3>
@@ -371,7 +399,7 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
                       </AuthorLink>
                       <div className="flex items-center space-x-1">
                         <Clock className="h-3 w-3" />
-                        <span>{formatTimeAgo(article.createdAt)}</span>
+                        <span>{formatTimeAgo(article.createdAt, locale)}</span>
                       </div>
                     </div>
                   </div>
@@ -404,7 +432,8 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
                   className="absolute inset-0"
                   imageClassName="group-hover:scale-105 transition-transform duration-500"
                 />
-                <div className="absolute top-3 left-3">
+                <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                  <FeaturedBadge type={spotlightArticles[0].featuredType} />
                   <CategoryBadges article={spotlightArticles[0]} />
                 </div>
               </div>
@@ -412,7 +441,7 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
                 <div className="flex items-center space-x-3 mb-3 text-xs text-gray-400">
                   <div className="flex items-center space-x-1">
                     <Clock className="h-3 w-3" />
-                    <span>{formatTimeAgo(spotlightArticles[0].createdAt)}</span>
+                    <span>{formatTimeAgo(spotlightArticles[0].createdAt, locale)}</span>
                   </div>
                   <span>·</span>
                   <div className="flex items-center space-x-1">
@@ -447,7 +476,8 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
                         className="absolute inset-0"
                         imageClassName="group-hover:scale-105 transition-transform duration-500"
                       />
-                      <div className="absolute top-3 left-3">
+                      <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                        <FeaturedBadge type={article.featuredType} />
                         <CategoryBadges article={article} />
                       </div>
                     </div>
@@ -465,7 +495,7 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
                         </AuthorLink>
                         <div className="flex items-center space-x-1">
                           <Clock className="h-3 w-3" />
-                          <span>{formatTimeAgo(article.createdAt)}</span>
+                          <span>{formatTimeAgo(article.createdAt, locale)}</span>
                         </div>
                       </div>
                     </div>
@@ -588,7 +618,7 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-2 text-xs text-gray-400">
                         <div className="flex items-center space-x-1">
                           <Clock className="h-3 w-3" />
-                          <span>{formatTimeAgo(article.createdAt)}</span>
+                          <span>{formatTimeAgo(article.createdAt, locale)}</span>
                         </div>
                       </div>
 

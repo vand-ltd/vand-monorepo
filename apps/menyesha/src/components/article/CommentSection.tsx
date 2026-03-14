@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useRef, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getComments, createComment, getMe } from '@org/api';
+import { useState, useRef } from 'react';
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getComments, getCommentCount, createComment, getMe } from '@org/api';
 import { useTranslations } from 'next-intl';
-import { MessageCircle, Send, User, Smile, ChevronDown, ChevronUp } from 'lucide-react';
+import { MessageCircle, Send, User, Smile, ChevronDown, Loader2 } from 'lucide-react';
 import EmojiPicker, { Theme, EmojiClickData } from 'emoji-picker-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
@@ -16,7 +16,6 @@ export function CommentSection({ articleId }: { articleId: string }) {
   const [authorName, setAuthorName] = useState('');
   const [authorEmail, setAuthorEmail] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(3);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const onEmojiClick = (emojiData: EmojiClickData) => {
@@ -45,10 +44,29 @@ export function CommentSection({ articleId }: { articleId: string }) {
 
   const isLoggedIn = !!user;
 
-  const { data: comments = [], isLoading } = useQuery({
-    queryKey: ['comments', articleId],
-    queryFn: () => getComments(articleId),
+  // Fetch total comment count
+  const { data: totalCount = 0 } = useQuery({
+    queryKey: ['comment-count', articleId],
+    queryFn: () => getCommentCount(articleId),
   });
+
+  // Fetch comments with cursor pagination
+  const {
+    data: commentsData,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['comments', articleId],
+    queryFn: ({ pageParam }) => getComments(articleId, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) =>
+      lastPage.meta?.hasMore ? lastPage.meta.nextCursor : undefined,
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const comments: any[] = commentsData?.pages.flatMap((page) => page.comments) ?? [];
 
   const { mutate: submitComment, isPending } = useMutation({
     mutationFn: () =>
@@ -61,6 +79,7 @@ export function CommentSection({ articleId }: { articleId: string }) {
       setAuthorName('');
       setAuthorEmail('');
       queryClient.invalidateQueries({ queryKey: ['comments', articleId] });
+      queryClient.invalidateQueries({ queryKey: ['comment-count', articleId] });
     },
   });
 
@@ -87,9 +106,9 @@ export function CommentSection({ articleId }: { articleId: string }) {
       <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
         <MessageCircle className="h-6 w-6" />
         {t('title')}
-        {comments.length > 0 && (
+        {totalCount > 0 && (
           <span className="text-base font-normal text-gray-500">
-            ({comments.length})
+            ({totalCount})
           </span>
         )}
       </h2>
@@ -187,7 +206,7 @@ export function CommentSection({ articleId }: { articleId: string }) {
         </div>
       ) : (
         <div className="space-y-4">
-          {comments.slice(0, visibleCount).map((comment: any) => (
+          {comments.map((comment: any) => (
             <div
               key={comment.id}
               className="flex gap-3 p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
@@ -211,28 +230,22 @@ export function CommentSection({ articleId }: { articleId: string }) {
             </div>
           ))}
 
-          {/* View More / Show Less */}
-          {comments.length > 3 && (
+          {/* Load More */}
+          {hasNextPage && (
             <div className="flex justify-center pt-2">
-              {visibleCount < comments.length ? (
-                <button
-                  type="button"
-                  onClick={() => setVisibleCount((prev) => Math.min(prev + 5, comments.length))}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-brand-primary dark:text-brand-accent hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                >
+              <button
+                type="button"
+                onClick={() => fetchNextPage()}
+                disabled={isFetchingNextPage}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-brand-primary dark:text-brand-accent hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-50"
+              >
+                {isFetchingNextPage ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
                   <ChevronDown className="h-4 w-4" />
-                  {t('viewMore', { count: comments.length - visibleCount })}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setVisibleCount(3)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-brand-primary dark:text-brand-accent hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                >
-                  <ChevronUp className="h-4 w-4" />
-                  {t('showLess')}
-                </button>
-              )}
+                )}
+                {t('viewMore', { count: totalCount - comments.length })}
+              </button>
             </div>
           )}
         </div>

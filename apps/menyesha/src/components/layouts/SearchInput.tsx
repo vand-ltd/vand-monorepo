@@ -1,14 +1,33 @@
+'use client'
+
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search } from "lucide-react"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { useLocale, useTranslations } from "next-intl"
 
 export function SearchInput() {
+  const [query, setQuery] = useState('')
+  const router = useRouter()
+  const locale = useLocale()
+  const t = useTranslations('search')
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    const trimmed = query.trim()
+    if (!trimmed) return
+    router.push(`/${locale}/search?q=${encodeURIComponent(trimmed)}`)
+  }
+
   return (
-    <div className="relative w-full max-w-md">
+    <form onSubmit={handleSearch} className="relative w-full max-w-md">
       <Input
         type="search"
-        placeholder="Search..."
-        className="pr-12" // space for button
+        placeholder={t('placeholder')}
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        className="pr-12"
       />
       <Button
         type="submit"
@@ -17,6 +36,6 @@ export function SearchInput() {
       >
         <Search className="w-4 h-4" />
       </Button>
-    </div>
+    </form>
   )
 }

@@ -276,6 +276,8 @@ export default function ArticleView({ slug }: { slug: string }) {
         <div className="relative h-96 md:h-[500px]">
           {article.thumbnail?.url ? (
             <Image src={article.thumbnail.url} alt={article.title} fill className="object-cover" priority />
+          ) : article.isBreaking ? (
+            <Image src="/breaking-news-banner.svg" alt="Breaking News" fill className="object-cover" priority />
           ) : (
             <div
               className="w-full h-full relative overflow-hidden"
@@ -484,6 +486,13 @@ export default function ArticleView({ slug }: { slug: string }) {
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      />
+                    ) : related.isBreaking ? (
+                      <Image
+                        src="/breaking-news-banner.svg"
+                        alt="Breaking News"
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
                       <div

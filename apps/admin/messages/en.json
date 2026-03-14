@@ -45,7 +45,8 @@
     "createUser": "Create User",
     "users": "Users",
     "collapse": "Collapse",
-    "breakingNews": "Breaking News"
+    "breakingNews": "Breaking News",
+    "categories": "Categories"
   },
   "user": {
     "profileTitle": "Admin User",
@@ -315,5 +316,23 @@
       "1": "Keep headlines short and factual",
       "2": "Set an expiry time to automatically remove from the ticker"
     }
+  },
+  "categories": {
+    "pageTitle": "Categories",
+    "pageSubtitle": "Manage article categories and subcategories",
+    "addCategory": "Add Category",
+    "cancel": "Cancel",
+    "newCategory": "New Category",
+    "parentCategory": "Parent Category",
+    "noParent": "None (top-level category)",
+    "parentHint": "Select a parent to create a subcategory",
+    "namePlaceholder": "Category name",
+    "create": "Create Category",
+    "created": "Category created successfully!",
+    "failed": "Failed to create category",
+    "allLanguagesRequired": "Please fill in names for all languages",
+    "existingCategories": "Existing Categories",
+    "noCategories": "No categories yet",
+    "subcategories": "subcategories"
   }
 }
