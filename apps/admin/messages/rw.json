@@ -46,7 +46,8 @@
     "users": "Abakoresha",
     "collapse": "Gufunga",
     "breakingNews": "Amakuru y'ingutu",
-    "categories": "Ibyiciro"
+    "categories": "Ibyiciro",
+    "terms": "Amabwiriza"
   },
   "user": {
     "profileTitle": "Umukoresha wa Admin",
@@ -70,7 +71,32 @@
     "rememberMe": "Unyibuke",
     "welcomeHeading": "Ikibaho cya Vand Admin",
     "welcomeDescription": "Gucunga ibikubiyemo, abakoresha, n'igenamiterere ry'urubuga binyuze mu kibaho kimwe.",
-    "backToDashboard": "Subira ku kibaho"
+    "backToDashboard": "Subira ku kibaho",
+    "twoFactorTitle": "Kwemeza Inshuro Ebyiri",
+    "twoFactorSubtitle": "Andika umubare w'imibare 6 uvuye mu porogaramu yawe yo kwemeza",
+    "otpLabel": "Kode yo kwemeza",
+    "otpPlaceholder": "000000",
+    "verify": "Emeza",
+    "verifying": "Kwemeza...",
+    "backToLogin": "Subira kwinjira",
+    "invalidOtp": "Kode yo kwemeza ntiyakiriwe cyangwa yarangiye. Ongera ugerageze."
+  },
+  "changePassword": {
+    "title": "Shyiraho Ijambo Ryibanga Ryawe",
+    "subtitle": "Ugomba gushyiraho ijambo ryibanga rishya mbere yo gukomeza",
+    "currentPasswordLabel": "Ijambo ryibanga rw'agateganyo",
+    "currentPasswordPlaceholder": "Injiza ijambo ryibanga rw'agateganyo",
+    "newPasswordLabel": "Ijambo ryibanga rishya",
+    "newPasswordPlaceholder": "Injiza ijambo ryibanga rikomeye",
+    "confirmPasswordLabel": "Emeza ijambo ryibanga rishya",
+    "confirmPasswordPlaceholder": "Ongera wandike ijambo ryibanga rishya",
+    "passwordMismatch": "Amagambo y'ibanga ntahuye",
+    "acceptTermsLabel": "Nemeye amabwiriza n'amategeko",
+    "acceptTermsRequired": "Ugomba kwemera amabwiriza n'amategeko",
+    "submit": "Shyiraho Ijambo Ryibanga Ukomeze",
+    "submitting": "Kubika...",
+    "success": "Ijambo ryibanga ryavuguruwe neza",
+    "failed": "Kuvugurura ijambo ryibanga byanze. Ongera ugerageze."
   },
   "createArticle": {
     "pageTitle": "Andika inkuru",
@@ -286,7 +312,15 @@
     "userActivated": "Umukoresha yakoreshejwe neza",
     "userDeactivated": "Umukoresha yahagaritswe neza",
     "userDeleted": "Umukoresha yasibwe neza",
-    "userActionFailed": "Igikorwa cyanze. Ongera ugerageze."
+    "userActionFailed": "Igikorwa cyanze. Ongera ugerageze.",
+    "column2fa": "2FA",
+    "enabled": "Byakozwe",
+    "disabled": "Byahagaritswe",
+    "enable2fa": "Gukora 2FA",
+    "disable2fa": "Guhagarika 2FA",
+    "2faEnabled": "2FA yakozwe neza",
+    "2faDisabled": "2FA yahagaritswe neza",
+    "cannotToggleSelf": "Ntushobora guhindura igenamiterere rya 2FA ryawe hano"
   },
   "breakingNews": {
     "pageTitle": "Andika amakuru y'ingutu",
@@ -316,6 +350,32 @@
       "1": "Imutwe igomba kuba igufi kandi y'ukuri",
       "2": "Shyiraho igihe cyo kurangira kugirango ikurwe mu rubanza mu buryo bwikora"
     }
+  },
+  "terms": {
+    "pageTitle": "Amabwiriza n'Amategeko",
+    "pageSubtitle": "Gucunga verisiyo z'amabwiriza n'amategeko",
+    "newVersion": "Verisiyo Nshya",
+    "cancel": "Hagarika",
+    "versionLabel": "Verisiyo",
+    "versionPlaceholder": "urugero: 1.0.0",
+    "contentLabel": "Ibikubiyemo",
+    "contentPlaceholder": "Andika amabwiriza n'amategeko yose...",
+    "create": "Shyiraho Verisiyo",
+    "created": "Verisiyo y'amabwiriza yakozwe neza!",
+    "failed": "Gushyiraho verisiyo byanze",
+    "activated": "Verisiyo yakozwe neza!",
+    "activateFailed": "Gukora verisiyo byanze",
+    "activate": "Shyiraho nk'ikoreshwa",
+    "viewContent": "Reba",
+    "active": "Ikoreshwa",
+    "inactive": "Impapuro",
+    "columnVersion": "Verisiyo",
+    "columnStatus": "Imiterere",
+    "columnDate": "Yakozwe",
+    "columnActions": "Ibikorwa",
+    "noTerms": "Nta verisiyo y'amabwiriza irahari",
+    "contentTitle": "Ibikubiyemo by'amabwiriza",
+    "close": "Funga"
   },
   "categories": {
     "pageTitle": "Ibyiciro",

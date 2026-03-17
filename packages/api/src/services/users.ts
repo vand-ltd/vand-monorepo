@@ -39,3 +39,13 @@ export async function deleteUser(userId: string) {
   const { data } = await api.delete(`/api/admin/users/${userId}`);
   return data.data;
 }
+
+export async function enable2fa(userId: string) {
+  const { data } = await api.patch(`/api/admin/users/${userId}/2fa/enable`);
+  return data.data;
+}
+
+export async function disable2fa(userId: string) {
+  const { data } = await api.patch(`/api/admin/users/${userId}/2fa/disable`);
+  return data.data;
+}

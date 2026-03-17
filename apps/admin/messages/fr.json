@@ -46,7 +46,8 @@
     "users": "Utilisateurs",
     "collapse": "Réduire",
     "breakingNews": "Flash Info",
-    "categories": "Catégories"
+    "categories": "Catégories",
+    "terms": "Conditions"
   },
   "user": {
     "profileTitle": "Utilisateur Admin",
@@ -70,7 +71,32 @@
     "rememberMe": "Se souvenir de moi",
     "welcomeHeading": "Panneau Admin Vand",
     "welcomeDescription": "Gérez votre contenu, vos utilisateurs et les paramètres de la plateforme depuis un tableau de bord central.",
-    "backToDashboard": "Retour au tableau de bord"
+    "backToDashboard": "Retour au tableau de bord",
+    "twoFactorTitle": "Authentification à deux facteurs",
+    "twoFactorSubtitle": "Saisissez le code à 6 chiffres de votre application d'authentification",
+    "otpLabel": "Code de vérification",
+    "otpPlaceholder": "000000",
+    "verify": "Vérifier",
+    "verifying": "Vérification...",
+    "backToLogin": "Retour à la connexion",
+    "invalidOtp": "Code de vérification invalide ou expiré. Veuillez réessayer."
+  },
+  "changePassword": {
+    "title": "Définir votre mot de passe",
+    "subtitle": "Vous devez définir un nouveau mot de passe avant de continuer",
+    "currentPasswordLabel": "Mot de passe temporaire",
+    "currentPasswordPlaceholder": "Entrez votre mot de passe temporaire",
+    "newPasswordLabel": "Nouveau mot de passe",
+    "newPasswordPlaceholder": "Entrez un mot de passe fort",
+    "confirmPasswordLabel": "Confirmer le nouveau mot de passe",
+    "confirmPasswordPlaceholder": "Ressaisissez votre nouveau mot de passe",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "acceptTermsLabel": "J'accepte les conditions générales d'utilisation",
+    "acceptTermsRequired": "Vous devez accepter les conditions générales",
+    "submit": "Définir le mot de passe et continuer",
+    "submitting": "Enregistrement...",
+    "success": "Mot de passe mis à jour avec succès",
+    "failed": "Échec de la mise à jour du mot de passe. Veuillez réessayer."
   },
   "createArticle": {
     "pageTitle": "Créer un article",
@@ -286,7 +312,15 @@
     "userActivated": "Utilisateur activé avec succès",
     "userDeactivated": "Utilisateur désactivé avec succès",
     "userDeleted": "Utilisateur supprimé avec succès",
-    "userActionFailed": "L'action a échoué. Veuillez réessayer."
+    "userActionFailed": "L'action a échoué. Veuillez réessayer.",
+    "column2fa": "2FA",
+    "enabled": "Activé",
+    "disabled": "Désactivé",
+    "enable2fa": "Activer 2FA",
+    "disable2fa": "Désactiver 2FA",
+    "2faEnabled": "2FA activé avec succès",
+    "2faDisabled": "2FA désactivé avec succès",
+    "cannotToggleSelf": "Vous ne pouvez pas modifier vos propres paramètres 2FA ici"
   },
   "breakingNews": {
     "pageTitle": "Créer un Flash Info",
@@ -316,6 +350,32 @@
       "1": "Gardez les titres courts et factuels",
       "2": "Définissez une date d'expiration pour retirer automatiquement du bandeau"
     }
+  },
+  "terms": {
+    "pageTitle": "Conditions Générales",
+    "pageSubtitle": "Gérer les versions des conditions générales d'utilisation",
+    "newVersion": "Nouvelle version",
+    "cancel": "Annuler",
+    "versionLabel": "Version",
+    "versionPlaceholder": "ex. 1.0.0",
+    "contentLabel": "Contenu",
+    "contentPlaceholder": "Rédigez les conditions générales complètes...",
+    "create": "Créer une version",
+    "created": "Version des conditions créée avec succès !",
+    "failed": "Échec de la création de la version",
+    "activated": "Version activée avec succès !",
+    "activateFailed": "Échec de l'activation de la version",
+    "activate": "Définir comme active",
+    "viewContent": "Voir",
+    "active": "Active",
+    "inactive": "Brouillon",
+    "columnVersion": "Version",
+    "columnStatus": "Statut",
+    "columnDate": "Créée le",
+    "columnActions": "Actions",
+    "noTerms": "Aucune version des conditions pour l'instant",
+    "contentTitle": "Contenu des conditions",
+    "close": "Fermer"
   },
   "categories": {
     "pageTitle": "Catégories",

@@ -46,7 +46,8 @@
     "users": "Users",
     "collapse": "Collapse",
     "breakingNews": "Breaking News",
-    "categories": "Categories"
+    "categories": "Categories",
+    "terms": "Terms"
   },
   "user": {
     "profileTitle": "Admin User",
@@ -70,7 +71,32 @@
     "rememberMe": "Remember me",
     "welcomeHeading": "Vand Admin Panel",
     "welcomeDescription": "Manage your content, users, and platform settings from one central dashboard.",
-    "backToDashboard": "Back to Dashboard"
+    "backToDashboard": "Back to Dashboard",
+    "twoFactorTitle": "Two-Factor Authentication",
+    "twoFactorSubtitle": "Enter the 6-digit code from your authenticator app",
+    "otpLabel": "Verification Code",
+    "otpPlaceholder": "000000",
+    "verify": "Verify",
+    "verifying": "Verifying...",
+    "backToLogin": "Back to login",
+    "invalidOtp": "Invalid or expired verification code. Please try again."
+  },
+  "changePassword": {
+    "title": "Set Your Password",
+    "subtitle": "You must set a new password before continuing",
+    "currentPasswordLabel": "Temporary Password",
+    "currentPasswordPlaceholder": "Enter your temporary password",
+    "newPasswordLabel": "New Password",
+    "newPasswordPlaceholder": "Enter a strong password",
+    "confirmPasswordLabel": "Confirm New Password",
+    "confirmPasswordPlaceholder": "Re-enter your new password",
+    "passwordMismatch": "Passwords do not match",
+    "acceptTermsLabel": "I accept the terms and conditions",
+    "acceptTermsRequired": "You must accept the terms and conditions",
+    "submit": "Set Password & Continue",
+    "submitting": "Saving...",
+    "success": "Password updated successfully",
+    "failed": "Failed to update password. Please try again."
   },
   "createArticle": {
     "pageTitle": "Create Article",
@@ -286,7 +312,15 @@
     "userActivated": "User activated successfully",
     "userDeactivated": "User deactivated successfully",
     "userDeleted": "User deleted successfully",
-    "userActionFailed": "Action failed. Please try again."
+    "userActionFailed": "Action failed. Please try again.",
+    "column2fa": "2FA",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "enable2fa": "Enable 2FA",
+    "disable2fa": "Disable 2FA",
+    "2faEnabled": "2FA enabled successfully",
+    "2faDisabled": "2FA disabled successfully",
+    "cannotToggleSelf": "You cannot change your own 2FA settings here"
   },
   "breakingNews": {
     "pageTitle": "Create Breaking News",
@@ -316,6 +350,32 @@
       "1": "Keep headlines short and factual",
       "2": "Set an expiry time to automatically remove from the ticker"
     }
+  },
+  "terms": {
+    "pageTitle": "Terms & Conditions",
+    "pageSubtitle": "Manage terms and conditions versions",
+    "newVersion": "New Version",
+    "cancel": "Cancel",
+    "versionLabel": "Version",
+    "versionPlaceholder": "e.g. 1.0.0",
+    "contentLabel": "Content",
+    "contentPlaceholder": "Write the full terms and conditions...",
+    "create": "Create Version",
+    "created": "Terms version created successfully!",
+    "failed": "Failed to create terms version",
+    "activated": "Terms version activated successfully!",
+    "activateFailed": "Failed to activate terms version",
+    "activate": "Set Active",
+    "viewContent": "View",
+    "active": "Active",
+    "inactive": "Draft",
+    "columnVersion": "Version",
+    "columnStatus": "Status",
+    "columnDate": "Created",
+    "columnActions": "Actions",
+    "noTerms": "No terms versions yet",
+    "contentTitle": "Terms Content",
+    "close": "Close"
   },
   "categories": {
     "pageTitle": "Categories",

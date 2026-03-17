@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getUsers, getRoles, activateUser, deactivateUser, deleteUser } from '@org/api';
+import { getUsers, getRoles, activateUser, deactivateUser, deleteUser, enable2fa, disable2fa } from '@org/api';
+import { getMe } from '@org/api';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
@@ -33,6 +34,8 @@ import {
   XCircle,
   Power,
   Trash2,
+  ShieldCheck,
+  ShieldOff,
 } from 'lucide-react';
 
 export default function UsersPage() {
@@ -69,6 +72,29 @@ export default function UsersPage() {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
     },
     onError: () => toast.error(t('userActionFailed')),
+  });
+
+  const enable2faMutation = useMutation({
+    mutationFn: enable2fa,
+    onSuccess: () => {
+      toast.success(t('2faEnabled'));
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+    onError: () => toast.error(t('userActionFailed')),
+  });
+
+  const disable2faMutation = useMutation({
+    mutationFn: disable2fa,
+    onSuccess: () => {
+      toast.success(t('2faDisabled'));
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+    onError: () => toast.error(t('userActionFailed')),
+  });
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['me'],
+    queryFn: getMe,
   });
 
   const { data: roles = [] } = useQuery({
@@ -198,6 +224,9 @@ export default function UsersPage() {
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">
                       {t('columnDate')}
                     </th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden sm:table-cell">
+                      {t('column2fa')}
+                    </th>
                     <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       {t('columnActions')}
                     </th>
@@ -292,9 +321,56 @@ export default function UsersPage() {
                         </span>
                       </td>
 
+                      {/* 2FA Status */}
+                      <td className="px-4 py-3 hidden sm:table-cell">
+                        {user.twoFactorEnabled ? (
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                            <ShieldCheck className="h-3 w-3" />
+                            <span>{t('enabled')}</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+                            <ShieldOff className="h-3 w-3" />
+                            <span>{t('disabled')}</span>
+                          </span>
+                        )}
+                      </td>
+
                       {/* Actions */}
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end space-x-1">
+                          {/* 2FA toggle — disabled for self */}
+                          {user.twoFactorEnabled ? (
+                            <button
+                              onClick={() => {
+                                if (currentUser?.id === user.id) {
+                                  toast.error(t('cannotToggleSelf'));
+                                  return;
+                                }
+                                disable2faMutation.mutate(user.id);
+                              }}
+                              disabled={disable2faMutation.isPending || currentUser?.id === user.id}
+                              className="p-1.5 rounded-lg text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors disabled:opacity-50"
+                              title={currentUser?.id === user.id ? t('cannotToggleSelf') : t('disable2fa')}
+                            >
+                              <ShieldCheck className="h-4 w-4" />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                if (currentUser?.id === user.id) {
+                                  toast.error(t('cannotToggleSelf'));
+                                  return;
+                                }
+                                enable2faMutation.mutate(user.id);
+                              }}
+                              disabled={enable2faMutation.isPending || currentUser?.id === user.id}
+                              className="p-1.5 rounded-lg text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+                              title={currentUser?.id === user.id ? t('cannotToggleSelf') : t('enable2fa')}
+                            >
+                              <ShieldOff className="h-4 w-4" />
+                            </button>
+                          )}
                           {user.isActive ? (
                             <button
                               onClick={() => deactivateMutation.mutate(user.id)}

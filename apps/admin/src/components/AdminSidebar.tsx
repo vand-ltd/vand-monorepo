@@ -15,6 +15,7 @@ import {
   PanelLeftOpen,
   Zap,
   FolderPlus,
+  ScrollText,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -44,6 +45,7 @@ export function AdminSidebar() {
     { href: '/categories' as const, label: t('categories'), icon: FolderPlus, auth: true, adminOnly: true },
     { href: '/users' as const, label: t('users'), icon: Users, auth: true, adminOnly: true },
     { href: '/create-user' as const, label: t('createUser'), icon: UserPlus, auth: true, adminOnly: true },
+    { href: '/terms' as const, label: t('terms'), icon: ScrollText, auth: true, adminOnly: true },
   ].filter((link) => {
     if (link.auth && !isLoggedIn) return false;
     if (link.hideWhenAuth && isLoggedIn) return false;
