@@ -43,6 +43,17 @@ const featuredTypeStyles: Record<string, { bg: string; text: string; darkBg: str
   Spotlight: { bg: '#7c3aed', text: '#ffffff', darkBg: '#a78bfa', darkText: '#1f2937', icon: '✨' },
 };
 
+function SponsoredBadge({ className = "" }: { className?: string }) {
+  return (
+    <span
+      className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-1 ${className}`}
+      style={{ backgroundColor: 'light-dark(#fef3c7, rgba(180,83,9,0.35))', color: 'light-dark(#92400e, #fcd34d)' }}
+    >
+      $ SPONSORED
+    </span>
+  );
+}
+
 function FeaturedBadge({ type, className = "" }: { type?: string; className?: string }) {
   if (!type || !featuredTypeStyles[type]) return null;
   const style = featuredTypeStyles[type];
@@ -328,7 +339,8 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 
               {/* Category badges — top-left */}
-              <div className="absolute top-3 left-3 sm:top-4 sm:left-4 lg:top-6 lg:left-6 flex items-center gap-1.5">
+              <div className="absolute top-3 left-3 sm:top-4 sm:left-4 lg:top-6 lg:left-6 flex flex-wrap items-center gap-1.5">
+                {heroArticle.isSponsored && <SponsoredBadge />}
                 <FeaturedBadge type={heroArticle.featuredType} />
                 <CategoryBadges article={heroArticle} />
               </div>
@@ -383,7 +395,8 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
 
                   {/* Category badges — top-left */}
-                  <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                  <div className="absolute top-3 left-3 flex flex-wrap items-center gap-1.5">
+                    {article.isSponsored && <SponsoredBadge />}
                     <FeaturedBadge type={article.featuredType} />
                     <CategoryBadges article={article} />
                   </div>
@@ -432,7 +445,8 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
                   className="absolute inset-0"
                   imageClassName="group-hover:scale-105 transition-transform duration-500"
                 />
-                <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                <div className="absolute top-3 left-3 flex flex-wrap items-center gap-1.5">
+                  {spotlightArticles[0].isSponsored && <SponsoredBadge />}
                   <FeaturedBadge type={spotlightArticles[0].featuredType} />
                   <CategoryBadges article={spotlightArticles[0]} />
                 </div>
@@ -476,7 +490,8 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
                         className="absolute inset-0"
                         imageClassName="group-hover:scale-105 transition-transform duration-500"
                       />
-                      <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                      <div className="absolute top-3 left-3 flex flex-wrap items-center gap-1.5">
+                        {article.isSponsored && <SponsoredBadge />}
                         <FeaturedBadge type={article.featuredType} />
                         <CategoryBadges article={article} />
                       </div>
@@ -616,6 +631,7 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
                   <div className="flex-1 min-w-0 flex flex-col justify-between">
                     <div>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-2 text-xs text-gray-400">
+                        {article.isSponsored && <SponsoredBadge />}
                         <div className="flex items-center space-x-1">
                           <Clock className="h-3 w-3" />
                           <span>{formatTimeAgo(article.createdAt, locale)}</span>

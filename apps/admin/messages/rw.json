@@ -47,17 +47,24 @@
     "collapse": "Gufunga",
     "breakingNews": "Amakuru y'ingutu",
     "categories": "Ibyiciro",
-    "terms": "Amabwiriza"
+    "terms": "Amabwiriza",
+    "editProfile": "Hindura Umwirondoro",
+    "createSponsoredArticle": "Inyandiko Yishyuriwe"
   },
   "user": {
     "profileTitle": "Umukoresha wa Admin",
     "fullName": "Amazina yose",
+    "displayName": "Izina rigaragara",
     "email": "Imeyili",
     "phone": "Telefoni",
     "role": "Umurimo",
     "adminRole": "Umuyobozi",
     "status": "Imiterere",
-    "active": "Arakora"
+    "active": "Arakora",
+    "bio": "Ubuzima bwagufi",
+    "xLink": "X (Twitter)",
+    "linkedinLink": "LinkedIn",
+    "editProfile": "Hindura Umwirondoro"
   },
   "login": {
     "title": "Kwinjira muri Admin",
@@ -150,6 +157,15 @@
     "articleCreated": "Inkuru yanditswe neza!",
     "articleFailed": "Kwandika inkuru byanze. Ongera ugerageze.",
     "languageMismatch": "Ururimi wahisemo ntiruhura n'ururimi rw'urubuga rwawe. Hindura ururimi rw'urubuga cyangwa uhindure ururimi rw'inkuru."
+  },
+  "createSponsoredArticle": {
+    "pageTitle": "Andika inkuru yishyuriwe",
+    "sponsorshipLabel": "Ubwishyu",
+    "sponsoredByLabel": "Yishyuriwe na",
+    "sponsoredByPlaceholder": "Izina ry'ikigo cyangwa ikompanyi",
+    "sponsoredUntilLabel": "Yishyuriwe kugeza",
+    "articleCreated": "Inkuru yishyuriwe yanditswe neza!",
+    "articleFailed": "Kwandika inkuru yishyuriwe byanze. Ongera ugerageze."
   },
   "articles": {
     "pageTitle": "Inyandiko",
@@ -264,6 +280,25 @@
     "editArticle": "Hindura inkuru",
     "profileNotFound": "Umwirondoro w'umwanditsi ntibashije kuboneka",
     "pageInfo": "Urupapuro {current} kuri {total}"
+  },
+  "editProfile": {
+    "pageTitle": "Hindura Umwirondoro",
+    "pageSubtitle": "Vugurura izina, ifoto, n'ubuzima bwawe",
+    "avatarLabel": "Ifoto y'umwirondoro",
+    "avatarHint": "Kanda kugirango ubone ifoto nshya",
+    "displayNameLabel": "Izina rigaragara",
+    "displayNamePlaceholder": "Injiza izina rigaragara",
+    "bioLabel": "Ubuzima bwagufi",
+    "bioPlaceholder": "Andika ubuzima bwagufi...",
+    "xLinkLabel": "X (Twitter)",
+    "xLinkPlaceholder": "https://x.com/izina",
+    "linkedinLinkLabel": "LinkedIn",
+    "linkedinLinkPlaceholder": "https://linkedin.com/in/izina",
+    "save": "Bika Impinduka",
+    "saving": "Kubika...",
+    "saved": "Umwirondoro wavuguruwe neza!",
+    "failed": "Guvugurura umwirondoro byanze. Ongera ugerageze.",
+    "uploading": "Kohereza..."
   },
   "createUser": {
     "pageTitle": "Kora umukoresha",

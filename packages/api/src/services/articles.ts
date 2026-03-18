@@ -10,6 +10,9 @@ export async function createArticle(articleData: {
   tagIds?: string[];
   isBreaking?: boolean;
   breakingUntil?: string;
+  isSponsored?: boolean;
+  sponsoredBy?: string;
+  sponsoredUntil?: string;
 }): Promise<any> {
   const { data } = await api.post('/api/menyesha/articles', articleData);
   return data;

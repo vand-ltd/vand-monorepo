@@ -26,6 +26,8 @@ import {
   ChevronRight,
   Tag,
   X,
+  Pencil,
+  ExternalLink,
 } from 'lucide-react';
 import { AuthGuard } from '@/components/AuthGuard';
 import {
@@ -207,8 +209,12 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Profile Card */}
               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div className="bg-gradient-brand px-6 py-8 text-center">
-                  <div className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center mx-auto mb-4 border-2 border-white/30">
+                {/* Header */}
+                <div className="bg-gradient-brand px-6 py-8 text-center relative">
+                  <Link href="/profile" className="absolute top-3 right-3 p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors" title={u('editProfile')}>
+                    <Pencil className="h-4 w-4 text-white" />
+                  </Link>
+                  <div className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center mx-auto mb-4 border-2 border-white/30 relative">
                     {me.internalProfile?.avatar ? (
                       <Image
                         src={me.internalProfile.avatar}
@@ -223,7 +229,9 @@ export default function DashboardPage() {
                       </div>
                     )}
                   </div>
-                  <h2 className="text-xl font-bold text-white">{me.fullName}</h2>
+                  <h2 className="text-xl font-bold text-white">
+                    {me.internalProfile?.displayName || me.fullName}
+                  </h2>
                   {me.internalProfile?.role?.displayName && (
                     <div className="flex items-center justify-center space-x-2 mt-2">
                       <Shield className="h-4 w-4 text-[#F59E0B]" />
@@ -235,19 +243,34 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="px-6 py-6 space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-[#003153]/10 dark:bg-[#003153]/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <User className="h-5 w-5 text-[#003153] dark:text-[#F59E0B]" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                        {u('fullName')}
+                  {/* Bio */}
+                  {me.internalProfile?.bio && (
+                    <div className="relative rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 px-4 py-3">
+                      <span className="absolute -top-2.5 left-3 text-3xl leading-none text-[#003153]/20 dark:text-[#F59E0B]/20 font-serif select-none">&ldquo;</span>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed pt-1 italic">
+                        {me.internalProfile.bio}
                       </p>
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                        {me.fullName}
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 font-medium uppercase tracking-wide">
+                        {u('bio')}
                       </p>
                     </div>
-                  </div>
+                  )}
+
+                  {me.internalProfile?.displayName && me.internalProfile.displayName !== me.fullName && (
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-[#003153]/10 dark:bg-[#003153]/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <User className="h-5 w-5 text-[#003153] dark:text-[#F59E0B]" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                          {u('fullName')}
+                        </p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                          {me.fullName}
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-[#003153]/10 dark:bg-[#003153]/30 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -278,6 +301,44 @@ export default function DashboardPage() {
                       </div>
                     </div>
                   )}
+
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-[#003153]/10 dark:bg-[#003153]/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <ExternalLink className="h-5 w-5 text-[#003153] dark:text-[#F59E0B]" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                        {u('xLink')}
+                      </p>
+                      {me.internalProfile?.xLink ? (
+                        <a href={me.internalProfile.xLink} target="_blank" rel="noopener noreferrer"
+                          className="text-sm font-semibold text-[#003153] dark:text-[#F59E0B] hover:underline truncate block">
+                          {me.internalProfile.xLink}
+                        </a>
+                      ) : (
+                        <p className="text-sm font-semibold text-gray-400 dark:text-gray-500">—</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-[#003153]/10 dark:bg-[#003153]/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <ExternalLink className="h-5 w-5 text-[#003153] dark:text-[#F59E0B]" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                        {u('linkedinLink')}
+                      </p>
+                      {me.internalProfile?.linkedinLink ? (
+                        <a href={me.internalProfile.linkedinLink} target="_blank" rel="noopener noreferrer"
+                          className="text-sm font-semibold text-[#003153] dark:text-[#F59E0B] hover:underline truncate block">
+                          {me.internalProfile.linkedinLink}
+                        </a>
+                      ) : (
+                        <p className="text-sm font-semibold text-gray-400 dark:text-gray-500">—</p>
+                      )}
+                    </div>
+                  </div>
 
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-green-50 dark:bg-green-900/30 rounded-lg flex items-center justify-center flex-shrink-0">

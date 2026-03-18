@@ -47,17 +47,24 @@
     "collapse": "Réduire",
     "breakingNews": "Flash Info",
     "categories": "Catégories",
-    "terms": "Conditions"
+    "terms": "Conditions",
+    "editProfile": "Modifier le profil",
+    "createSponsoredArticle": "Article Sponsorisé"
   },
   "user": {
     "profileTitle": "Utilisateur Admin",
     "fullName": "Nom complet",
+    "displayName": "Nom affiché",
     "email": "E-mail",
     "phone": "Téléphone",
     "role": "Rôle",
     "adminRole": "Administrateur",
     "status": "Statut",
-    "active": "Actif"
+    "active": "Actif",
+    "bio": "Biographie",
+    "xLink": "X (Twitter)",
+    "linkedinLink": "LinkedIn",
+    "editProfile": "Modifier le profil"
   },
   "login": {
     "title": "Connexion Admin",
@@ -150,6 +157,15 @@
     "articleCreated": "Article créé avec succès !",
     "articleFailed": "Échec de la création de l'article. Veuillez réessayer.",
     "languageMismatch": "La langue sélectionnée ne correspond pas à votre locale actuelle. Veuillez changer de locale ou modifier la langue de l'article."
+  },
+  "createSponsoredArticle": {
+    "pageTitle": "Créer un article sponsorisé",
+    "sponsorshipLabel": "Parrainage",
+    "sponsoredByLabel": "Sponsorisé par",
+    "sponsoredByPlaceholder": "Nom de la marque ou de l'entreprise",
+    "sponsoredUntilLabel": "Sponsorisé jusqu'au",
+    "articleCreated": "Article sponsorisé créé avec succès !",
+    "articleFailed": "Échec de la création de l'article sponsorisé. Veuillez réessayer."
   },
   "articles": {
     "pageTitle": "Articles",
@@ -264,6 +280,25 @@
     "editArticle": "Modifier l'article",
     "profileNotFound": "Profil de l'auteur introuvable",
     "pageInfo": "Page {current} sur {total}"
+  },
+  "editProfile": {
+    "pageTitle": "Modifier le profil",
+    "pageSubtitle": "Mettez à jour votre nom, avatar et biographie",
+    "avatarLabel": "Photo de profil",
+    "avatarHint": "Cliquez pour télécharger une nouvelle photo",
+    "displayNameLabel": "Nom affiché",
+    "displayNamePlaceholder": "Entrez votre nom affiché",
+    "bioLabel": "Biographie",
+    "bioPlaceholder": "Rédigez une courte biographie...",
+    "xLinkLabel": "X (Twitter)",
+    "xLinkPlaceholder": "https://x.com/nomutilisateur",
+    "linkedinLinkLabel": "LinkedIn",
+    "linkedinLinkPlaceholder": "https://linkedin.com/in/nomutilisateur",
+    "save": "Enregistrer les modifications",
+    "saving": "Enregistrement...",
+    "saved": "Profil mis à jour avec succès !",
+    "failed": "Échec de la mise à jour du profil. Veuillez réessayer.",
+    "uploading": "Téléchargement..."
   },
   "createUser": {
     "pageTitle": "Créer un utilisateur",

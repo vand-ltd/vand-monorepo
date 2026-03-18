@@ -47,17 +47,24 @@
     "collapse": "Collapse",
     "breakingNews": "Breaking News",
     "categories": "Categories",
-    "terms": "Terms"
+    "terms": "Terms",
+    "editProfile": "Edit Profile",
+    "createSponsoredArticle": "Sponsored Article"
   },
   "user": {
     "profileTitle": "Admin User",
     "fullName": "Full Name",
+    "displayName": "Display Name",
     "email": "Email",
     "phone": "Phone",
     "role": "Role",
     "adminRole": "Administrator",
     "status": "Status",
-    "active": "Active"
+    "active": "Active",
+    "bio": "Bio",
+    "xLink": "X (Twitter)",
+    "linkedinLink": "LinkedIn",
+    "editProfile": "Edit Profile"
   },
   "login": {
     "title": "Admin Login",
@@ -150,6 +157,15 @@
     "articleCreated": "Article created successfully!",
     "articleFailed": "Failed to create article. Please try again.",
     "languageMismatch": "The selected article language does not match your current locale. Please switch your locale or change the article language."
+  },
+  "createSponsoredArticle": {
+    "pageTitle": "Create Sponsored Article",
+    "sponsorshipLabel": "Sponsorship",
+    "sponsoredByLabel": "Sponsored By",
+    "sponsoredByPlaceholder": "Brand or company name",
+    "sponsoredUntilLabel": "Sponsored Until",
+    "articleCreated": "Sponsored article created successfully!",
+    "articleFailed": "Failed to create sponsored article. Please try again."
   },
   "articles": {
     "pageTitle": "Articles",
@@ -264,6 +280,25 @@
     "editArticle": "Edit article",
     "profileNotFound": "Author profile not found",
     "pageInfo": "Page {current} of {total}"
+  },
+  "editProfile": {
+    "pageTitle": "Edit Profile",
+    "pageSubtitle": "Update your display name, avatar, and bio",
+    "avatarLabel": "Profile Photo",
+    "avatarHint": "Click to upload a new photo",
+    "displayNameLabel": "Display Name",
+    "displayNamePlaceholder": "Enter your display name",
+    "bioLabel": "Bio",
+    "bioPlaceholder": "Write a short bio...",
+    "xLinkLabel": "X (Twitter)",
+    "xLinkPlaceholder": "https://x.com/username",
+    "linkedinLinkLabel": "LinkedIn",
+    "linkedinLinkPlaceholder": "https://linkedin.com/in/username",
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "saved": "Profile updated successfully!",
+    "failed": "Failed to update profile. Please try again.",
+    "uploading": "Uploading..."
   },
   "createUser": {
     "pageTitle": "Create User",

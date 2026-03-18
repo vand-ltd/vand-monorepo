@@ -39,7 +39,9 @@
     "joined": "Yinjiye",
     "totalArticles": "Inyandiko {count}",
     "articles": "Inyandiko",
-    "noArticles": "Nta nyandiko zabonetse"
+    "noArticles": "Nta nyandiko zabonetse",
+    "followOn": "Kurikira kuri",
+    "about": "Ibyerekeye"
   },
   "comments": {
     "title": "Ibitekerezo",

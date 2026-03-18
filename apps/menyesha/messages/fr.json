@@ -39,7 +39,9 @@
     "joined": "Inscrit",
     "totalArticles": "{count} articles",
     "articles": "Articles",
-    "noArticles": "Aucun article trouvé"
+    "noArticles": "Aucun article trouvé",
+    "followOn": "Suivre sur",
+    "about": "À propos"
   },
   "comments": {
     "title": "Commentaires",

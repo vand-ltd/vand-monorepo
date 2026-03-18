@@ -258,6 +258,22 @@ export default function ArticleView({ slug }: { slug: string }) {
         </Link>
       </div>
 
+      {/* Sponsored Content Banner */}
+      {article.isSponsored && (
+        <div className="mb-4">
+          <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/20">
+            <span className="px-2.5 py-1 rounded text-xs font-bold uppercase tracking-widest bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-400">
+              $ Sponsored Content
+            </span>
+            {article.sponsoredBy && (
+              <span className="text-sm text-amber-700 dark:text-amber-400">
+                by <span className="font-semibold">{article.sponsoredBy}</span>
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Breaking News Banner */}
       {article.isBreaking && (!article.breakingUntil || new Date(article.breakingUntil) > new Date()) && (
         <div className="mb-4 flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-red-600 to-red-700 text-white animate-pulse-slow">
@@ -332,6 +348,15 @@ export default function ArticleView({ slug }: { slug: string }) {
           <div className="px-6 pt-4">
             <p className="text-lg text-gray-600 dark:text-gray-400 leading-relaxed">
               {article.excerpt}
+            </p>
+          </div>
+        )}
+
+        {/* Sponsored by line */}
+        {article.isSponsored && article.sponsoredBy && (
+          <div className="px-6 pt-3 pb-1">
+            <p className="text-sm text-amber-700 dark:text-amber-400 font-medium">
+              Sponsored by {article.sponsoredBy}
             </p>
           </div>
         )}

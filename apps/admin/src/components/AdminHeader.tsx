@@ -17,8 +17,11 @@ import {
   Users,
   Zap,
   FolderPlus,
+  User,
+  BadgeDollarSign,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 export function AdminHeader() {
   const t = useTranslations('nav');
@@ -27,10 +30,12 @@ export function AdminHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
 
   useEffect(() => {
     setIsLoggedIn(!!localStorage.getItem('token'));
     setUserRole(localStorage.getItem('userRole') || '');
+    setAvatarUrl(localStorage.getItem('avatarUrl') || '');
   }, [pathname]);
 
   const isLoginPage = pathname.endsWith('/login');
@@ -41,6 +46,7 @@ export function AdminHeader() {
     { href: '/articles' as const, label: t('articles'), icon: List, auth: true, adminOnly: true },
     { href: '/create-article' as const, label: t('createArticle'), icon: FileText, auth: true },
     { href: '/breaking-news' as const, label: t('breakingNews'), icon: Zap, auth: true },
+    { href: '/create-sponsored-article' as const, label: t('createSponsoredArticle'), icon: BadgeDollarSign, auth: true, adminOnly: true },
     { href: '/categories' as const, label: t('categories'), icon: FolderPlus, auth: true, adminOnly: true },
     { href: '/users' as const, label: t('users'), icon: Users, auth: true, adminOnly: true },
     { href: '/create-user' as const, label: t('createUser'), icon: UserPlus, auth: true, adminOnly: true },
@@ -75,18 +81,32 @@ export function AdminHeader() {
             <LanguageSwitcher />
             <ToggleMode />
             {isLoggedIn && !isLoginPage && (
-              <button
-                onClick={() => {
-                  localStorage.removeItem('token');
-                  localStorage.removeItem('userRole');
-                  setIsLoggedIn(false);
-                  window.location.href = `/${locale}/login`;
-                }}
-                className="hidden md:flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                title={t('logout')}
-              >
-                <LogOut className="h-4 w-4" />
-              </button>
+              <>
+                <Link
+                  href="/profile"
+                  className="hidden md:flex relative w-8 h-8 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 items-center justify-center hover:ring-2 hover:ring-[#003153] dark:hover:ring-[#F59E0B] transition-all"
+                  title={t('editProfile')}
+                >
+                  {avatarUrl ? (
+                    <Image src={avatarUrl} alt="" fill className="object-cover" />
+                  ) : (
+                    <User className="h-4 w-4 text-gray-400" />
+                  )}
+                </Link>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('userRole');
+                    localStorage.removeItem('avatarUrl');
+                    setIsLoggedIn(false);
+                    window.location.href = `/${locale}/login`;
+                  }}
+                  className="hidden md:flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  title={t('logout')}
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </>
             )}
             {!isLoginPage && (
               <button
