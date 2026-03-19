@@ -6,7 +6,6 @@ import {
   FileText,
   Eye,
   Save,
-  Send,
   ChevronDown,
   ImagePlus,
   X,
@@ -14,11 +13,12 @@ import {
   Tag,
   Clock,
   Loader2,
+  Plus,
 } from 'lucide-react';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { AuthGuard } from '@/components/AuthGuard';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { getCategories, createArticle, uploadMedia, getTags } from '@org/api';
+import { getCategories, createArticle, uploadMedia, getTags, assignTagIds, assignArticleTags } from '@org/api';
 import { useRouter } from '@/i18n/navigation';
 import { toast } from 'sonner';
 
@@ -34,20 +34,21 @@ export default function CreateArticlePage() {
   const [content, setContent] = useState('');
   const [contentJson, setContentJson] = useState({});
   const [category, setCategory] = useState('');
-  const [tags, setTags] = useState<{ id: string; label: string }[]>([]);
+  const [tags, setTags] = useState<{ id: string; label: string; isNew?: boolean; name?: string; translations?: { label: string; language: string }[] }[]>([]);
   const [tagInput, setTagInput] = useState('');
+  const [debouncedTagInput, setDebouncedTagInput] = useState('');
   const [showTagDropdown, setShowTagDropdown] = useState(false);
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [thumbnailId, setThumbnailId] = useState<string | null>(null);
   const [isPreview, setIsPreview] = useState(false);
   const [language, setLanguage] = useState(locale);
-  const [userRole, setUserRole] = useState('');
-
   const tagDropdownRef = useRef<HTMLDivElement>(null);
 
+  // Debounce tag search input
   useEffect(() => {
-    setUserRole(localStorage.getItem('userRole') || '');
-  }, []);
+    const timer = setTimeout(() => setDebouncedTagInput(tagInput), 300);
+    return () => clearTimeout(timer);
+  }, [tagInput]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -64,20 +65,41 @@ export default function CreateArticlePage() {
     queryFn: () => getCategories(language),
   });
 
-  const { data: availableTags = [] } = useQuery({
-    queryKey: ['tags', language],
-    queryFn: () => getTags(language),
+  const { data: searchedTags = [], isFetching: tagsSearching } = useQuery({
+    queryKey: ['tags-search', language, debouncedTagInput],
+    queryFn: () => getTags(language, debouncedTagInput || undefined),
+    enabled: showTagDropdown,
   });
 
-  const filteredTags = availableTags.filter(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (tag: any) =>
-      tag.label.toLowerCase().includes(tagInput.toLowerCase()) &&
-      !tags.some((t) => t.id === tag.id)
-  );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const filteredTags = searchedTags.filter((tag: any) => !tags.some((t) => t.id === tag.id));
 
   const addTag = (tag: { id: string; label: string }) => {
+    if (tags.length >= 5) {
+      toast.error(t('maxTags'));
+      return;
+    }
     setTags([...tags, tag]);
+    setTagInput('');
+    setShowTagDropdown(false);
+  };
+
+  const addNewTag = () => {
+    if (tags.length >= 5) {
+      toast.error(t('maxTags'));
+      return;
+    }
+    const name = tagInput.trim().toLowerCase().replace(/\s+/g, '-');
+    const label = tagInput.trim();
+    setTags([...tags, {
+      id: `new-${Date.now()}`,
+      label,
+      isNew: true,
+      name,
+      translations: [
+        { label, language: locale },
+      ],
+    }]);
     setTagInput('');
     setShowTagDropdown(false);
   };
@@ -106,27 +128,46 @@ export default function CreateArticlePage() {
   };
 
   const articleMutation = useMutation({
-    mutationFn: createArticle,
+    mutationFn: async () => {
+      // 1. Create article
+      const result = await createArticle({
+        title,
+        excerpt: subtitle,
+        language,
+        categoryId: category,
+        content: contentJson,
+        ...(thumbnailId ? { thumbnailId } : {}),
+      });
+      const articleId = result.data?.id || result.id;
+
+      // 2. Assign tags if any
+      if (tags.length > 0 && articleId) {
+        const existingTags = tags.filter((t) => !t.isNew);
+        const newTags = tags.filter((t) => t.isNew);
+
+        if (existingTags.length > 0) {
+          await assignTagIds(articleId, existingTags.map((t) => t.id));
+        }
+        if (newTags.length > 0) {
+          await assignArticleTags(articleId, newTags.map((t) => ({
+            name: t.name!,
+            translations: t.translations!,
+          })));
+        }
+      }
+    },
     onSuccess: () => {
       toast.success(t('articleCreated'));
       router.push('/');
     },
     onError: (error: any) => {
       const message = error?.response?.data?.message || t('articleFailed');
-      toast.error(message);
+      toast.error(Array.isArray(message) ? message.join(', ') : message);
     },
-  })
+  });
 
   const handleSubmit = () => {
-    articleMutation.mutate({
-      title,
-      excerpt: subtitle,
-      language,
-      categoryId: category,
-      content: contentJson,
-      ...(thumbnailId ? { thumbnailId } : {}),
-      tagIds: tags.map((t) => t.id),
-    });
+    articleMutation.mutate();
   };
 
   return (
@@ -168,28 +209,6 @@ export default function CreateArticlePage() {
                 {articleMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 {t('saveDraft')}
               </button>
-              {userRole !== 'reporter' && (
-                <button
-                  type="button"
-                  onClick={() => handleSubmit()}
-                  disabled={articleMutation.isPending}
-                  className="flex items-center gap-1.5 px-3 h-9 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm"
-                >
-                  {articleMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                  {t('submitForReview')}
-                </button>
-              )}
-              {userRole !== 'reporter' && (
-                <button
-                  type="button"
-                  onClick={() => handleSubmit()}
-                  disabled={articleMutation.isPending}
-                  className="flex items-center gap-1.5 px-4 h-9 text-sm font-semibold text-white bg-gradient-to-r from-[#003153] to-[#005F73] rounded-lg hover:opacity-90 transition-all shadow-sm"
-                >
-                  {articleMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                  {t('publish')}
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -392,19 +411,35 @@ export default function CreateArticlePage() {
                       placeholder={t('tagsPlaceholder')}
                       className="w-full h-10 px-3 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#003153]"
                     />
-                    {showTagDropdown && filteredTags.length > 0 && (
+                    {showTagDropdown && (tagInput.length > 0 || filteredTags.length > 0) && (
                       <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        {tagsSearching && (
+                          <div className="px-3 py-2 text-sm text-gray-400 flex items-center gap-2">
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            {t('searchingTags')}
+                          </div>
+                        )}
                         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                         {filteredTags.map((tag: any) => (
                           <button
                             key={tag.id}
                             type="button"
                             onClick={() => addTag({ id: tag.id, label: tag.label })}
-                            className="w-full text-left px-3 py-2 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors first:rounded-t-lg last:rounded-b-lg"
+                            className="w-full text-left px-3 py-2 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                           >
                             {tag.label}
                           </button>
                         ))}
+                        {!tagsSearching && filteredTags.length === 0 && tagInput.trim().length > 0 && (
+                          <button
+                            type="button"
+                            onClick={addNewTag}
+                            className="w-full text-left px-3 py-2 text-sm text-[#003153] dark:text-[#F59E0B] hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            {t('createTag', { name: tagInput.trim() })}
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>

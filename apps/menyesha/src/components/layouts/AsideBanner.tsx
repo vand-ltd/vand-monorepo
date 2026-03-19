@@ -4,7 +4,7 @@ import React, { ReactNode } from "react";
 import { TrendingUp, Clock, Eye, ArrowUp, Flame, Megaphone, Mail } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { getTrendingArticles } from "@org/api";
+import { getTrendingArticles, getAds } from "@org/api";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import Image from "next/image";
@@ -20,6 +20,44 @@ function formatViews(count: number): string {
   return String(count);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function AdCard({ ad }: { ad: any }) {
+  return (
+    <Card className="overflow-hidden !p-0 !gap-0">
+      <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer sponsored" className="block group">
+        <div className="relative w-full overflow-hidden">
+          <Image
+            src={ad.imageUrl}
+            alt={ad.title || 'Advertisement'}
+            width={300}
+            height={250}
+            className="w-full h-auto object-cover group-hover:scale-[1.02] transition-transform duration-300"
+          />
+        </div>
+        {ad.title && (
+          <div className="px-3 py-2 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800">
+            <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide">Ad · {ad.title}</p>
+          </div>
+        )}
+      </a>
+    </Card>
+  );
+}
+
+function AdPlaceholder({ size, label }: { size: string; label: string }) {
+  return (
+    <Card className="overflow-hidden !p-0 !gap-0">
+      <div className="w-full h-[250px] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex flex-col items-center justify-center text-center p-6">
+        <div className="w-12 h-12 rounded-xl bg-brand-primary/10 dark:bg-brand-accent/10 flex items-center justify-center mb-3">
+          <Megaphone className="h-6 w-6 text-brand-primary dark:text-brand-accent" />
+        </div>
+        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{label}</p>
+        <p className="text-[10px] text-gray-400 dark:text-gray-500">{size}</p>
+      </div>
+    </Card>
+  );
+}
+
 const AsideBanner = ({ children }: AsideBannerProps) => {
   const locale = useLocale();
   const t = useTranslations('sidebar');
@@ -29,19 +67,40 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
     queryFn: () => getTrendingArticles({ language: locale, limit: 5 }),
   });
 
+  const { data: sidebarAds = [] } = useQuery({
+    queryKey: ['ads-sidebar', locale],
+    queryFn: () => getAds({ placement: 'sidebar', language: locale }),
+  });
+
+  const { data: leaderboardAds = [] } = useQuery({
+    queryKey: ['ads-leaderboard', locale],
+    queryFn: () => getAds({ placement: 'leaderboard', language: locale }),
+  });
+
   const trendingStories = Array.isArray(trendingData) ? trendingData : trendingData?.articles ?? [];
 
   return (
     <>
       {/* Top Banner Ad */}
       <div className='bg-background border-b px-4'>
-        <div className="my-4 w-full max-w-[728px] mx-auto h-[100px] rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 flex items-center justify-center gap-3 text-sm text-gray-500 dark:text-gray-400">
-          <Megaphone className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-          <div className="text-center">
-            <p className="text-xs font-medium">{t('adSpaceAvailable')}</p>
-            <p className="text-[10px] text-gray-400 dark:text-gray-500">728 x 90 · {t('adLeaderboard')}</p>
+        {leaderboardAds.length > 0 ? (
+          <div className="my-4 w-full max-w-[728px] mx-auto">
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            {leaderboardAds.slice(0, 1).map((ad: any) => (
+              <a key={ad.id} href={ad.linkUrl} target="_blank" rel="noopener noreferrer sponsored" className="block">
+                <Image src={ad.imageUrl} alt={ad.title || 'Advertisement'} width={728} height={90} className="w-full h-auto object-cover rounded-lg" />
+              </a>
+            ))}
           </div>
-        </div>
+        ) : (
+          <div className="my-4 w-full max-w-[728px] mx-auto h-[100px] rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 flex items-center justify-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+            <Megaphone className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+            <div className="text-center">
+              <p className="text-xs font-medium">{t('adSpaceAvailable')}</p>
+              <p className="text-[10px] text-gray-400 dark:text-gray-500">728 x 90 · {t('adLeaderboard')}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       <main className='w-full bg-gray-50 dark:bg-gray-900/50 overflow-hidden'>
@@ -168,54 +227,26 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
                   <p className="text-xs text-white/80 leading-relaxed">
                     {t('advertiseDescription')}
                   </p>
-                  <div className="grid grid-cols-2 gap-2 text-[10px] text-white/70">
-                    <div className="flex items-center gap-1">
-                      <Eye className="h-3 w-3 text-brand-accent" />
-                      <span>{t('advertiseReach')}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <TrendingUp className="h-3 w-3 text-brand-accent" />
-                      <span>{t('advertiseGrowth')}</span>
-                    </div>
-                  </div>
                 </div>
               </div>
               <CardContent className="p-4">
-                <div className="space-y-3">
-                  <div className="w-full h-[200px] rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center text-center p-4">
-                    <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-2">
-                      <Megaphone className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{t('adSpaceAvailable')}</p>
-                    <p className="text-[10px] text-gray-400 dark:text-gray-500">300 x 250</p>
-                  </div>
-                  <a
-                    href={`mailto:ads@menyesha.com?subject=${encodeURIComponent(t('advertiseEmailSubject'))}`}
-                    className="w-full flex items-center justify-center gap-1.5 bg-brand-primary hover:bg-brand-secondary text-white text-xs font-semibold py-2.5 px-4 rounded-lg transition-colors duration-200"
-                  >
-                    <Mail className="h-3.5 w-3.5" />
-                    {t('advertiseContact')}
-                  </a>
-                </div>
+                <a
+                  href={`mailto:ads@menyesha.com?subject=${encodeURIComponent(t('advertiseEmailSubject'))}`}
+                  className="w-full flex items-center justify-center gap-1.5 bg-brand-primary hover:bg-brand-secondary text-white text-xs font-semibold py-2.5 px-4 rounded-lg transition-colors duration-200"
+                >
+                  <Mail className="h-3.5 w-3.5" />
+                  {t('advertiseContact')}
+                </a>
               </CardContent>
             </Card>
 
-            {/* Second Ad Slot */}
-            <Card className="overflow-hidden !p-0 !gap-0">
-              <div className="w-full h-[250px] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex flex-col items-center justify-center text-center p-6 border-b border-gray-200 dark:border-gray-700">
-                <div className="w-12 h-12 rounded-xl bg-brand-primary/10 dark:bg-brand-accent/10 flex items-center justify-center mb-3">
-                  <Megaphone className="h-6 w-6 text-brand-primary dark:text-brand-accent" />
-                </div>
-                <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{t('adSpaceAvailable')}</p>
-                <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-3">300 x 250 · {t('adSidebar')}</p>
-                <a
-                  href={`mailto:ads@menyesha.com?subject=${encodeURIComponent(t('advertiseEmailSubject'))}`}
-                  className="text-xs font-medium text-brand-primary dark:text-brand-accent hover:underline"
-                >
-                  {t('advertiseContact')}
-                </a>
-              </div>
-            </Card>
+            {/* Sidebar Ads */}
+            {sidebarAds.length > 0 ? (
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              sidebarAds.map((ad: any) => <AdCard key={ad.id} ad={ad} />)
+            ) : (
+              <AdPlaceholder size="300 x 250" label={t('adSpaceAvailable')} />
+            )}
 
             {/* Back to Top */}
             <button 

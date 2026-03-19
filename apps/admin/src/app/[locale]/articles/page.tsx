@@ -118,7 +118,7 @@ export default function ArticlesPage() {
     },
     onError: (error: any) => {
       const message = error?.response?.data?.message || t('statusUpdateFailed');
-      toast.error(message);
+      toast.error(Array.isArray(message) ? message.join(', ') : message);
     },
   });
 

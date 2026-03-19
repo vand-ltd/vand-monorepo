@@ -18,6 +18,48 @@
   outline: none;
 }
 
+/* Image with caption in editor */
+.tiptap figure.image-with-caption {
+  margin: 1.5rem 0;
+  text-align: center;
+}
+
+.tiptap figure.image-with-caption img {
+  border-radius: 0.5rem;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+.tiptap figure.image-with-caption figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-style: italic;
+  text-align: center !important;
+}
+
+.dark .tiptap figure.image-with-caption figcaption {
+  color: #9ca3af;
+}
+
+/* Caption styling — override Tailwind Typography defaults */
+figcaption {
+  text-align: center !important;
+  font-style: italic !important;
+  color: #6b7280 !important;
+  font-size: 0.875rem !important;
+  margin-top: 0.5rem !important;
+}
+
+.dark figcaption {
+  color: #9ca3af !important;
+}
+
+figure {
+  text-align: center !important;
+}
+
 
 :root {
   --color-brand-primary: #003153;

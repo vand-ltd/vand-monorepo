@@ -47,7 +47,7 @@ export function AdminSidebar() {
     { href: '/users' as const, label: t('users'), icon: Users, auth: true, adminOnly: true },
     { href: '/create-user' as const, label: t('createUser'), icon: UserPlus, auth: true, adminOnly: true },
     { href: '/terms' as const, label: t('terms'), icon: ScrollText, auth: true, adminOnly: true },
-    { href: '/create-sponsored-article' as const, label: t('createSponsoredArticle'), icon: BadgeDollarSign, auth: true, adminOnly: true },
+    { href: '/create-sponsored-article' as const, label: t('createSponsoredArticle'), icon: BadgeDollarSign, auth: true },
   ].filter((link) => {
     if (link.auth && !isLoggedIn) return false;
     if (link.hideWhenAuth && isLoggedIn) return false;

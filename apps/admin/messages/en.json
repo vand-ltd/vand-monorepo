@@ -27,7 +27,9 @@
     "searchTags": "Search tags...",
     "assignAndSubmit": "Assign & Submit",
     "cancel": "Cancel",
+    "createTag": "Create \"{name}\"",
     "viewArticle": "View article",
+    "statusUpdated": "Article status updated",
     "pageInfo": "Page {current} of {total}"
   },
   "toggleTheme": {
@@ -131,7 +133,10 @@
     "selectCategory": "Select a category",
     "languageLabel": "Article Language",
     "tagsLabel": "Tags",
-    "tagsPlaceholder": "Add a tag and press Enter",
+    "tagsPlaceholder": "Search tags...",
+    "searchingTags": "Searching...",
+    "maxTags": "Maximum 5 tags per article",
+    "createTag": "Create \"{name}\"",
     "tipsTitle": "Writing Tips",
     "tips": {
       "0": "Use a compelling headline that grabs attention",

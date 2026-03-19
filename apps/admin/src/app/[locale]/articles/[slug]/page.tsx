@@ -7,7 +7,6 @@ import {
   FileText,
   Eye,
   Save,
-  Send,
   ChevronDown,
   ImagePlus,
   X,
@@ -54,35 +53,6 @@ export default function EditArticlePage() {
   const [thumbnailId, setThumbnailId] = useState<string | null>(null);
   const [status, setStatus] = useState<ArticleStatus>('Draft');
 
-  // Workflow transition map: current status -> available transitions
-  const getTransitions = (currentStatus: ArticleStatus): { status: ArticleStatus; label: string; style: string }[] => {
-    switch (currentStatus) {
-      case 'Draft':
-        return [
-          { status: 'InReview', label: t('submitForReview'), style: 'bg-blue-600 hover:bg-blue-700 text-white' },
-          { status: 'Published', label: t('publish'), style: 'bg-gradient-to-r from-[#003153] to-[#005F73] text-white hover:opacity-90' },
-        ];
-      case 'InReview':
-        return [
-          { status: 'Published', label: t('approve'), style: 'bg-green-600 hover:bg-green-700 text-white' },
-          { status: 'Draft', label: t('sendBack'), style: 'bg-yellow-500 hover:bg-yellow-600 text-white' },
-          { status: 'Rejected', label: t('reject'), style: 'bg-red-600 hover:bg-red-700 text-white' },
-        ];
-      case 'Rejected':
-        return [
-          { status: 'Draft', label: t('rework'), style: 'bg-yellow-500 hover:bg-yellow-600 text-white' },
-          { status: 'InReview', label: t('resubmit'), style: 'bg-blue-600 hover:bg-blue-700 text-white' },
-        ];
-      case 'Published':
-        return [
-          { status: 'Archived', label: t('archive'), style: 'bg-gray-600 hover:bg-gray-700 text-white' },
-        ];
-      case 'Archived':
-        return [];
-      default:
-        return [];
-    }
-  };
   const [featuredType, setFeaturedType] = useState<string>('');
   const [isPreview, setIsPreview] = useState(false);
   const [language, setLanguage] = useState(locale);
@@ -201,7 +171,7 @@ export default function EditArticlePage() {
     input.click();
   };
 
-  const handleSubmit = (articleStatus: ArticleStatus) => {
+  const handleSubmit = () => {
     updateMutation.mutate({
       title,
       excerpt: subtitle,
@@ -210,7 +180,6 @@ export default function EditArticlePage() {
       content: contentJson || {},
       ...(thumbnailId ? { thumbnailId } : {}),
       ...(tags.length > 0 ? { tagIds: tags.map((t) => t.id) } : {}),
-      status: articleStatus,
       ...(featuredType ? { featuredType } : { featuredType: null }),
     });
   };
@@ -291,10 +260,10 @@ export default function EditArticlePage() {
                       <Eye className="w-4 h-4" />
                       {isPreview ? t('editMode') : t('preview')}
                     </button>
-                    {/* Save (keeps current status) */}
+                    {/* Save as draft */}
                     <button
                       type="button"
-                      onClick={() => handleSubmit(status)}
+                      onClick={() => handleSubmit()}
                       disabled={updateMutation.isPending}
                       className="flex items-center gap-1.5 px-3 h-9 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
                     >
@@ -303,25 +272,8 @@ export default function EditArticlePage() {
                       ) : (
                         <Save className="w-4 h-4" />
                       )}
-                      {t('save')}
+                      {t('saveDraft')}
                     </button>
-                    {/* Workflow transition buttons */}
-                    {getTransitions(status).map((transition) => (
-                      <button
-                        key={transition.status}
-                        type="button"
-                        onClick={() => handleSubmit(transition.status)}
-                        disabled={updateMutation.isPending}
-                        className={`flex items-center gap-1.5 px-3 h-9 text-sm font-medium rounded-lg transition-all shadow-sm ${transition.style}`}
-                      >
-                        {updateMutation.isPending ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Send className="w-4 h-4" />
-                        )}
-                        {transition.label}
-                      </button>
-                    ))}
                   </>
                 )}
               </div>

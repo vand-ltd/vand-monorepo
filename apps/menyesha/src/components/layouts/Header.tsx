@@ -158,8 +158,8 @@ export const Header = () => {
           </div>
 
           {/* Navigation Bar */}
-          <nav ref={navRef} className="hidden md:flex items-center justify-between border-t pt-3">
-            <div className="flex items-center space-x-8">
+          <nav ref={navRef} className="hidden md:flex items-center justify-between border-t pt-3 gap-4">
+            <div className="flex items-center space-x-6 flex-1 min-w-0 flex-wrap">
               {navLinks.map((link) => {
                 const isActive = normalizePath(pathname) === `/${locale}${link.href}` ||
                                 (link.href === '/' && normalizePath(pathname) === `/${locale}`);
@@ -175,7 +175,7 @@ export const Header = () => {
                   >
                     <Link
                       href={`/${locale}${link.href}`}
-                      className={`text-sm font-medium transition-colors relative group flex items-center gap-1 ${
+                      className={`text-sm font-medium transition-colors relative group flex items-center gap-1 whitespace-nowrap ${
                         isActive
                           ? 'text-brand-primary dark:text-brand-accent'
                           : 'text-muted-foreground hover:text-brand-primary dark:hover:text-brand-accent'
@@ -224,7 +224,7 @@ export const Header = () => {
               })}
             </div>
 
-            <div className="flex items-center space-x-4 text-xs text-muted-foreground">
+            <div className="flex items-center space-x-4 text-xs text-muted-foreground flex-shrink-0">
               {mounted && (
                 <>
                   <span>{currentDate}</span>

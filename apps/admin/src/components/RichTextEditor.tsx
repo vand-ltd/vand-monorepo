@@ -3,7 +3,7 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
-import Image from '@tiptap/extension-image';
+import TiptapImage from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
@@ -37,6 +37,53 @@ import {
 import { useCallback, useState } from 'react';
 import { uploadMedia } from '@org/api';
 
+const ImageWithCaption = TiptapImage.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      title: { default: null },
+    };
+  },
+  renderHTML({ HTMLAttributes }) {
+    const { title, ...rest } = HTMLAttributes;
+    if (title) {
+      return [
+        'figure',
+        { class: 'image-with-caption' },
+        ['img', rest],
+        ['figcaption', {}, title],
+      ];
+    }
+    return ['img', rest];
+  },
+  parseHTML() {
+    return [
+      {
+        tag: 'figure.image-with-caption',
+        getAttrs(node) {
+          const img = (node as HTMLElement).querySelector('img');
+          const figcaption = (node as HTMLElement).querySelector('figcaption');
+          return {
+            src: img?.getAttribute('src'),
+            alt: img?.getAttribute('alt'),
+            title: figcaption?.textContent || img?.getAttribute('title'),
+          };
+        },
+      },
+      {
+        tag: 'img[src]',
+        getAttrs(node) {
+          return {
+            src: (node as HTMLElement).getAttribute('src'),
+            alt: (node as HTMLElement).getAttribute('alt'),
+            title: (node as HTMLElement).getAttribute('title'),
+          };
+        },
+      },
+    ];
+  },
+});
+
 interface RichTextEditorProps {
   content: string | object;
   onChange: (content: string, json: object) => void;
@@ -59,7 +106,10 @@ function ToolbarButton({
   return (
     <button
       type="button"
-      onClick={onClick}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        onClick();
+      }}
       disabled={disabled}
       title={title}
       className={`p-2 rounded-lg transition-all duration-150 ${
@@ -90,7 +140,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
       Placeholder.configure({
         placeholder: placeholder || 'Start writing your article...',
       }),
-      Image.configure({
+      ImageWithCaption.configure({
         HTMLAttributes: { class: 'rounded-lg max-w-full h-auto mx-auto' },
       }),
       Link.configure({
@@ -192,9 +242,9 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
   if (!editor) return null;
 
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-gray-800 shadow-sm">
+    <div className="border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 shadow-sm">
       {/* Toolbar */}
-      <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-3 py-2">
+      <div className="sticky top-[7.5rem] z-20 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-2 rounded-t-xl">
         <div className="flex flex-wrap items-center gap-0.5">
           {/* Undo / Redo */}
           <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo">
@@ -290,7 +340,22 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
           <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} isActive={editor.isActive('orderedList')} title="Ordered List">
             <ListOrdered className="w-4 h-4" />
           </ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} isActive={editor.isActive('blockquote')} title="Blockquote">
+          <ToolbarButton
+            onClick={() => {
+              if (editor.isActive('blockquote')) {
+                editor.chain().focus().lift('blockquote').run();
+              } else {
+                // Collapse selection to current paragraph before wrapping
+                const { from } = editor.state.selection;
+                const $from = editor.state.doc.resolve(from);
+                const start = $from.start($from.depth);
+                const end = $from.end($from.depth);
+                editor.chain().focus().setTextSelection({ from: start, to: end }).wrapIn('blockquote').run();
+              }
+            }}
+            isActive={editor.isActive('blockquote')}
+            title="Blockquote"
+          >
             <Quote className="w-4 h-4" />
           </ToolbarButton>
           <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Horizontal Rule">

@@ -7,7 +7,6 @@ export async function createArticle(articleData: {
   categoryId: string;
   content: object | string;
   thumbnailId?: string;
-  tagIds?: string[];
   isBreaking?: boolean;
   breakingUntil?: string;
   isSponsored?: boolean;
@@ -59,10 +58,18 @@ export async function toggleFeaturedArticle(articleId: string) {
   return data.data;
 }
 
-export async function getTags(language?: string) {
+export async function getTags(language?: string, search?: string) {
   const { data } = await api.get('/api/menyesha/tags', {
-    params: language ? { language } : undefined,
+    params: { ...(language ? { language } : {}), ...(search ? { search } : {}) },
   });
+  return data.data;
+}
+
+export async function assignTagIds(
+  articleId: string,
+  tagIds: string[]
+): Promise<any> {
+  const { data } = await api.post(`/api/menyesha/articles/${articleId}/tags`, { tagIds });
   return data.data;
 }
 
@@ -71,6 +78,14 @@ export async function assignArticleTags(
   tags: { name: string; translations: { label: string; language: string }[] }[]
 ): Promise<any> {
   const { data } = await api.post(`/api/menyesha/articles/${articleId}/tags/bulk`, { tags });
+  return data.data;
+}
+
+export async function removeArticleTags(
+  articleId: string,
+  tagIds: string[]
+): Promise<any> {
+  const { data } = await api.delete(`/api/menyesha/articles/${articleId}/tags`, { data: { tagIds } });
   return data.data;
 }
 

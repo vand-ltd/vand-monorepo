@@ -24,6 +24,7 @@ import {
   Filter,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Tag,
   X,
   Pencil,
@@ -74,8 +75,11 @@ export default function DashboardPage() {
   const [tagInput, setTagInput] = useState('');
   const [showTagDropdown, setShowTagDropdown] = useState(false);
   const [assigningTags, setAssigningTags] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<string>('InReview');
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState<string | null>(null);
 
   const tagDropdownRef = useRef<HTMLDivElement>(null);
+  const tableRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -104,13 +108,40 @@ export default function DashboardPage() {
       !selectedTags.some((t) => t.id === tag.id)
   );
 
-  const submitForReview = useMutation({
-    mutationFn: (articleId: string) =>
-      updateArticle(articleId, { status: 'InReview' }),
+  // Close status dropdown on outside click
+  useEffect(() => {
+    if (!statusDropdownOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (tableRef.current && !tableRef.current.contains(e.target as Node)) {
+        setStatusDropdownOpen(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [statusDropdownOpen]);
+
+  function getTransitions(currentStatus: ArticleStatus, role: string): ArticleStatus[] {
+    if (role === 'reporter') {
+      if (currentStatus === 'Draft') return ['InReview'];
+      return [];
+    }
+    switch (currentStatus) {
+      case 'Draft': return ['InReview', 'Published'];
+      case 'InReview': return ['Published', 'Draft', 'Rejected'];
+      case 'Rejected': return ['Draft', 'InReview'];
+      case 'Published': return ['Archived'];
+      case 'Archived': return [];
+      default: return [];
+    }
+  }
+
+  const submitWithStatus = useMutation({
+    mutationFn: ({ articleId, status }: { articleId: string; status: string }) =>
+      updateArticle(articleId, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-articles'] });
       queryClient.invalidateQueries({ queryKey: ['me'] });
-      toast.success(t('submitSuccess'));
+      toast.success(t('statusUpdated'));
     },
     onError: (error: any) => {
       const message = error?.response?.data?.message || t('submitFailed');
@@ -118,14 +149,15 @@ export default function DashboardPage() {
     },
   });
 
-  const handleSubmitForReview = (article: any) => {
-    if (!article.tags || article.tags.length === 0) {
+  const handleStatusChange = (article: any, targetStatus: string) => {
+    if ((targetStatus === 'InReview' || targetStatus === 'Published') && (!article.tags || article.tags.length === 0)) {
       setTagDialogArticleId(article.id);
+      setPendingStatus(targetStatus);
       setSelectedTags([]);
       setTagInput('');
       setTagDialogOpen(true);
     } else {
-      submitForReview.mutate(article.id);
+      submitWithStatus.mutate({ articleId: article.id, status: targetStatus });
     }
   };
 
@@ -138,7 +170,7 @@ export default function DashboardPage() {
         translations: tag.translations,
       }));
       await assignArticleTags(tagDialogArticleId, tagsPayload);
-      submitForReview.mutate(tagDialogArticleId);
+      submitWithStatus.mutate({ articleId: tagDialogArticleId, status: pendingStatus });
       setTagDialogOpen(false);
     } catch (error: any) {
       const message = error?.response?.data?.message || t('submitFailed');
@@ -451,7 +483,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Articles Table */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div ref={tableRef} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                 {articlesLoading ? (
                   <div className="flex items-center justify-center py-16">
                     <Loader2 className="h-8 w-8 animate-spin text-[#003153] dark:text-[#F59E0B]" />
@@ -520,13 +552,45 @@ export default function DashboardPage() {
                               </span>
                             </td>
                             <td className="px-4 py-3">
-                              <span
-                                className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                  STATUS_COLORS[article.status as ArticleStatus] || STATUS_COLORS.Draft
-                                }`}
-                              >
-                                {t(STATUS_LABELS[article.status as ArticleStatus] || 'draftArticles')}
-                              </span>
+                              <div className="relative">
+                                <button
+                                  onClick={() => {
+                                    const transitions = getTransitions(article.status as ArticleStatus, userRole);
+                                    if (transitions.length === 0) return;
+                                    setStatusDropdownOpen(
+                                      statusDropdownOpen === article.id ? null : article.id
+                                    );
+                                  }}
+                                  disabled={submitWithStatus.isPending}
+                                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium transition-opacity hover:opacity-80 ${
+                                    STATUS_COLORS[article.status as ArticleStatus] || STATUS_COLORS.Draft
+                                  } ${getTransitions(article.status as ArticleStatus, userRole).length > 0 ? 'cursor-pointer' : 'cursor-default'}`}
+                                >
+                                  {t(STATUS_LABELS[article.status as ArticleStatus] || 'draftArticles')}
+                                  {getTransitions(article.status as ArticleStatus, userRole).length > 0 && (
+                                    <ChevronDown className="w-3 h-3" />
+                                  )}
+                                </button>
+                                {statusDropdownOpen === article.id && getTransitions(article.status as ArticleStatus, userRole).length > 0 && (
+                                  <div className="absolute z-20 mt-1 left-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 min-w-[140px]">
+                                    {getTransitions(article.status as ArticleStatus, userRole).map((targetStatus) => (
+                                      <button
+                                        key={targetStatus}
+                                        onClick={() => {
+                                          setStatusDropdownOpen(null);
+                                          handleStatusChange(article, targetStatus);
+                                        }}
+                                        className="w-full text-left px-3 py-1.5 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                                      >
+                                        <span className={`w-2 h-2 rounded-full ${STATUS_COLORS[targetStatus].split(' ')[0]}`} />
+                                        <span className="text-gray-700 dark:text-gray-300">
+                                          {t(STATUS_LABELS[targetStatus])}
+                                        </span>
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
                             </td>
                             <td className="px-4 py-3 hidden lg:table-cell">
                               <div className="flex items-center space-x-1 text-sm text-gray-500">
@@ -541,17 +605,6 @@ export default function DashboardPage() {
                             </td>
                             <td className="px-4 py-3 text-right">
                               <div className="flex items-center justify-end space-x-1">
-                                {userRole === 'reporter' && article.status === 'Draft' && (
-                                  <button
-                                    onClick={() => handleSubmitForReview(article)}
-                                    disabled={submitForReview.isPending}
-                                    className="px-2.5 py-1 rounded-lg text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors inline-flex items-center space-x-1 disabled:opacity-50"
-                                    title={t('submitForReview')}
-                                  >
-                                    <Send className="h-3.5 w-3.5" />
-                                    <span>{t('submitForReview')}</span>
-                                  </button>
-                                )}
                                 <Link
                                   href={`/articles/${article.slug}`}
                                   className="p-1.5 rounded-lg text-gray-400 hover:text-[#003153] dark:hover:text-[#F59E0B] hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors inline-flex"
@@ -643,7 +696,7 @@ export default function DashboardPage() {
                 placeholder={t('searchTags')}
                 className="w-full h-10 px-3 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#003153]"
               />
-              {showTagDropdown && filteredTags.length > 0 && (
+              {showTagDropdown && (tagInput.length > 0 || filteredTags.length > 0) && (
                 <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                   {filteredTags.map((tag: any) => (
                     <button
@@ -654,11 +707,32 @@ export default function DashboardPage() {
                         setTagInput('');
                         setShowTagDropdown(false);
                       }}
-                      className="w-full text-left px-3 py-2 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors first:rounded-t-lg last:rounded-b-lg"
+                      className="w-full text-left px-3 py-2 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                     >
                       {tag.label}
                     </button>
                   ))}
+                  {filteredTags.length === 0 && tagInput.trim().length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const name = tagInput.trim().toLowerCase().replace(/\s+/g, '-');
+                        const label = tagInput.trim();
+                        setSelectedTags([...selectedTags, {
+                          id: `new-${Date.now()}`,
+                          name,
+                          label,
+                          translations: [{ label, language: locale }],
+                        }]);
+                        setTagInput('');
+                        setShowTagDropdown(false);
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm text-[#003153] dark:text-[#F59E0B] hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
+                    >
+                      <span className="text-xs">+</span>
+                      {t('createTag', { name: tagInput.trim() })}
+                    </button>
+                  )}
                 </div>
               )}
             </div>

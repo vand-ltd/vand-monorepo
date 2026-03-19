@@ -9,3 +9,4 @@ export * from './services/authors';
 export * from './services/users';
 export * from './services/comments';
 export * from './services/terms';
+export * from './services/ads';

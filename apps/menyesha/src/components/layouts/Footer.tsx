@@ -27,7 +27,7 @@ const Footer = () => {
                 alt="Menyesha"
                 width={120}
                 height={40}
-                className="h-8 w-auto object-contain brightness-0 invert"
+                className="h-8 w-auto object-contain"
               />
             </div>
             <p className="text-sm text-gray-400 mb-5 leading-relaxed">

@@ -27,7 +27,9 @@
     "searchTags": "Rechercher des tags...",
     "assignAndSubmit": "Attribuer et soumettre",
     "cancel": "Annuler",
+    "createTag": "Créer \"{name}\"",
     "viewArticle": "Voir l'article",
+    "statusUpdated": "Statut de l'article mis à jour",
     "pageInfo": "Page {current} sur {total}"
   },
   "toggleTheme": {
@@ -131,7 +133,10 @@
     "selectCategory": "Sélectionner une catégorie",
     "languageLabel": "Langue de l'article",
     "tagsLabel": "Étiquettes",
-    "tagsPlaceholder": "Ajouter une étiquette et appuyez sur Entrée",
+    "tagsPlaceholder": "Rechercher des tags...",
+    "searchingTags": "Recherche...",
+    "maxTags": "Maximum 5 tags par article",
+    "createTag": "Créer \"{name}\"",
     "tipsTitle": "Conseils de rédaction",
     "tips": {
       "0": "Utilisez un titre accrocheur qui attire l'attention",
