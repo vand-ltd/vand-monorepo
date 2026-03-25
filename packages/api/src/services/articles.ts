@@ -48,6 +48,9 @@ export async function getArticles(params: {
   limit?: number;
   status?: string;
   featuredType?: string;
+  categorySlug?: string;
+  subCategorySlug?: string;
+  search?: string;
 }) {
   const { data } = await api.get('/api/menyesha/articles', { params });
   return data.data;

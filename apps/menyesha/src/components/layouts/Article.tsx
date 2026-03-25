@@ -4,8 +4,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { MessageCircle, Clock, Eye, Grid, List, Zap, Loader2, ChevronDown, Star, ArrowUp } from "lucide-react";
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { getArticlesFeed } from '@org/api';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { ChevronLeft, ChevronRight as ChevronRightIcon } from 'lucide-react';
+import { getArticlesFeed, getArticles } from '@org/api';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { formatTimeAgo } from '@/lib/timeago';
@@ -237,45 +238,72 @@ function ArticleThumbnail({ article, className = '', imageClassName = '' }: { ar
 
 const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCategoryKey?: string }) => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+  const [page, setPage] = useState(1);
   const locale = useLocale();
   const t = useTranslations('feed');
   const tSidebar = useTranslations('sidebar');
 
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(categoryKey || null);
+  const isHomeFeed = !categoryKey;
 
-  // Sync selectedCategory when categoryKey prop changes
+  // Reset page when category changes
   useEffect(() => {
-    setSelectedCategory(categoryKey || null);
-  }, [categoryKey]);
+    setPage(1);
+  }, [categoryKey, subCategoryKey]);
 
+  // Cursor pagination for home
   const {
-    data,
+    data: cursorData,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    isLoading,
+    isLoading: cursorLoading,
   } = useInfiniteQuery({
-    queryKey: ['articles-feed', locale, selectedCategory, subCategoryKey],
+    queryKey: ['articles-feed', locale],
     queryFn: ({ pageParam }) =>
       getArticlesFeed({
         cursor: pageParam,
         language: locale,
-        ...(selectedCategory ? { categorySlug: selectedCategory } : {}),
-        ...(subCategoryKey ? { subCategorySlug: subCategoryKey } : {}),
         status: 'Published',
       }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) =>
       lastPage.meta.hasMore ? lastPage.meta.nextCursor : undefined,
+    enabled: isHomeFeed,
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const articles: any[] = data?.pages.flatMap((page: { articles: any[] }) => page.articles) ?? [];
+  // Offset pagination for category pages
+  const {
+    data: offsetData,
+    isLoading: offsetLoading,
+  } = useQuery({
+    queryKey: ['articles-category', locale, categoryKey, subCategoryKey, page],
+    queryFn: () =>
+      getArticles({
+        page,
+        limit: 12,
+        language: locale,
+        ...(categoryKey ? { categorySlug: categoryKey } : {}),
+        ...(subCategoryKey ? { subCategorySlug: subCategoryKey } : {}),
+        status: 'Published',
+      }),
+    enabled: !isHomeFeed,
+  });
 
-  // Derive featured slots — only use articles explicitly marked with featuredType
-  // Hero: 1, Secondary: up to 4, Spotlight: up to 8
-  // Unmarked articles always go to the Latest Stories feed
+  const isLoading = isHomeFeed ? cursorLoading : offsetLoading;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const articles: any[] = isHomeFeed
+    ? (cursorData?.pages.flatMap((p: { articles: any[] }) => p.articles) ?? [])
+    : (offsetData?.articles ?? []);
+
+  const offsetMeta = offsetData?.meta ?? { total: 0, page: 1, totalPages: 1 };
+  const totalPages = offsetMeta.totalPages || Math.ceil((offsetMeta.total || 0) / 12);
+
+  // Derive featured slots — only for home feed
   const { heroArticle, secondaryArticles, spotlightArticles, feedArticles } = useMemo(() => {
+    if (!isHomeFeed) {
+      return { heroArticle: null, secondaryArticles: [], spotlightArticles: [], feedArticles: articles };
+    }
     const hero = articles.find((a: any) => a.featuredType === 'Hero') || null;
     const secondary = articles.filter((a: any) => a.featuredType === 'Secondary').slice(0, 4);
     const spotlight = articles.filter((a: any) => a.featuredType === 'Spotlight').slice(0, 8);
@@ -291,7 +319,8 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
       spotlightArticles: spotlight,
       feedArticles: feed,
     };
-  }, [articles]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [articles, isHomeFeed]);
 
   if (isLoading) {
     return (
@@ -656,39 +685,83 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
         </section>
       )}
 
-      {/* Load More */}
-      <div className="flex justify-center py-8">
-        {hasNextPage ? (
-          <button
-            onClick={() => fetchNextPage()}
-            disabled={isFetchingNextPage}
-            className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isFetchingNextPage ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                {t('loading')}
-              </>
-            ) : (
-              <>
-                <ChevronDown className="h-4 w-4" />
-                {t('loadMore')}
-              </>
-            )}
-          </button>
-        ) : (
-          <div className="flex flex-col items-center gap-3">
-            <p className="text-sm text-gray-400">{t('allCaughtUp')}</p>
+      {/* Pagination */}
+      {isHomeFeed ? (
+        <div className="flex justify-center py-8">
+          {hasNextPage ? (
             <button
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              onClick={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+              className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <ArrowUp className="h-4 w-4" />
-              {tSidebar('backToTop')}
+              {isFetchingNextPage ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t('loading')}
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-4 w-4" />
+                  {t('loadMore')}
+                </>
+              )}
             </button>
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="flex flex-col items-center gap-3">
+              <p className="text-sm text-gray-400">{t('allCaughtUp')}</p>
+              <button
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                <ArrowUp className="h-4 w-4" />
+                {tSidebar('backToTop')}
+              </button>
+            </div>
+          )}
+        </div>
+      ) : totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 py-8">
+          <button
+            onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            disabled={page === 1}
+            className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronLeft className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+          </button>
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            let pageNum: number;
+            if (totalPages <= 5) {
+              pageNum = i + 1;
+            } else if (page <= 3) {
+              pageNum = i + 1;
+            } else if (page >= totalPages - 2) {
+              pageNum = totalPages - 4 + i;
+            } else {
+              pageNum = page - 2 + i;
+            }
+            return (
+              <button
+                key={pageNum}
+                onClick={() => { setPage(pageNum); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
+                  page === pageNum
+                    ? 'bg-brand-primary text-white dark:bg-brand-accent dark:text-gray-900'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+          <button
+            onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            disabled={page >= totalPages}
+            className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronRightIcon className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

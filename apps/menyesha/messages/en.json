@@ -104,6 +104,10 @@
     "noResults": "No articles found for \"{query}\"",
     "tryAgain": "Try different keywords or browse our categories."
   },
+  "metadata": {
+    "title": "Menyesha - Know first, know clearly",
+    "description": "Stay informed with the latest breaking news, analysis, and stories from Rwanda and around the world."
+  },
   "footer": {
     "description": "Delivering accurate, unbiased news and in-depth analysis from Rwanda and around the world.",
     "contact": "Contact",

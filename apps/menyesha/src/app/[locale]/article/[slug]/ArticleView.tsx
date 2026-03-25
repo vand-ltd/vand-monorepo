@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getArticleBySlug, getRelatedArticles } from '@org/api';
 import Image from 'next/image';
@@ -52,17 +52,17 @@ function getCategoryColors(slug: string) {
 }
 
 // Tiptap JSON renderer
-function renderTiptapNode(node: any, index: number): React.ReactNode {
+function renderTiptapNode(node: any, index: number, onImageClick?: (src: string, caption?: string) => void): React.ReactNode {
   if (!node) return null;
 
   switch (node.type) {
     case 'doc':
-      return node.content?.map((child: any, i: number) => renderTiptapNode(child, i));
+      return node.content?.map((child: any, i: number) => renderTiptapNode(child, i, onImageClick));
 
     case 'paragraph':
       return (
         <p key={index} className="mb-4 leading-relaxed text-gray-700 dark:text-gray-300" style={{ textAlign: node.attrs?.textAlign || undefined }}>
-          {node.content?.map((child: any, i: number) => renderTiptapNode(child, i)) || <br />}
+          {node.content?.map((child: any, i: number) => renderTiptapNode(child, i, onImageClick)) || <br />}
         </p>
       );
 
@@ -77,7 +77,7 @@ function renderTiptapNode(node: any, index: number): React.ReactNode {
       };
       return (
         <HeadingTag key={index} className={classes[level] || classes[2]}>
-          {node.content?.map((child: any, i: number) => renderTiptapNode(child, i))}
+          {node.content?.map((child: any, i: number) => renderTiptapNode(child, i, onImageClick))}
         </HeadingTag>
       );
     }
@@ -101,7 +101,7 @@ function renderTiptapNode(node: any, index: number): React.ReactNode {
               break;
             case 'link':
               element = (
-                <a key={index} href={mark.attrs?.href} target="_blank" rel="noopener noreferrer" className="text-brand-primary hover:underline">
+                <a key={index} href={mark.attrs?.href} target="_blank" rel="noopener noreferrer" className="text-brand-secondary hover:text-brand-accent underline decoration-brand-secondary/40 hover:decoration-brand-accent transition-colors">
                   {element}
                 </a>
               );
@@ -118,52 +118,60 @@ function renderTiptapNode(node: any, index: number): React.ReactNode {
     case 'bulletList':
       return (
         <ul key={index} className="list-disc pl-6 mb-4 space-y-1 text-gray-700 dark:text-gray-300">
-          {node.content?.map((child: any, i: number) => renderTiptapNode(child, i))}
+          {node.content?.map((child: any, i: number) => renderTiptapNode(child, i, onImageClick))}
         </ul>
       );
 
     case 'orderedList':
       return (
         <ol key={index} className="list-decimal pl-6 mb-4 space-y-1 text-gray-700 dark:text-gray-300">
-          {node.content?.map((child: any, i: number) => renderTiptapNode(child, i))}
+          {node.content?.map((child: any, i: number) => renderTiptapNode(child, i, onImageClick))}
         </ol>
       );
 
     case 'listItem':
       return (
         <li key={index}>
-          {node.content?.map((child: any, i: number) => renderTiptapNode(child, i))}
+          {node.content?.map((child: any, i: number) => renderTiptapNode(child, i, onImageClick))}
         </li>
       );
 
     case 'blockquote':
       return (
         <blockquote key={index} className="border-l-4 border-brand-primary pl-4 my-6 italic text-gray-600 dark:text-gray-400">
-          {node.content?.map((child: any, i: number) => renderTiptapNode(child, i))}
+          {node.content?.map((child: any, i: number) => renderTiptapNode(child, i, onImageClick))}
         </blockquote>
       );
 
     case 'codeBlock':
       return (
         <pre key={index} className="bg-gray-900 text-gray-100 p-4 rounded-lg my-4 overflow-x-auto">
-          <code>{node.content?.map((child: any, i: number) => renderTiptapNode(child, i))}</code>
+          <code>{node.content?.map((child: any, i: number) => renderTiptapNode(child, i, onImageClick))}</code>
         </pre>
       );
 
     case 'image':
       return (
         <figure key={index} className="my-6">
-          <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+          <div
+            className="relative w-full aspect-video rounded-lg overflow-hidden cursor-zoom-in group"
+            onClick={() => onImageClick?.(node.attrs?.src, node.attrs?.title)}
+          >
             <Image
               src={node.attrs?.src}
               alt={node.attrs?.alt || ''}
               fill
-              className="object-cover"
+              className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
               sizes="(max-width: 768px) 100vw, 80vw"
             />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/50 text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-sm">
+                Click to expand
+              </span>
+            </div>
           </div>
           {node.attrs?.title && (
-            <figcaption className="mt-2 text-sm text-gray-500 text-center">{node.attrs.title}</figcaption>
+            <figcaption className="mt-2 text-sm text-gray-500 dark:text-gray-400 text-center italic">{node.attrs.title}</figcaption>
           )}
         </figure>
       );
@@ -212,6 +220,21 @@ export default function ArticleView({ slug }: { slug: string }) {
   const locale = useLocale();
   const t = useTranslations('article');
   const router = useRouter();
+  const [lightbox, setLightbox] = useState<{ src: string; caption?: string } | null>(null);
+
+  const openLightbox = useCallback((src: string, caption?: string) => {
+    setLightbox({ src, caption });
+  }, []);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!lightbox) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightbox(null);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [lightbox]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -429,7 +452,7 @@ export default function ArticleView({ slug }: { slug: string }) {
                 ? article.content.split('\n').map((paragraph: string, i: number) => (
                     paragraph.trim() ? <p key={i} className="mb-4 leading-relaxed text-gray-700 dark:text-gray-300">{paragraph}</p> : null
                   ))
-                : renderTiptapNode(article.content, 0)
+                : renderTiptapNode(article.content, 0, openLightbox)
             )}
           </div>
 
@@ -584,6 +607,35 @@ export default function ArticleView({ slug }: { slug: string }) {
 
       {/* Comments */}
       <CommentSection articleId={article.id} />
+
+      {/* Image Lightbox */}
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm cursor-zoom-out"
+          onClick={() => setLightbox(null)}
+        >
+          <button
+            onClick={() => setLightbox(null)}
+            className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors z-10"
+          >
+            <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <div className="max-w-[90vw] max-h-[85vh] relative" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={lightbox.src}
+              alt={lightbox.caption || ''}
+              className="max-w-full max-h-[85vh] object-contain rounded-lg"
+            />
+            {lightbox.caption && (
+              <p className="text-center text-sm text-white/80 mt-3 italic max-w-2xl mx-auto">
+                {lightbox.caption}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

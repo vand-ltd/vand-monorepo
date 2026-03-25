@@ -2,6 +2,7 @@ import api from '../client';
 
 export async function getArticlesFeed(parms: {
   cursor?: string;
+  page?: number;
   limit?: number;
   language?: string;
   categorySlug?: string;

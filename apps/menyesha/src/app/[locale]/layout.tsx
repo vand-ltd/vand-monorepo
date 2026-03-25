@@ -1,5 +1,6 @@
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { Geist, Geist_Mono } from "next/font/google";
+import type { Metadata } from 'next';
 // @ts-ignore
 import "../globals.css";
 import { notFound } from "next/navigation";
@@ -20,6 +21,38 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  let messages;
+  try {
+    messages = (await import(`../../../messages/${locale}.json`)).default;
+  } catch {
+    messages = (await import(`../../../messages/en.json`)).default;
+  }
+  const m = messages.metadata;
+
+  const localeMap: Record<string, string> = { en: 'en_US', fr: 'fr_FR', rw: 'rw_RW' };
+
+  return {
+    title: m.title,
+    description: m.description,
+    openGraph: {
+      type: 'website',
+      locale: localeMap[locale] || 'en_US',
+      url: `https://menyesha.vand.rw/${locale}`,
+      siteName: 'Menyesha',
+      title: m.title,
+      description: m.description,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: m.title,
+      description: m.description,
+      creator: '@menyesha',
+    },
+  };
+}
 
 export default async function LocaleLayout({
   children, params

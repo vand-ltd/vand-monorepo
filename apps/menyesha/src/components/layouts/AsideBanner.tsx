@@ -140,32 +140,20 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
                     ))}
                   </div>
                 )}
-                {trendingStories.map((story: any, index: number) => (
+                {/* #1 Trending — featured card */}
+                {trendingStories.length > 0 && (
                   <Link
-                    key={story.id}
-                    href={`/${locale}/article/${story.slug}`}
-                    className="flex gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group"
+                    href={`/${locale}/article/${trendingStories[0].slug}`}
+                    className="block group"
                   >
-                    {/* Rank */}
-                    <span className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-                      index === 0
-                        ? 'bg-brand-accent text-white'
-                        : index === 1
-                          ? 'bg-brand-primary/15 text-brand-primary dark:bg-brand-accent/20 dark:text-brand-accent'
-                          : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
-                    }`}>
-                      {index + 1}
-                    </span>
-
-                    {/* Thumbnail */}
-                    <div className="relative w-20 h-14 shrink-0 rounded-md overflow-hidden">
-                      {story.thumbnail?.url ? (
+                    <div className="relative h-40 overflow-hidden">
+                      {trendingStories[0].thumbnail?.url ? (
                         <Image
-                          src={story.thumbnail.url}
-                          alt={story.title}
+                          src={trendingStories[0].thumbnail.url}
+                          alt={trendingStories[0].title}
                           fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
-                          sizes="80px"
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          sizes="300px"
                         />
                       ) : (
                         <div
@@ -174,35 +162,60 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
                             background: 'light-dark(linear-gradient(145deg, #f3f4f6, #fff), linear-gradient(145deg, rgba(0,49,83,0.3), #1f2937))',
                           }}
                         >
-                          <span className="absolute -bottom-1 -right-0.5 font-black select-none leading-none opacity-[0.07]" style={{ fontSize: '3.5rem' }}>
-                            {(story.category?.name || 'M')[0]}
+                          <span className="absolute -bottom-2 -right-1 font-black select-none leading-none opacity-[0.07]" style={{ fontSize: '6rem' }}>
+                            {(trendingStories[0].category?.name || 'M')[0]}
                           </span>
-                          <div className="absolute top-0 left-0 w-0.5 h-full" style={{ backgroundColor: '#F59E0B' }} />
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <Image src="/favicon.svg" alt="" width={16} height={16} className="object-contain opacity-50" />
+                            <Image src="/favicon.svg" alt="" width={32} height={32} className="object-contain opacity-50" />
                           </div>
                         </div>
                       )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                      <div className="absolute top-2.5 left-2.5">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-brand-accent text-white">
+                          #1
+                        </span>
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 p-3">
+                        <h4 className="text-sm font-bold text-white leading-tight line-clamp-2 group-hover:text-brand-accent transition-colors">
+                          {trendingStories[0].title}
+                        </h4>
+                        <div className="flex items-center gap-2 mt-1.5 text-[11px] text-white/70">
+                          <span className="font-medium text-brand-accent">{trendingStories[0].category?.name}</span>
+                          <span className="flex items-center gap-0.5">
+                            <Eye className="h-3 w-3" />
+                            {formatViews(trendingStories[0].viewCount || 0)}
+                          </span>
+                        </div>
+                      </div>
                     </div>
+                  </Link>
+                )}
 
-                    {/* Content */}
+                {/* #2+ Trending — compact rows */}
+                {trendingStories.slice(1).map((story: any, index: number) => (
+                  <Link
+                    key={story.id}
+                    href={`/${locale}/article/${story.slug}`}
+                    className="flex gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group border-l-2 border-transparent hover:border-brand-accent"
+                  >
+                    <span className="shrink-0 w-6 h-6 rounded flex items-center justify-center text-[11px] font-bold bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                      {index + 2}
+                    </span>
+
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium leading-tight line-clamp-2 group-hover:text-brand-primary dark:group-hover:text-brand-accent transition-colors">
+                      <h4 className="text-[13px] font-medium leading-tight line-clamp-2 group-hover:text-brand-primary dark:group-hover:text-brand-accent transition-colors">
                         {story.title}
                       </h4>
-                      <div className="flex items-center gap-2 mt-1.5 text-[11px] text-muted-foreground">
-                        <span className="text-brand-primary dark:text-brand-accent font-medium truncate">
-                          {story.category?.name || 'General'}
-                        </span>
-                        <span className="text-gray-300 dark:text-gray-600">|</span>
-                        <div className="flex items-center gap-0.5">
+                      <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground">
+                        <span className="flex items-center gap-0.5">
                           <Eye className="h-3 w-3" />
-                          <span>{formatViews(story.viewCount || 0)}</span>
-                        </div>
-                        <div className="flex items-center gap-0.5">
+                          {formatViews(story.viewCount || 0)}
+                        </span>
+                        <span className="flex items-center gap-0.5">
                           <Clock className="h-3 w-3" />
-                          <span>{formatTimeAgo(story.createdAt, locale)}</span>
-                        </div>
+                          {formatTimeAgo(story.createdAt, locale)}
+                        </span>
                       </div>
                     </div>
                   </Link>

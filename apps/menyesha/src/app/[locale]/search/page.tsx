@@ -1,12 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { getArticlesFeed } from '@org/api';
+import { useQuery } from '@tanstack/react-query';
+import { getArticles } from '@org/api';
 import { useLocale, useTranslations } from 'next-intl';
-import { Clock, Eye, MessageCircle, ArrowLeft, Search, Loader2, ChevronDown } from 'lucide-react';
+import { Clock, Eye, MessageCircle, ArrowLeft, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { SearchInput } from '@/components/layouts/SearchInput';
 import { formatTimeAgo } from '@/lib/timeago';
 
@@ -15,30 +16,28 @@ export default function SearchPage() {
   const query = searchParams.get('q') || '';
   const locale = useLocale();
   const t = useTranslations('search');
+  const [page, setPage] = useState(1);
 
   const {
     data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
     isLoading,
-  } = useInfiniteQuery({
-    queryKey: ['search-articles', locale, query],
-    queryFn: ({ pageParam }) =>
-      getArticlesFeed({
-        cursor: pageParam,
+  } = useQuery({
+    queryKey: ['search-articles', locale, query, page],
+    queryFn: () =>
+      getArticles({
+        page,
+        limit: 12,
         language: locale,
         search: query,
         status: 'Published',
       }),
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) =>
-      lastPage.meta.hasMore ? lastPage.meta.nextCursor : undefined,
     enabled: !!query,
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const articles: any[] = data?.pages.flatMap((page: { articles: any[] }) => page.articles) ?? [];
+  const articles: any[] = data?.articles ?? [];
+  const meta = data?.meta ?? { total: 0, page: 1, totalPages: 1 };
+  const totalPages = meta.totalPages || Math.ceil((meta.total || 0) / 12);
 
   return (
     <div className="w-full max-w-full bg-gray-50 dark:bg-gray-900 min-h-screen">
@@ -174,23 +173,50 @@ export default function SearchPage() {
               </Link>
             ))}
 
-            {isFetchingNextPage && (
-              <div className="flex justify-center py-4">
-                <Loader2 className="h-6 w-6 animate-spin text-brand-primary" />
-              </div>
-            )}
           </div>
         )}
 
-        {/* Load More */}
-        {hasNextPage && !isFetchingNextPage && (
-          <div className="text-center py-8">
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 py-8">
             <button
-              onClick={() => fetchNextPage()}
-              className="inline-flex items-center space-x-2 px-6 py-3 bg-brand-primary text-white font-semibold rounded-lg hover:bg-brand-secondary transition-colors"
+              onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              disabled={page === 1}
+              className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
-              <ChevronDown className="h-4 w-4" />
-              <span>Load More</span>
+              <ChevronLeft className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+            </button>
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum: number;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (page <= 3) {
+                pageNum = i + 1;
+              } else if (page >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = page - 2 + i;
+              }
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => { setPage(pageNum); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
+                    page === pageNum
+                      ? 'bg-brand-primary text-white dark:bg-brand-accent dark:text-gray-900'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+            <button
+              onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              disabled={page >= totalPages}
+              className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight className="h-4 w-4 text-gray-600 dark:text-gray-300" />
             </button>
           </div>
         )}

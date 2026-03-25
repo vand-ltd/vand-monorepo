@@ -104,6 +104,10 @@
     "noResults": "Aucun article trouv\u00e9 pour \"{query}\"",
     "tryAgain": "Essayez d'autres mots-cl\u00e9s ou parcourez nos cat\u00e9gories."
   },
+  "metadata": {
+    "title": "Menyesha - Informez-vous d'abord, comprenez mieux",
+    "description": "Restez informé avec les dernières actualités, analyses et reportages du Rwanda et du monde entier."
+  },
   "footer": {
     "description": "Des informations pr\u00e9cises et impartiales et des analyses approfondies du Rwanda et du monde entier.",
     "contact": "Contact",

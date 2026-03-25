@@ -281,7 +281,7 @@ export default function AuthorPage() {
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 mt-8">
           <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             disabled={page === 1}
             className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
@@ -301,10 +301,10 @@ export default function AuthorPage() {
             return (
               <button
                 key={pageNum}
-                onClick={() => setPage(pageNum)}
+                onClick={() => { setPage(pageNum); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                 className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
                   page === pageNum
-                    ? 'bg-brand-primary text-white'
+                    ? 'bg-brand-primary text-white dark:bg-brand-accent dark:text-gray-900'
                     : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`}
               >
@@ -313,7 +313,7 @@ export default function AuthorPage() {
             );
           })}
           <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             disabled={page >= totalPages}
             className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >

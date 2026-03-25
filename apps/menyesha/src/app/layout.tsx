@@ -16,12 +16,10 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'Vand News - Your Trusted Source for Breaking News',
-  description: 'Stay informed with the latest breaking news, analysis, and stories from around the world. Your trusted source for comprehensive news coverage.',
-  keywords: 'news, breaking news, world news, politics, sports, technology, business',
-  authors: [{ name: 'Vand News Team' }],
-  creator: 'Vand News',
-  publisher: 'Vand News',
+  keywords: 'menyesha, news, breaking news, Rwanda, Africa, world news, politics, sports, technology, business',
+  authors: [{ name: 'Menyesha Team' }],
+  creator: 'Menyesha',
+  publisher: 'Menyesha',
   formatDetection: {
     email: false,
     address: false,
@@ -40,20 +38,6 @@ export const metadata: Metadata = {
       'max-image-preview': 'large',
       'max-snippet': -1,
     },
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    url: 'https://vandnews.com',
-    siteName: 'Vand News',
-    title: 'Vand News - Your Trusted Source for Breaking News',
-    description: 'Stay informed with the latest breaking news, analysis, and stories from around the world.',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Vand News - Your Trusted Source for Breaking News',
-    description: 'Stay informed with the latest breaking news, analysis, and stories from around the world.',
-    creator: '@vandnews',
   },
 };
 
@@ -79,7 +63,7 @@ export default function RootLayout({
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Vand News" />
+        <meta name="apple-mobile-web-app-title" content="Menyesha" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
       <body className={`min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased ${inter.className} overflow-x-hidden`} suppressHydrationWarning>

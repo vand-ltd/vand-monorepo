@@ -104,6 +104,10 @@
     "noResults": "Nta nyandiko zabonetse kuri \"{query}\"",
     "tryAgain": "Gerageza amagambo atandukanye cyangwa reba ibicishije mu byiciro."
   },
+  "metadata": {
+    "title": "Menyesha - Menya mbere, menya neza",
+    "description": "Komeza umenye amakuru mashya, isesengura n'inkuru z'u Rwanda n'isi yose."
+  },
   "footer": {
     "description": "Gutanga amakuru y'ukuri kandi adashyigikira uruhande n'isesengura ryimbitse ryo mu Rwanda no ku isi yose.",
     "contact": "Twandikire",
