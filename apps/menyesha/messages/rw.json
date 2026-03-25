@@ -30,16 +30,16 @@
   },
   "article": {
     "backToHome": "Subira ku rubuga",
-    "articleNotFound": "Inyandiko ntibashije kuboneka",
-    "relatedArticles": "Inyandiko zijyanye"
+    "articleNotFound": "Inkuru ntibashije kuboneka",
+    "relatedArticles": "Inkuru zijyanye"
   },
   "author": {
     "backToHome": "Subira ku rubuga",
     "notFound": "Umwanditsi ntibashije kuboneka",
     "joined": "Yinjiye",
-    "totalArticles": "Inyandiko {count}",
-    "articles": "Inyandiko",
-    "noArticles": "Nta nyandiko zabonetse",
+    "totalArticles": "Inkuru {count}",
+    "articles": "Inkuru",
+    "noArticles": "Nta nkuru zabonetse",
     "followOn": "Kurikira kuri",
     "about": "Ibyerekeye"
   },
@@ -50,7 +50,7 @@
     "commentPlaceholder": "Andika igitekerezo...",
     "submit": "Ohereza",
     "submitting": "Birimo koherezwa...",
-    "noComments": "Ba uwa mbere gutanga igitekerezo kuri iyi nyandiko.",
+    "noComments": "Ba uwa mbere gutanga igitekerezo kuri iyi nkuru.",
     "justNow": "Ubu nyine",
     "minutesAgo": "hashize {count}m",
     "hoursAgo": "hashize {count}h",
@@ -103,6 +103,11 @@
     "resultsFor": "Ibisubizo bya \"{query}\"",
     "noResults": "Nta nyandiko zabonetse kuri \"{query}\"",
     "tryAgain": "Gerageza amagambo atandukanye cyangwa reba ibicishije mu byiciro."
+  },
+  "notFound": {
+    "title": "Urupapuro ntirwabonetse",
+    "description": "Urupapuro ushaka ntirubaho cyangwa rwarimutwe ahandi. Gerageza gushakisha icyo ukeneye.",
+    "backToHome": "Subira ku rubuga"
   },
   "metadata": {
     "title": "Menyesha - Menya mbere, menya neza",

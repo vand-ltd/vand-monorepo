@@ -104,6 +104,11 @@
     "noResults": "No articles found for \"{query}\"",
     "tryAgain": "Try different keywords or browse our categories."
   },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you're looking for doesn't exist or has been moved. Try searching for what you need.",
+    "backToHome": "Back to homepage"
+  },
   "metadata": {
     "title": "Menyesha - Know first, know clearly",
     "description": "Stay informed with the latest breaking news, analysis, and stories from Rwanda and around the world."

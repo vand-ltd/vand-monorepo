@@ -71,34 +71,25 @@ function FeaturedBadge({ type, className = "" }: { type?: string; className?: st
   );
 }
 
-function CategoryBadge({ slug, name, className = "" }: { slug?: string; name?: string; className?: string }) {
-  const style = categoryStyles[slug || ""] || defaultCategoryStyle;
-  return (
-    <span
-      className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${className}`}
-      style={{
-        backgroundColor: `light-dark(${style.lightBg}, ${style.darkBg})`,
-        color: `light-dark(${style.lightText}, ${style.darkText})`,
-      }}
-    >
-      {name || "General"}
-    </span>
-  );
-}
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function CategoryBadges({ article, className = "" }: { article: any; className?: string }) {
-  const parent = article.category?.parent;
   const category = article.category;
   if (!category) return null;
 
+  // Show the most specific category (child over parent)
+  const displayName = category.name || "General";
+  const style = categoryStyles[category.slug || ""] || defaultCategoryStyle;
+
   return (
-    <div className={`flex flex-wrap items-center gap-1.5 ${className}`}>
-      {parent && (
-        <CategoryBadge slug={parent.slug} name={parent.name} />
-      )}
-      <CategoryBadge slug={category.slug} name={category.name} />
-    </div>
+    <span
+      className={`px-2 py-0.5 rounded text-[11px] font-semibold backdrop-blur-sm ${className}`}
+      style={{
+        backgroundColor: `light-dark(${style.lightBg}e6, ${style.darkBg})`,
+        color: `light-dark(${style.lightText}, ${style.darkText})`,
+      }}
+    >
+      {displayName}
+    </span>
   );
 }
 
@@ -151,7 +142,7 @@ function AuthorAvatar({ author, size = 'md' }: { author: any; size?: 'sm' | 'md'
   if (author?.avatar) {
     return (
       <div className={`relative ${sizeClasses[size]} rounded-full overflow-hidden`}>
-        <img src={author.avatar} alt={author.user?.fullName || ''} className="absolute inset-0 w-full h-full object-cover" />
+        <img src={author.avatar} alt={author.user?.fullName || ''} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
       </div>
     );
   }
@@ -195,6 +186,7 @@ function ArticleThumbnail({ article, className = '', imageClassName = '' }: { ar
         <img
           src={article.thumbnail.url}
           alt={article.title}
+          loading="lazy"
           className={`w-full h-full object-cover ${imageClassName}`}
         />
       ) : isBreaking ? (

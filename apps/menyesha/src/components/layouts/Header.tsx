@@ -281,18 +281,14 @@ export const Header = () => {
               })()}
             </div>
 
-            <div className="flex items-center space-x-4 text-xs text-muted-foreground flex-shrink-0">
+            <div className="flex items-center space-x-3 text-xs text-muted-foreground flex-shrink-0">
               {mounted && (
                 <>
                   <span>{currentDate}</span>
+                  <span className="text-gray-300 dark:text-gray-600">|</span>
                   <span>{currentTime}</span>
                 </>
               )}
-              <div className="flex items-center space-x-1 text-gray-700 dark:text-gray-300">
-                <span>☀️</span>
-                <span className="font-medium">24°C</span>
-                <span className="opacity-75">Kigali</span>
-              </div>
             </div>
           </nav>
 
