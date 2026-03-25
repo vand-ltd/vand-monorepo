@@ -8,7 +8,7 @@ import { ToggleMode } from "./ToggleMode"
 import { SearchInput } from "./SearchInput"
 import LanguageSwitcher from "./LanguageSwitcher"
 import { Button } from "@/components/ui/button"
-import { Menu, User, ChevronDown, ChevronRight } from "lucide-react"
+import { Menu, User, ChevronDown, ChevronRight, ChevronLeft } from "lucide-react"
 import { BreakingNewsTicker } from "./BreakingNewsTicker"
 import { useTranslations, useLocale } from "next-intl"
 import { usePathname } from "next/navigation"
@@ -35,10 +35,28 @@ export const Header = () => {
   const { currentDate, currentTime, mounted } = useClientDateTime()
   const { resolvedTheme } = useTheme()
   const [logoMounted, setLogoMounted] = useState(false)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
   const dropdownTimeout = useRef<NodeJS.Timeout | null>(null)
   const navRef = useRef<HTMLElement>(null)
+  const navScrollRef = useRef<HTMLDivElement>(null)
+  const navItemRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   useEffect(() => setLogoMounted(true), [])
+
+  // Check scroll overflow
+  const updateScrollButtons = () => {
+    const el = navScrollRef.current
+    if (!el) return
+    setCanScrollLeft(el.scrollLeft > 0)
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1)
+  }
+
+  const scrollNav = (direction: 'left' | 'right') => {
+    const el = navScrollRef.current
+    if (!el) return
+    el.scrollBy({ left: direction === 'left' ? -150 : 150, behavior: 'smooth' })
+  }
 
   const t = useTranslations('nav')
   const locale = useLocale();
@@ -83,6 +101,19 @@ export const Header = () => {
 
     return links;
   }, [categories, t]);
+
+  useEffect(() => {
+    updateScrollButtons()
+    const el = navScrollRef.current
+    if (!el) return
+    el.addEventListener('scroll', updateScrollButtons)
+    window.addEventListener('resize', updateScrollButtons)
+    return () => {
+      el.removeEventListener('scroll', updateScrollButtons)
+      window.removeEventListener('resize', updateScrollButtons)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navLinks])
 
   const normalizePath = (path: string) =>
     path.endsWith('/') && path !== '/' ? path.slice(0, -1) : path;
@@ -159,7 +190,24 @@ export const Header = () => {
 
           {/* Navigation Bar */}
           <nav ref={navRef} className="hidden md:flex items-center justify-between border-t pt-3 gap-4">
-            <div className="flex items-center space-x-6 flex-1 min-w-0 flex-wrap">
+            <div className="relative flex-1 min-w-0">
+              {canScrollLeft && (
+                <button
+                  onClick={() => scrollNav('left')}
+                  className="absolute left-0 top-0 bottom-0 z-10 w-7 flex items-center justify-center bg-gradient-to-r from-background via-background/90 to-transparent hover:from-background"
+                >
+                  <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                </button>
+              )}
+              {canScrollRight && (
+                <button
+                  onClick={() => scrollNav('right')}
+                  className="absolute right-0 top-0 bottom-0 z-10 w-7 flex items-center justify-center bg-gradient-to-l from-background via-background/90 to-transparent hover:from-background"
+                >
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </button>
+              )}
+              <div ref={navScrollRef} className="flex items-center space-x-6 overflow-x-auto scrollbar-hide px-1">
               {navLinks.map((link) => {
                 const isActive = normalizePath(pathname) === `/${locale}${link.href}` ||
                                 (link.href === '/' && normalizePath(pathname) === `/${locale}`);
@@ -169,7 +217,7 @@ export const Header = () => {
                 return (
                   <div
                     key={link.href}
-                    className="relative"
+                    ref={(el) => { navItemRefs.current[link.href] = el; }}
                     onMouseEnter={() => hasDropdown ? handleMouseEnter(link.href) : undefined}
                     onMouseLeave={hasDropdown ? handleMouseLeave : undefined}
                   >
@@ -190,38 +238,47 @@ export const Header = () => {
                       )}
                       <div className="absolute -bottom-3 left-0 right-0 h-0.5 bg-brand-primary dark:bg-brand-accent scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
                     </Link>
-
-                    {/* Dropdown */}
-                    {hasDropdown && isDropdownOpen && (
-                      <div
-                        className="absolute top-full left-0 mt-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl py-1 min-w-[180px] z-50 animate-in fade-in slide-in-from-top-2 duration-150"
-                        onMouseEnter={() => handleMouseEnter(link.href)}
-                        onMouseLeave={handleMouseLeave}
-                      >
-                        {/* All (parent category) */}
-                        <Link
-                          href={`/${locale}${link.href}`}
-                          className="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors font-medium"
-                          onClick={() => setActiveDropdown(null)}
-                        >
-                          {link.label}
-                        </Link>
-                        <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
-                        {link.subcategories!.map((sub) => (
-                          <Link
-                            key={sub.key}
-                            href={`/${locale}${link.href}${sub.href}`}
-                            className="flex items-center px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-brand-primary dark:hover:text-brand-accent transition-colors"
-                            onClick={() => setActiveDropdown(null)}
-                          >
-                            {sub.name}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 );
               })}
+              </div>
+
+              {/* Dropdown rendered outside scrollable container */}
+              {activeDropdown && (() => {
+                const link = navLinks.find((l) => l.href === activeDropdown);
+                const el = navItemRefs.current[activeDropdown];
+                if (!link?.subcategories || !el) return null;
+                const rect = el.getBoundingClientRect();
+                const navRect = navRef.current?.getBoundingClientRect();
+                const left = rect.left - (navRect?.left || 0);
+                return (
+                  <div
+                    className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl py-1 min-w-[180px] z-50 animate-in fade-in slide-in-from-top-2 duration-150"
+                    style={{ top: rect.bottom - (navRect?.top || 0) + 4, left }}
+                    onMouseEnter={() => handleMouseEnter(activeDropdown)}
+                    onMouseLeave={handleMouseLeave}
+                  >
+                    <Link
+                      href={`/${locale}${link.href}`}
+                      className="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors font-medium"
+                      onClick={() => setActiveDropdown(null)}
+                    >
+                      {link.label}
+                    </Link>
+                    <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
+                    {link.subcategories.map((sub) => (
+                      <Link
+                        key={sub.key}
+                        href={`/${locale}${link.href}${sub.href}`}
+                        className="flex items-center px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-brand-primary dark:hover:text-brand-accent transition-colors"
+                        onClick={() => setActiveDropdown(null)}
+                      >
+                        {sub.name}
+                      </Link>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="flex items-center space-x-4 text-xs text-muted-foreground flex-shrink-0">

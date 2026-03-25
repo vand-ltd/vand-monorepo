@@ -85,6 +85,18 @@
     "adLeaderboard": "Banni\u00e8re",
     "adSidebar": "Barre lat\u00e9rale"
   },
+  "feed": {
+    "latestStories": "Actualités",
+    "editorsPicks": "Choix de la rédaction",
+    "articles": "articles",
+    "all": "Tout",
+    "noArticles": "Aucun article trouvé",
+    "loadMore": "Charger plus d'articles",
+    "loading": "Chargement...",
+    "allCaughtUp": "Vous êtes à jour",
+    "checkBackLater": "Revenez plus tard pour plus d'articles",
+    "moreAvailable": "Plus d'articles disponibles"
+  },
   "search": {
     "placeholder": "Rechercher des articles...",
     "title": "R\u00e9sultats de recherche",

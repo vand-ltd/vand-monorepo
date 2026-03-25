@@ -1,9 +1,11 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getArticleBySlug, getRelatedArticles } from '@org/api';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import {
   Eye,
@@ -209,6 +211,11 @@ function ArticleSkeleton() {
 export default function ArticleView({ slug }: { slug: string }) {
   const locale = useLocale();
   const t = useTranslations('article');
+  const router = useRouter();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [slug]);
 
   const { data: article, isLoading, error } = useQuery({
     queryKey: ['article', slug],
@@ -252,10 +259,13 @@ export default function ArticleView({ slug }: { slug: string }) {
     <div className="w-full max-w-4xl mx-auto">
       {/* Back Navigation */}
       <div className="mb-6">
-        <Link href="/" className="inline-flex items-center space-x-2 text-[var(--color-brand-primary)] hover:text-[var(--color-brand-secondary)] dark:text-white dark:hover:text-[var(--color-brand-accent)] transition-colors">
+        <button
+          onClick={() => router.back()}
+          className="inline-flex items-center space-x-2 text-[var(--color-brand-primary)] hover:text-[var(--color-brand-secondary)] dark:text-white dark:hover:text-[var(--color-brand-accent)] transition-colors"
+        >
           <ArrowLeft className="h-4 w-4" />
           <span>{t('backToHome')}</span>
-        </Link>
+        </button>
       </div>
 
       {/* Sponsored Content Banner */}

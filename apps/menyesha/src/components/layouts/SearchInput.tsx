@@ -32,7 +32,7 @@ export function SearchInput() {
       <Button
         type="submit"
         size="sm"
-        className="absolute right-1 top-1/2 -translate-y-1/2 h-8 px-2"
+        className="absolute right-1 top-1/2 -translate-y-1/2 h-8 px-2 bg-brand-primary hover:bg-brand-secondary text-white"
       >
         <Search className="w-4 h-4" />
       </Button>

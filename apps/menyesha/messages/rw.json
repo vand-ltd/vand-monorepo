@@ -85,6 +85,18 @@
     "adLeaderboard": "Ikibanza cyo hejuru",
     "adSidebar": "Uruhande"
   },
+  "feed": {
+    "latestStories": "Amakuru Mashya",
+    "editorsPicks": "Ibihitiyemo",
+    "articles": "inyandiko",
+    "all": "Byose",
+    "noArticles": "Nta nyandiko zabonetse",
+    "loadMore": "Shakisha inyandiko nyinshi",
+    "loading": "Birimo gushakisha...",
+    "allCaughtUp": "Warangije gusoma byose",
+    "checkBackLater": "Garuka nyuma kubona inyandiko nshya",
+    "moreAvailable": "Hari inyandiko nyinshi"
+  },
   "search": {
     "placeholder": "Shakisha inyandiko...",
     "title": "Ibisubizo by'ubushakashatsi",

@@ -85,6 +85,18 @@
     "adLeaderboard": "Leaderboard",
     "adSidebar": "Sidebar"
   },
+  "feed": {
+    "latestStories": "Latest News",
+    "editorsPicks": "Editor's Picks",
+    "articles": "articles",
+    "all": "All",
+    "noArticles": "No articles found",
+    "loadMore": "Load More Stories",
+    "loading": "Loading Stories...",
+    "allCaughtUp": "You're all caught up",
+    "checkBackLater": "Check back later for more stories",
+    "moreAvailable": "More stories available"
+  },
   "search": {
     "placeholder": "Search articles...",
     "title": "Search Results",

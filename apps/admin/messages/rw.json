@@ -47,7 +47,7 @@
     "createUser": "Kora umukoresha",
     "users": "Abakoresha",
     "collapse": "Gufunga",
-    "breakingNews": "Amakuru y'ingutu",
+    "breakingNews": "Amakuru mashya",
     "categories": "Ibyiciro",
     "terms": "Amabwiriza",
     "editProfile": "Hindura Umwirondoro",
@@ -185,9 +185,9 @@
     "statusArchived": "Yabitswe",
     "allFeatured": "Ibikunzwe byose",
     "featuredType": {
-      "Hero": "Nyamukuru",
-      "Secondary": "Iya kabiri",
-      "Spotlight": "Igisobanuro"
+      "Hero": "Inkuru Nyamukuru",
+      "Secondary": "Inkuru Iya kabiri",
+      "Spotlight": "Inkuru Zihariye"
     },
     "columnTitle": "Umutwe",
     "columnCategory": "Icyiciro",
@@ -244,9 +244,9 @@
     "featuredLabel": "Ubwoko bw'ibikunzwe",
     "noneFeatured": "Ntacyo",
     "featuredType": {
-      "Hero": "Nyamukuru",
-      "Secondary": "Iya kabiri",
-      "Spotlight": "Igisobanuro"
+      "Hero": "Inkuru Nyamukuru",
+      "Secondary": "Inkuru Zikurikira",
+      "Spotlight": "Inkuru Zihariye"
     },
     "languageLabel": "Ururimi rw'inkuru",
     "languages": {
@@ -364,29 +364,29 @@
   },
   "breakingNews": {
     "pageTitle": "Andika amakuru mashya",
-    "breakingLabel": "Amakuru mashya",
-    "breakingBadge": "Iyi nkuru izasohoka nk'amakuru mashya kandi igaragare mu rubanza rw'amakuru",
+    "breakingLabel": "Amakuru y'ibanze",
+    "breakingBadge": "Iyi nkuru izasohoka nk'amakuru y'ibanze kandi igaragare mu rubanza rw'amakuru",
     "publish": "Sohereza nonaha",
-    "created": "Amakuru mashya yasohowe neza!",
-    "failed": "Ntibashije gusohora amakuru mashya. Ongera ugerageze.",
+    "created": "Amakuru y'ibanze yasohowe neza!",
+    "failed": "Ntibashije gusohora amakuru y'ibanze. Ongera ugerageze.",
     "titleRequired": "Umutwe warabuze",
     "categoryRequired": "Icyiciro gisabwa",
     "contentRequired": "Ibikubiyemo bisabwa",
     "titleLabel": "Umutwe",
-    "titlePlaceholder": "Umutwe w'amakuru mashya...",
+    "titlePlaceholder": "Umutwe w'amakuru y'ibanze...",
     "excerptLabel": "Incamake",
-    "excerptPlaceholder": "Incamake ngufi y'amakuru mashya...",
+    "excerptPlaceholder": "Incamake ngufi y'amakuru y'ibanze...",
     "contentLabel": "Inkuru yose",
-    "contentPlaceholder": "Andika inkuru yose y'amakuru mashya...",
+    "contentPlaceholder": "Andika inkuru yose y'amakuru y'ibanze...",
     "settings": "Igenamiterere",
     "categoryLabel": "Icyiciro",
     "selectCategory": "Hitamo icyiciro",
     "languageLabel": "Ururimi",
     "breakingUntilLabel": "Kugeza ryari",
-    "breakingUntilHint": "Siga ubusa kugirango igume nk'amakuru mashya",
-    "infoTitle": "Amabwiriza y'amakuru mashya",
+    "breakingUntilHint": "Siga ubusa kugirango igume nk'amakuru y'ibanze",
+    "infoTitle": "Amabwiriza y'amakuru y'ibanze",
     "infoTips": {
-      "0": "Amakuru mashya asohoka ako kanya kandi agaragara mu rubanza",
+      "0": "Amakuru y'ibanze asohoka ako kanya kandi agaragara mu rubanza",
       "1": "Imutwe igomba kuba igufi kandi y'ukuri",
       "2": "Shyiraho igihe cyo kurangira kugirango ikurwe mu rubanza mu buryo bwikora"
     }

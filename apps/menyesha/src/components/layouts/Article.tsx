@@ -3,10 +3,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import { MessageCircle, Clock, Eye, ArrowRight, TrendingUp, Grid, List, Zap, Loader2, ChevronDown, Star } from "lucide-react";
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { getArticlesFeed, getCategories } from '@org/api';
-import { useLocale } from 'next-intl';
+import { MessageCircle, Clock, Eye, Grid, List, Zap, Loader2, ChevronDown, Star, ArrowUp } from "lucide-react";
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { getArticlesFeed } from '@org/api';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { formatTimeAgo } from '@/lib/timeago';
 
@@ -238,12 +238,8 @@ function ArticleThumbnail({ article, className = '', imageClassName = '' }: { ar
 const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCategoryKey?: string }) => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const locale = useLocale();
-
-  // Fetch categories for current locale
-  const { data: categories } = useQuery({
-    queryKey: ['categories', locale],
-    queryFn: () => getCategories(locale),
-  });
+  const t = useTranslations('feed');
+  const tSidebar = useTranslations('sidebar');
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(categoryKey || null);
 
@@ -316,7 +312,7 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
   if (articles.length === 0) {
     return (
       <div className="text-center py-16">
-        <p className="text-gray-500 dark:text-gray-400 text-lg">No articles found</p>
+        <p className="text-gray-500 dark:text-gray-400 text-lg">{t('noArticles')}</p>
       </div>
     );
   }
@@ -430,7 +426,7 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
         <section>
           <div className="flex items-center space-x-2 mb-6">
             <Star className="h-5 w-5 text-brand-accent" />
-            <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">Editor&apos;s Picks</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{t('editorsPicks')}</h2>
             <span className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-1 rounded-full">
               {spotlightArticles.length}
             </span>
@@ -531,10 +527,10 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
             <div className="flex items-center space-x-3">
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center space-x-2 sm:space-x-3">
                 <Zap className="h-6 w-6 sm:h-8 sm:w-8 text-brand-accent" />
-                <span>Latest Stories</span>
+                <span>{t('latestStories')}</span>
               </h2>
               <span className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-1 rounded-full">
-                {feedArticles.length} articles
+                {feedArticles.length} {t('articles')}
               </span>
             </div>
             <div className="flex items-center space-x-2">
@@ -561,41 +557,6 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
             </div>
           </div>
 
-          {/* Category Filter */}
-          {categories && categories.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-6">
-              <button
-                onClick={() => setSelectedCategory(null)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide transition-all duration-200 ${
-                  selectedCategory === null
-                    ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900'
-                    : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
-                }`}
-              >
-                All
-              </button>
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              {categories.map((cat: any) => {
-                const colors = categoryStyles[cat.slug] || defaultCategoryStyle;
-                const isActive = selectedCategory === cat.slug;
-                return (
-                  <button
-                    key={cat.id}
-                    onClick={() => setSelectedCategory(isActive ? null : cat.slug)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide transition-all duration-200 ${
-                      isActive ? 'ring-2 ring-offset-1 ring-gray-400 dark:ring-gray-500' : ''
-                    }`}
-                    style={{
-                      backgroundColor: `light-dark(${colors.lightBg}, ${colors.darkBg})`,
-                      color: `light-dark(${colors.lightText}, ${colors.darkText})`,
-                    }}
-                  >
-                    {cat.name}
-                  </button>
-                );
-              })}
-            </div>
-          )}
 
           <div className={`space-y-5 lg:space-y-6 ${viewMode === 'grid' ? 'md:grid md:grid-cols-2 md:gap-6 md:space-y-0' : ''}`}>
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -695,52 +656,38 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
         </section>
       )}
 
-      {/* Load More Section */}
-      <div className="text-center py-8 sm:py-12 border-t border-gray-200 dark:border-gray-700">
-        <div className="max-w-md mx-auto space-y-5">
-          {hasNextPage ? (
+      {/* Load More */}
+      <div className="flex justify-center py-8">
+        {hasNextPage ? (
+          <button
+            onClick={() => fetchNextPage()}
+            disabled={isFetchingNextPage}
+            className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isFetchingNextPage ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {t('loading')}
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-4 w-4" />
+                {t('loadMore')}
+              </>
+            )}
+          </button>
+        ) : (
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-sm text-gray-400">{t('allCaughtUp')}</p>
             <button
-              onClick={() => fetchNextPage()}
-              disabled={isFetchingNextPage}
-              className="group relative w-full bg-gradient-breaking-news text-white font-bold px-8 py-4 rounded-xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl flex items-center justify-center space-x-3 overflow-hidden disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-brand-accent via-brand-secondary to-brand-primary opacity-0 group-hover:opacity-100 group-disabled:opacity-0 transition-opacity duration-500" />
-
-              <div className="relative flex items-center space-x-3">
-                {isFetchingNextPage ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    <span className="text-lg font-semibold tracking-wide">Loading Stories...</span>
-                  </>
-                ) : (
-                  <>
-                    <TrendingUp className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
-                    <span className="text-lg font-semibold tracking-wide">Load More Stories</span>
-                    <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
-                  </>
-                )}
-              </div>
+              <ArrowUp className="h-4 w-4" />
+              {tSidebar('backToTop')}
             </button>
-          ) : (
-            <div className="space-y-3">
-              <div className="flex items-center justify-center space-x-2 text-brand-primary dark:text-brand-accent">
-                <div className="w-8 h-[2px] bg-brand-accent rounded-full" />
-                <span className="text-sm font-semibold">You&apos;re all caught up</span>
-                <div className="w-8 h-[2px] bg-brand-accent rounded-full" />
-              </div>
-              <p className="text-xs text-gray-400">Check back later for more stories</p>
-            </div>
-          )}
-
-          {hasNextPage && (
-            <div className="flex items-center justify-center space-x-6 text-sm text-gray-400">
-              <div className="flex items-center space-x-2">
-                <ChevronDown className="h-3.5 w-3.5 animate-bounce" />
-                <span>More stories available</span>
-              </div>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
