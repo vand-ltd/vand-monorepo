@@ -41,16 +41,20 @@ export function BreakingNewsTicker() {
             }}
           >
             {tickerItems.map((article: any, index: number) => (
-              <Link
-                key={`${article.id}-${index}`}
-                href={`/${locale}/article/${article.slug}`}
-                className="inline-flex items-center text-sm hover:underline shrink-0 mx-6"
-              >
-                <span>{article.title}</span>
-                <span className="ml-1.5 flex items-center text-white/70 text-xs">
-                  {t('readMore')} <ChevronRight className="h-3 w-3" />
-                </span>
-              </Link>
+              <span key={`${article.id}-${index}`} className="inline-flex items-center shrink-0">
+                {index > 0 && (
+                  <span className="mx-4 text-white/30">|</span>
+                )}
+                <Link
+                  href={`/${locale}/article/${article.slug}`}
+                  className="inline-flex items-center text-sm hover:underline"
+                >
+                  <span>{article.title}</span>
+                  <span className="ml-1.5 flex items-center text-white/70 text-xs">
+                    {t('readMore')} <ChevronRight className="h-3 w-3" />
+                  </span>
+                </Link>
+              </span>
             ))}
           </div>
         </div>

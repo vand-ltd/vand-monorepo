@@ -187,7 +187,7 @@ export default function CreateBreakingNewsPage() {
                         className="w-full h-10 px-3 pr-8 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 appearance-none"
                       >
                         <option value="">{t('selectCategory')}</option>
-                        {categories.map((cat: any) => (
+                        {categories.filter((cat: any) => cat.slug !== 'breaking-news').map((cat: any) => (
                           cat.children?.length > 0 ? (
                             <optgroup key={cat.id} label={cat.name}>
                               {cat.children.map((sub: any) => (

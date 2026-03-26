@@ -79,7 +79,7 @@ export const Header = () => {
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      sorted.forEach((cat: any) => {
+      sorted.filter((cat: any) => cat.slug !== 'breaking-news').forEach((cat: any) => {
         const subcategories: SubCategory[] = (cat.children || []).map((child: any) => ({
           key: child.slug,
           href: `/${child.slug}`,

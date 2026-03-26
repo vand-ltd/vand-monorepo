@@ -42,7 +42,7 @@ export const GoogleAdBanner: React.FC<GoogleAdBannerProps> = ({
       // @ts-expect-error - AdSense global not typed
       (window.adsbygoogle = window.adsbygoogle || []).push({})
     } catch (err) {
-      console.log('AdSense error:', err)
+      // AdSense initialization error
     }
   }, [])
 
@@ -93,7 +93,7 @@ export const GoogleAdResponsive: React.FC<{
       // @ts-expect-error - AdSense global not typed
       (window.adsbygoogle = window.adsbygoogle || []).push({})
     } catch (err) {
-      console.log('AdSense error:', err)
+      // AdSense initialization error
     }
   }, [])
 

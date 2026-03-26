@@ -104,6 +104,74 @@
     "noResults": "Nta nyandiko zabonetse kuri \"{query}\"",
     "tryAgain": "Gerageza amagambo atandukanye cyangwa reba ibicishije mu byiciro."
   },
+  "login": {
+    "loginTab": "Kwinjira",
+    "registerTab": "Kwiyandikisha",
+    "fullName": "Amazina yombi",
+    "fullNamePlaceholder": "Kalisa Jean",
+    "email": "Imeyili",
+    "emailPlaceholder": "wowe@urugero.com",
+    "password": "Ijambo ry'ibanga",
+    "passwordPlaceholder": "Andika ijambo ry'ibanga",
+    "loggingIn": "Birimo kwinjira...",
+    "phone": "Telefoni",
+    "phonePlaceholder": "0781234567",
+    "submit": "Iyandikishe",
+    "submitting": "Birimo kwandikisha...",
+    "success": "Kwiyandikisha byagenze neza!",
+    "backToHome": "Subira ku rubuga"
+  },
+  "contactPage": {
+    "title": "Twandikire",
+    "description": "Ufite inkuru, igitekerezo, cyangwa ikibazo? Twishimiye kukumva.",
+    "generalEmail": "Ibibazo rusange",
+    "generalEmailHint": "Ku bitekerezo, gukosora, n'ibisabwa by'itangazamakuru",
+    "location": "Aho duherereye",
+    "storyTipTitle": "Ufite inkuru?",
+    "storyTipDescription": "Ufite amakuru ku nkuru yihutirwa? Itsinda ryacu ry'abanyamakuru rigenzura buri makuru. Amazina yawe azabikwa mu ibanga.",
+    "sendTip": "Ohereza inkuru",
+    "advertisingTitle": "Kwamamaza",
+    "advertisingDescription": "Urashaka kugera ku basomyi bacu? Twandikire ku byerekeye kwamamaza no ku binyandiko bifashishijwe."
+  },
+  "aboutPage": {
+    "heroTitle": "Ibyerekeye Menyesha",
+    "heroDescription": "Menyesha ni urubuga rw'amakuru rwigenga rutanga amakuru y'ukuri kandi adashyigikira uruhande avuye mu Rwanda no ku isi yose.",
+    "slogan": "Menya mbere, menya neza",
+    "missionTitle": "Intego Yacu",
+    "missionText": "Menyesha yashinzwe dufite icyizere kimwe gusa: buri wese akwiye kubona amakuru y'ukuri kandi yanditswe neza. Twiyemeje gutanga inkuru zigisha, zitoza kandi ziha imbaraga abasomyi bacu — dukurikirana ibyabaye mu Rwanda no muri Afurika hamwe n'ibyabaye ku rwego mpuzamahanga bishobora guhindura isi yacu.",
+    "valuesTitle": "Icyo Dushyigikiye",
+    "values": {
+      "independence": {
+        "title": "Ubwigenge mu itangazamakuru",
+        "description": "Dukomeza kubungabunga ubwigenge bwacu mu itangazamakuru, tutarangwa n'abafite inyungu."
+      },
+      "factBased": {
+        "title": "Itangazamakuru rishingiye ku makuru y'ukuri",
+        "description": "Buri nkuru igenzurwa neza mbere yo gutangazwa."
+      },
+      "perspective": {
+        "title": "Icyerekezo cy'Afurika n'isi",
+        "description": "Dutanga amakuru dufite ubumenyi bw'aho hantu mu Rwanda no muri Afurika, mu buryo bw'isi yose."
+      },
+      "realTime": {
+        "title": "Amakuru y'ako kanya",
+        "description": "Amakuru mashya atangwa mu gihe ibikorwa bibaye."
+      },
+      "community": {
+        "title": "Gushyira imbere abaturage",
+        "description": "Dushishikariza ibiganiro bifite ishingiro kandi twubaka umuryango w'abasomyi bashishikaye."
+      },
+      "transparency": {
+        "title": "Gukorera ku mugaragaro",
+        "description": "Tugaragaza ku mugaragaro inkomoko y'amakuru yacu n'imiyoborere yacu mu itangazamakuru ry'ubunyangamugayo."
+      }
+    },
+    "contactTitle": "Twandikire",
+    "contactDescription": "Ufite inkuru, gukosora, cyangwa ushaka gufatanya? Twishimiye kukumva.",
+    "email": "Imeyili",
+    "location": "Aho duherereye",
+    "readNews": "Soma amakuru mashya"
+  },
   "notFound": {
     "title": "Urupapuro ntirwabonetse",
     "description": "Urupapuro ushaka ntirubaho cyangwa rwarimutwe ahandi. Gerageza gushakisha icyo ukeneye.",

@@ -104,6 +104,74 @@
     "noResults": "No articles found for \"{query}\"",
     "tryAgain": "Try different keywords or browse our categories."
   },
+  "login": {
+    "loginTab": "Login",
+    "registerTab": "Register",
+    "fullName": "Full Name",
+    "fullNamePlaceholder": "John Doe",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "loggingIn": "Logging in...",
+    "phone": "Phone",
+    "phonePlaceholder": "0781234567",
+    "submit": "Register",
+    "submitting": "Registering...",
+    "success": "Registration successful!",
+    "backToHome": "Back to homepage"
+  },
+  "contactPage": {
+    "title": "Contact Us",
+    "description": "Have a story tip, feedback, or inquiry? We'd love to hear from you.",
+    "generalEmail": "General Inquiries",
+    "generalEmailHint": "For feedback, corrections, and press inquiries",
+    "location": "Location",
+    "storyTipTitle": "Have a Story Tip?",
+    "storyTipDescription": "Got a lead on a breaking story? Our editorial team reviews every tip. Your identity will be kept confidential.",
+    "sendTip": "Send a Tip",
+    "advertisingTitle": "Advertising",
+    "advertisingDescription": "Interested in reaching our audience? Contact us for ad placements and sponsored content opportunities."
+  },
+  "aboutPage": {
+    "heroTitle": "About Menyesha",
+    "heroDescription": "Menyesha is an independent digital news platform delivering accurate, unbiased reporting from Rwanda and around the world.",
+    "slogan": "Know first, know clearly",
+    "missionTitle": "Our Mission",
+    "missionText": "Menyesha was founded with a simple belief: everyone deserves access to truthful, well-reported news. We are committed to delivering stories that inform, educate, and empower our readers — covering local events in Rwanda and the broader African continent alongside international developments that shape our world.",
+    "valuesTitle": "What We Stand For",
+    "values": {
+      "independence": {
+        "title": "Editorial Independence",
+        "description": "We maintain complete editorial independence, free from corporate or political influence."
+      },
+      "factBased": {
+        "title": "Fact-Based Reporting",
+        "description": "Every story is thoroughly fact-checked and verified before publication."
+      },
+      "perspective": {
+        "title": "African & Global Perspective",
+        "description": "We cover stories with local insight from Rwanda and Africa, set in a global context."
+      },
+      "realTime": {
+        "title": "Real-Time Updates",
+        "description": "Breaking news delivered as events unfold, keeping you informed around the clock."
+      },
+      "community": {
+        "title": "Community Focus",
+        "description": "We foster informed discussions and build engaged communities of readers."
+      },
+      "transparency": {
+        "title": "Transparency",
+        "description": "We are open about our sources, methodology, and commitment to ethical journalism."
+      }
+    },
+    "contactTitle": "Get in Touch",
+    "contactDescription": "Have a story tip, correction, or want to collaborate? We'd love to hear from you.",
+    "email": "Email",
+    "location": "Location",
+    "readNews": "Read Latest News"
+  },
   "notFound": {
     "title": "Page not found",
     "description": "The page you're looking for doesn't exist or has been moved. Try searching for what you need.",

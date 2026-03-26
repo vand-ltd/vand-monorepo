@@ -104,6 +104,74 @@
     "noResults": "Aucun article trouv\u00e9 pour \"{query}\"",
     "tryAgain": "Essayez d'autres mots-cl\u00e9s ou parcourez nos cat\u00e9gories."
   },
+  "login": {
+    "loginTab": "Connexion",
+    "registerTab": "S'inscrire",
+    "fullName": "Nom complet",
+    "fullNamePlaceholder": "Jean Dupont",
+    "email": "E-mail",
+    "emailPlaceholder": "vous@exemple.com",
+    "password": "Mot de passe",
+    "passwordPlaceholder": "Entrez votre mot de passe",
+    "loggingIn": "Connexion...",
+    "phone": "Téléphone",
+    "phonePlaceholder": "0781234567",
+    "submit": "S'inscrire",
+    "submitting": "Inscription...",
+    "success": "Inscription réussie !",
+    "backToHome": "Retour à l'accueil"
+  },
+  "contactPage": {
+    "title": "Contactez-nous",
+    "description": "Vous avez un scoop, un commentaire ou une question ? Nous serions ravis de vous entendre.",
+    "generalEmail": "Renseignements généraux",
+    "generalEmailHint": "Pour les commentaires, corrections et demandes de presse",
+    "location": "Emplacement",
+    "storyTipTitle": "Vous avez un scoop ?",
+    "storyTipDescription": "Vous avez une piste sur une actualité ? Notre équipe éditoriale examine chaque information. Votre identité restera confidentielle.",
+    "sendTip": "Envoyer un scoop",
+    "advertisingTitle": "Publicité",
+    "advertisingDescription": "Intéressé par notre audience ? Contactez-nous pour des emplacements publicitaires et du contenu sponsorisé."
+  },
+  "aboutPage": {
+    "heroTitle": "À propos de Menyesha",
+    "heroDescription": "Menyesha est une plateforme d'information numérique indépendante, offrant des reportages précis et impartiaux du Rwanda et du monde entier.",
+    "slogan": "Informez-vous d'abord, comprenez mieux",
+    "missionTitle": "Notre Mission",
+    "missionText": "Menyesha a été fondé avec une conviction simple : chacun mérite un accès à des informations véridiques et bien rapportées. Nous nous engageons à livrer des articles qui informent, éduquent et responsabilisent nos lecteurs — couvrant les événements locaux au Rwanda et sur le continent africain, ainsi que les développements internationaux qui façonnent notre monde.",
+    "valuesTitle": "Nos Valeurs",
+    "values": {
+      "independence": {
+        "title": "Indépendance éditoriale",
+        "description": "Nous maintenons une indépendance éditoriale complète, libre de toute influence corporative ou politique."
+      },
+      "factBased": {
+        "title": "Reportage factuel",
+        "description": "Chaque article est rigoureusement vérifié avant publication."
+      },
+      "perspective": {
+        "title": "Perspective africaine et mondiale",
+        "description": "Nous couvrons les actualités avec un regard local du Rwanda et de l'Afrique, dans un contexte mondial."
+      },
+      "realTime": {
+        "title": "Mises à jour en temps réel",
+        "description": "Les dernières nouvelles livrées au fur et à mesure des événements."
+      },
+      "community": {
+        "title": "Axé sur la communauté",
+        "description": "Nous favorisons des discussions éclairées et bâtissons des communautés de lecteurs engagés."
+      },
+      "transparency": {
+        "title": "Transparence",
+        "description": "Nous sommes ouverts sur nos sources, notre méthodologie et notre engagement envers un journalisme éthique."
+      }
+    },
+    "contactTitle": "Contactez-nous",
+    "contactDescription": "Vous avez un scoop, une correction ou souhaitez collaborer ? Nous serions ravis de vous entendre.",
+    "email": "E-mail",
+    "location": "Emplacement",
+    "readNews": "Lire les dernières actualités"
+  },
   "notFound": {
     "title": "Page introuvable",
     "description": "La page que vous recherchez n'existe pas ou a été déplacée. Essayez de rechercher ce dont vous avez besoin.",

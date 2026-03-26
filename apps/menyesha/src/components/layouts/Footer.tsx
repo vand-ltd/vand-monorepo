@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import { Youtube, Mail, Phone, MapPin } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useState, useEffect } from "react";
 
 const Footer = () => {
@@ -12,6 +12,8 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
   const yearDisplay = currentYear > startYear ? `${startYear} – ${currentYear}` : `${startYear}`;
   const t = useTranslations('footer');
+  const tNav = useTranslations('nav');
+  const locale = useLocale();
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -25,7 +27,7 @@ const Footer = () => {
           <div>
             <div className="mb-4">
               <Image
-                src={mounted && resolvedTheme === 'dark' ? '/menyesha-logo-dark.svg' : '/menyesha-logo.svg'}
+                src="/menyesha-logo-dark.svg"
                 alt="Menyesha"
                 width={120}
                 height={40}
@@ -36,8 +38,7 @@ const Footer = () => {
               {t('description')}
             </p> */}
             <div className="flex space-x-2">
-              {/* TODO: Replace with real social URLs before launch */}
-              <a href="https://facebook.com/menyesha" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="bg-gray-800 hover:bg-brand-accent p-2 rounded-lg transition-colors">
+              <a href="https://www.facebook.com/profile.php?id=61575594504264" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="bg-gray-800 hover:bg-brand-accent p-2 rounded-lg transition-colors">
                 <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd"/>
                 </svg>
@@ -72,27 +73,22 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Legal Links */}
-          {/* <div>
+          {/* Quick Links */}
+          <div>
             <h4 className="text-sm font-semibold text-white uppercase tracking-wide mb-4">{t('legal')}</h4>
             <ul className="space-y-2.5">
               <li>
-                <Link href="#" className="text-sm text-gray-400 hover:text-brand-accent transition-colors">
-                  {t('privacyPolicy')}
+                <Link href={`/${locale}/about`} className="text-sm text-gray-400 hover:text-brand-accent transition-colors">
+                  {tNav('about')}
                 </Link>
               </li>
               <li>
-                <Link href="#" className="text-sm text-gray-400 hover:text-brand-accent transition-colors">
-                  {t('termsOfService')}
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-sm text-gray-400 hover:text-brand-accent transition-colors">
-                  {t('cookiePolicy')}
+                <Link href={`/${locale}/contact`} className="text-sm text-gray-400 hover:text-brand-accent transition-colors">
+                  {tNav('contact')}
                 </Link>
               </li>
             </ul>
-          </div> */}
+          </div>
         </div>
       </div>
 
