@@ -3,8 +3,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
-import { useTheme } from 'next-themes';
-import { useEffect, useState } from 'react';
 import {
   Shield,
   CheckCircle,
@@ -22,9 +20,6 @@ import { Button } from '@/components/ui/button';
 export default function AboutPage() {
   const locale = useLocale();
   const t = useTranslations('aboutPage');
-  const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
 
   const values = [
     { icon: Shield, key: 'independence' },
