@@ -1,11 +1,10 @@
 'use client';
 
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { Mail, MapPin, MessageSquare } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 export default function ContactPage() {
-  const locale = useLocale();
   const t = useTranslations('contactPage');
 
   return (
