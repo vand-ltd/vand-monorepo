@@ -2,10 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useTheme } from "next-themes";
-import { Youtube, Mail, Phone, MapPin } from "lucide-react";
+import { Youtube, Mail, MapPin } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
-import { useState, useEffect } from "react";
 
 const Footer = () => {
   const startYear = 2026;
@@ -14,9 +12,6 @@ const Footer = () => {
   const t = useTranslations('footer');
   const tNav = useTranslations('nav');
   const locale = useLocale();
-  const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
 
   return (
     <footer className="bg-gray-900 text-gray-300">

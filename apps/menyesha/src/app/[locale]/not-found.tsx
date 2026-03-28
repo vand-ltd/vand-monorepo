@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
-import { ArrowLeft, Search } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { SearchInput } from '@/components/layouts/SearchInput';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
