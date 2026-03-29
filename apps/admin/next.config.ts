@@ -5,8 +5,12 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
+        protocol: 'https' as const,
         hostname: '*.r2.dev',
+      },
+      {
+        protocol: 'https' as const,
+        hostname: 'storage.vand.rw',
       },
     ],
   },

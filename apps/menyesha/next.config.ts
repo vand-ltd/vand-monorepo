@@ -4,7 +4,16 @@ import { composePlugins, withNx } from '@nx/next';
 
 const nextConfig: NextConfig = {
   images: {
-    domains: [process.env.NEXT_PUBLIC_IMAGE_DOMAIN || ''].filter(Boolean),
+    remotePatterns: [
+      {
+        protocol: 'https' as const,
+        hostname: '*.r2.dev',
+      },
+      {
+        protocol: 'https' as const,
+        hostname: 'storage.vand.rw',
+      },
+    ],
   },
 };
 
