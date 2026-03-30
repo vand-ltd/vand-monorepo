@@ -4,7 +4,7 @@ import React, { ReactNode } from "react";
 import { TrendingUp, Clock, Eye, ArrowUp, Flame, Megaphone, Mail } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { getTrendingArticles, getAds } from "@org/api";
+import { getTrendingArticles } from "@org/api";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import Image from "next/image";
@@ -18,30 +18,6 @@ function formatViews(count: number): string {
   if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`;
   if (count >= 1_000) return `${(count / 1_000).toFixed(1)}K`;
   return String(count);
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function AdCard({ ad }: { ad: any }) {
-  return (
-    <Card className="overflow-hidden !p-0 !gap-0">
-      <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer sponsored" className="block group">
-        <div className="relative w-full overflow-hidden">
-          <Image
-            src={ad.imageUrl}
-            alt={ad.title || 'Advertisement'}
-            width={300}
-            height={250}
-            className="w-full h-auto object-cover group-hover:scale-[1.02] transition-transform duration-300"
-          />
-        </div>
-        {ad.title && (
-          <div className="px-3 py-2 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800">
-            <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide">Ad · {ad.title}</p>
-          </div>
-        )}
-      </a>
-    </Card>
-  );
 }
 
 function AdPlaceholder({ size, label }: { size: string; label: string }) {
@@ -67,15 +43,6 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
     queryFn: () => getTrendingArticles({ language: locale, limit: 5 }),
   });
 
-  const { data: sidebarAds = [] } = useQuery({
-    queryKey: ['ads-sidebar', locale],
-    queryFn: () => getAds({ placement: 'sidebar', language: locale }),
-  });
-
-  const { data: leaderboardAds = [] } = useQuery({
-    queryKey: ['ads-leaderboard', locale],
-    queryFn: () => getAds({ placement: 'leaderboard', language: locale }),
-  });
 
   const trendingStories = Array.isArray(trendingData) ? trendingData : trendingData?.articles ?? [];
 
@@ -83,24 +50,13 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
     <>
       {/* Top Banner Ad */}
       <div className='bg-background border-b px-4'>
-        {leaderboardAds.length > 0 ? (
-          <div className="my-4 w-full max-w-[728px] mx-auto">
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {leaderboardAds.slice(0, 1).map((ad: any) => (
-              <a key={ad.id} href={ad.linkUrl} target="_blank" rel="noopener noreferrer sponsored" className="block">
-                <Image src={ad.imageUrl} alt={ad.title || 'Advertisement'} width={728} height={90} className="w-full h-auto object-cover rounded-lg" />
-              </a>
-            ))}
+        <div className="my-4 w-full max-w-[728px] mx-auto h-[100px] rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 flex items-center justify-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+          <Megaphone className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+          <div className="text-center">
+            <p className="text-xs font-medium">{t('adSpaceAvailable')}</p>
+            <p className="text-[10px] text-gray-400 dark:text-gray-500">728 x 90 · {t('adLeaderboard')}</p>
           </div>
-        ) : (
-          <div className="my-4 w-full max-w-[728px] mx-auto h-[100px] rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 flex items-center justify-center gap-3 text-sm text-gray-500 dark:text-gray-400">
-            <Megaphone className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-            <div className="text-center">
-              <p className="text-xs font-medium">{t('adSpaceAvailable')}</p>
-              <p className="text-[10px] text-gray-400 dark:text-gray-500">728 x 90 · {t('adLeaderboard')}</p>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
 
       <main className='w-full bg-gray-50 dark:bg-gray-900/50 overflow-hidden'>
@@ -243,23 +199,15 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
                 </div>
               </div>
               <CardContent className="p-4">
-                <a
-                  href={`mailto:ads@menyesha.com?subject=${encodeURIComponent(t('advertiseEmailSubject'))}`}
-                  className="w-full flex items-center justify-center gap-1.5 bg-brand-primary hover:bg-brand-secondary text-white text-xs font-semibold py-2.5 px-4 rounded-lg transition-colors duration-200"
-                >
+                <div className="w-full flex items-center justify-center gap-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-xs font-semibold py-2.5 px-4 rounded-lg">
                   <Mail className="h-3.5 w-3.5" />
-                  {t('advertiseContact')}
-                </a>
+                  <span>menyesha@vand.rw</span>
+                </div>
               </CardContent>
             </Card>
 
             {/* Sidebar Ads */}
-            {sidebarAds.length > 0 ? (
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              sidebarAds.map((ad: any) => <AdCard key={ad.id} ad={ad} />)
-            ) : (
-              <AdPlaceholder size="300 x 250" label={t('adSpaceAvailable')} />
-            )}
+            <AdPlaceholder size="300 x 250" label={t('adSpaceAvailable')} />
 
             {/* Back to Top */}
             <button 

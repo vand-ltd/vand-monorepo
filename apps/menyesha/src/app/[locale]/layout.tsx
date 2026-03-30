@@ -10,6 +10,7 @@ import { Header } from '@/components/layouts/Header';
 import AsideBanner from '@/components/layouts/AsideBanner';
 import Footer from '@/components/layouts/Footer';
 import { QueryProvider } from '@org/api'
+import NextTopLoader from 'nextjs-toploader'
 
 // Font loaders must be called at module scope
 const geistSans = Geist({
@@ -79,6 +80,7 @@ export default async function LocaleLayout({
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
         <QueryProvider>
           <div className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}>
+            <NextTopLoader color="#003153" showSpinner={false} />
             <Header />
             <div className="flex-1">
               <AsideBanner>

@@ -13,6 +13,7 @@ export function createRouting() {
   return defineRouting({
     locales: [...locales],
     defaultLocale,
+    localeDetection: false,
   });
 }
 
