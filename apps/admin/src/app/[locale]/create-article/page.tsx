@@ -300,12 +300,12 @@ export default function CreateArticlePage() {
                     placeholder={t('titlePlaceholder')}
                     className="w-full text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 bg-transparent border-none outline-none leading-tight"
                   />
-                  <input
-                    type="text"
+                  <textarea
                     value={subtitle}
                     onChange={(e) => setSubtitle(e.target.value)}
                     placeholder={t('subtitlePlaceholder')}
-                    className="w-full text-xl text-gray-500 dark:text-gray-400 placeholder-gray-300 dark:placeholder-gray-600 bg-transparent border-none outline-none"
+                    rows={2}
+                    className="w-full text-xl text-gray-500 dark:text-gray-400 placeholder-gray-300 dark:placeholder-gray-600 bg-transparent border-none outline-none resize-none"
                   />
                 </div>
 

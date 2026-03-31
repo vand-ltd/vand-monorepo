@@ -31,7 +31,8 @@
   "article": {
     "backToHome": "Retour à l'accueil",
     "articleNotFound": "Article introuvable",
-    "relatedArticles": "Articles similaires"
+    "relatedArticles": "Articles similaires",
+    "minRead": "{count} min de lecture"
   },
   "author": {
     "backToHome": "Retour à l'accueil",
@@ -188,6 +189,7 @@
     "privacyPolicy": "Politique de confidentialit\u00e9",
     "termsOfService": "Conditions d'utilisation",
     "cookiePolicy": "Politique des cookies",
-    "allRightsReserved": "Tous droits r\u00e9serv\u00e9s."
+    "allRightsReserved": "Tous droits réservés.",
+    "socialMedia": "Réseaux sociaux"
   }
 }

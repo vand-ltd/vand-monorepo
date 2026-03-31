@@ -31,7 +31,8 @@
   "article": {
     "backToHome": "Back to Home",
     "articleNotFound": "Article not found",
-    "relatedArticles": "Related Articles"
+    "relatedArticles": "Related Articles",
+    "minRead": "{count} min read"
   },
   "author": {
     "backToHome": "Back to Home",
@@ -188,6 +189,7 @@
     "privacyPolicy": "Privacy Policy",
     "termsOfService": "Terms of Service",
     "cookiePolicy": "Cookie Policy",
-    "allRightsReserved": "All rights reserved."
+    "allRightsReserved": "All rights reserved.",
+    "socialMedia": "Social Media"
   }
 }

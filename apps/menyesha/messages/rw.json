@@ -31,7 +31,8 @@
   "article": {
     "backToHome": "Subira ku rubuga",
     "articleNotFound": "Inkuru ntibashije kuboneka",
-    "relatedArticles": "Inkuru zijyanye"
+    "relatedArticles": "Inkuru zijyanye",
+    "minRead": "Gusoma: {count} min"
   },
   "author": {
     "backToHome": "Subira ku rubuga",
@@ -188,6 +189,7 @@
     "privacyPolicy": "Politiki y'ibanga",
     "termsOfService": "Amabwiriza y'ikoreshwa",
     "cookiePolicy": "Politiki ya cookies",
-    "allRightsReserved": "Uburenganzira bwose burarinzwe."
+    "allRightsReserved": "Uburenganzira bwose burarinzwe.",
+    "socialMedia": "Imbuga nkoranyambaga"
   }
 }

@@ -380,12 +380,12 @@ export default function EditArticlePage() {
                       placeholder={t('titlePlaceholder')}
                       className="w-full text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white placeholder-gray-300 dark:placeholder-gray-600 bg-transparent border-none outline-none leading-tight"
                     />
-                    <input
-                      type="text"
+                    <textarea
                       value={subtitle}
                       onChange={(e) => setSubtitle(e.target.value)}
                       placeholder={t('subtitlePlaceholder')}
-                      className="w-full text-xl text-gray-500 dark:text-gray-400 placeholder-gray-300 dark:placeholder-gray-600 bg-transparent border-none outline-none"
+                      rows={2}
+                      className="w-full text-xl text-gray-500 dark:text-gray-400 placeholder-gray-300 dark:placeholder-gray-600 bg-transparent border-none outline-none resize-none"
                     />
                   </div>
 
@@ -430,13 +430,21 @@ export default function EditArticlePage() {
                         className="w-full h-10 px-3 pr-8 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003153] appearance-none"
                       >
                         <option value="">{t('selectCategory')}</option>
-                        {categories.map(
-                          (cat: { id: string; name: string }) => (
+                        {categories.map((cat: any) => (
+                          cat.children?.length > 0 ? (
+                            <optgroup key={cat.id} label={cat.name}>
+                              {cat.children.map((sub: any) => (
+                                <option key={sub.id} value={sub.id}>
+                                  {sub.name}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ) : (
                             <option key={cat.id} value={cat.id}>
                               {cat.name}
                             </option>
                           )
-                        )}
+                        ))}
                       </select>
                       {categoriesLoading && (
                         <Loader2 className="absolute right-8 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 animate-spin" />

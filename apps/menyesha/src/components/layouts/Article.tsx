@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import { MessageCircle, Clock, Eye, Grid, List, Zap, Loader2, ChevronDown, Star, ArrowUp } from "lucide-react";
+import { MessageCircle, Clock, Eye, Grid, List, Zap, Loader2, ChevronDown, Star, ArrowUp, BookOpen } from "lucide-react";
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight as ChevronRightIcon } from 'lucide-react';
 import { getArticlesFeed, getArticles } from '@org/api';
@@ -233,6 +233,7 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
   const [page, setPage] = useState(1);
   const locale = useLocale();
   const t = useTranslations('feed');
+  const tArticle = useTranslations('article');
   const tSidebar = useTranslations('sidebar');
 
   const isHomeFeed = !categoryKey;
@@ -378,14 +379,26 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
                   {heroArticle.excerpt}
                 </p>
 
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-2">
                   <AuthorLink author={heroArticle.author} className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
                     <AuthorAvatar author={heroArticle.author} size="md" />
                     <span className="font-semibold text-sm">{heroArticle.author?.user?.fullName || 'Author'}</span>
                   </AuthorLink>
-                  <div className="flex items-center space-x-1.5 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1 text-xs">
-                    <Eye className="h-3.5 w-3.5" />
-                    <span>{heroArticle.viewCount || 0}</span>
+                  <div className="flex items-center space-x-1.5 text-[10px] sm:text-xs">
+                    {heroArticle.readMin && (
+                      <div className="flex items-center space-x-1 bg-white/10 backdrop-blur-sm rounded-full px-2 py-0.5 sm:px-3 sm:py-1">
+                        <BookOpen className="hidden sm:inline h-3 w-3" />
+                        <span>{tArticle('minRead', { count: heroArticle.readMin })}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center space-x-1 bg-white/10 backdrop-blur-sm rounded-full px-2 py-0.5 sm:px-3 sm:py-1">
+                      <Eye className="h-3 w-3" />
+                      <span>{heroArticle.viewCount || 0}</span>
+                    </div>
+                    <div className="flex items-center space-x-1 bg-white/10 backdrop-blur-sm rounded-full px-2 py-0.5 sm:px-3 sm:py-1">
+                      <MessageCircle className="h-3 w-3" />
+                      <span>{heroArticle._count?.comments || 0}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -418,18 +431,33 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
                     <CategoryBadges article={article} />
                   </div>
 
-                  <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                    <h3 className="font-bold text-base sm:text-lg leading-tight mb-2 group-hover:text-brand-accent transition-colors line-clamp-2">
-                      {article.title}
-                    </h3>
-                    <div className="flex items-center justify-between text-xs opacity-90">
-                      <AuthorLink author={article.author} className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-                        <AuthorAvatar author={article.author} size="sm" />
-                        <span>{article.author?.user?.fullName || 'Author'}</span>
-                      </AuthorLink>
+                  <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 text-white">
+                    <div className="flex items-center space-x-3 mb-2 text-[10px] sm:text-xs opacity-90">
                       <div className="flex items-center space-x-1">
                         <Clock className="h-3 w-3" />
                         <span>{formatTimeAgo(article.createdAt, locale)}</span>
+                      </div>
+                    </div>
+                    <h3 className="font-bold text-sm sm:text-lg leading-tight mb-2 group-hover:text-brand-accent transition-colors line-clamp-2">
+                      {article.title}
+                    </h3>
+                    <div className="flex flex-col gap-1.5 text-[10px] sm:text-xs opacity-90">
+                      <AuthorLink author={article.author} className="flex items-center space-x-1.5 hover:opacity-80 transition-opacity">
+                        <AuthorAvatar author={article.author} size="sm" />
+                        <span className="truncate max-w-[120px] sm:max-w-none">{article.author?.user?.fullName || 'Author'}</span>
+                      </AuthorLink>
+                      <div className="flex items-center space-x-1.5">
+                        {article.readMin && (
+                          <span>{tArticle('minRead', { count: article.readMin })}</span>
+                        )}
+                        <span className="flex items-center space-x-0.5">
+                          <Eye className="h-3 w-3" />
+                          <span>{article.viewCount || 0}</span>
+                        </span>
+                        <span className="flex items-center space-x-0.5">
+                          <MessageCircle className="h-3 w-3" />
+                          <span>{article._count?.comments || 0}</span>
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -474,11 +502,6 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
                     <Clock className="h-3 w-3" />
                     <span>{formatTimeAgo(spotlightArticles[0].createdAt, locale)}</span>
                   </div>
-                  <span>·</span>
-                  <div className="flex items-center space-x-1">
-                    <Eye className="h-3 w-3" />
-                    <span>{spotlightArticles[0].viewCount || 0} views</span>
-                  </div>
                 </div>
                 <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-brand-primary dark:group-hover:text-brand-accent transition-colors leading-tight">
                   {spotlightArticles[0].title}
@@ -486,10 +509,28 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
                 <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base leading-relaxed mb-4 line-clamp-3">
                   {spotlightArticles[0].excerpt}
                 </p>
-                <AuthorLink author={spotlightArticles[0].author} className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
-                  <AuthorAvatar author={spotlightArticles[0].author} size="md" />
-                  <div className="font-semibold text-sm text-gray-900 dark:text-white">{spotlightArticles[0].author?.user?.fullName || 'Author'}</div>
-                </AuthorLink>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <AuthorLink author={spotlightArticles[0].author} className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+                    <AuthorAvatar author={spotlightArticles[0].author} size="md" />
+                    <div className="font-semibold text-sm text-gray-900 dark:text-white">{spotlightArticles[0].author?.user?.fullName || 'Author'}</div>
+                  </AuthorLink>
+                  <div className="flex items-center space-x-2 text-xs text-gray-400">
+                    {spotlightArticles[0].readMin && (
+                      <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 rounded-full px-2.5 py-1">
+                        <BookOpen className="hidden sm:inline h-3 w-3" />
+                        <span>{tArticle('minRead', { count: spotlightArticles[0].readMin })}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 rounded-full px-2.5 py-1">
+                      <Eye className="h-3 w-3" />
+                      <span>{spotlightArticles[0].viewCount || 0}</span>
+                    </div>
+                    <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 rounded-full px-2.5 py-1">
+                      <MessageCircle className="h-3 w-3" />
+                      <span>{spotlightArticles[0]._count?.comments || 0}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </Link>
@@ -514,20 +555,38 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
                       </div>
                     </div>
                     <div className="p-4 flex flex-col flex-1">
+                      <div className="flex items-center space-x-3 mb-2 text-xs text-gray-400">
+                        <div className="flex items-center space-x-1">
+                          <Clock className="h-3 w-3" />
+                          <span>{formatTimeAgo(article.createdAt, locale)}</span>
+                        </div>
+                      </div>
                       <h4 className="font-bold text-sm sm:text-base text-gray-900 dark:text-white leading-tight mb-2 group-hover:text-brand-primary dark:group-hover:text-brand-accent transition-colors line-clamp-2 min-h-[2.5rem]">
                         {article.title}
                       </h4>
                       <p className="text-gray-500 dark:text-gray-400 text-xs leading-relaxed mb-3 line-clamp-2 min-h-[2rem]">
                         {article.excerpt}
                       </p>
-                      <div className="flex items-center justify-between text-xs text-gray-400">
+                      <div className="flex flex-col gap-2 text-xs text-gray-400 mt-auto">
                         <AuthorLink author={article.author} className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
                           <AuthorAvatar author={article.author} size="sm" />
                           <span className="text-gray-600 dark:text-gray-300">{article.author?.user?.fullName || 'Author'}</span>
                         </AuthorLink>
-                        <div className="flex items-center space-x-1">
-                          <Clock className="h-3 w-3" />
-                          <span>{formatTimeAgo(article.createdAt, locale)}</span>
+                        <div className="flex items-center space-x-2">
+                          {article.readMin && (
+                            <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 rounded-full px-2 py-0.5">
+                              <BookOpen className="hidden sm:inline h-3 w-3" />
+                              <span>{tArticle('minRead', { count: article.readMin })}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 rounded-full px-2 py-0.5">
+                            <Eye className="h-3 w-3" />
+                            <span>{article.viewCount || 0}</span>
+                          </div>
+                          <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 rounded-full px-2 py-0.5">
+                            <MessageCircle className="h-3 w-3" />
+                            <span>{article._count?.comments || 0}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -545,16 +604,16 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
       {feedArticles.length > 0 && (
         <section>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 lg:mb-8 space-y-3 sm:space-y-0">
-            <div className="flex items-center space-x-3">
+            <div>
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center space-x-2 sm:space-x-3">
                 <Zap className="h-6 w-6 sm:h-8 sm:w-8 text-brand-accent" />
                 <span>{t('latestStories')}</span>
               </h2>
-              <span className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-1 rounded-full">
+              <span className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-1 rounded-full inline-block mt-1.5">
                 {feedArticles.length} {t('articles')}
               </span>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="hidden sm:flex items-center space-x-2">
               <button
                 onClick={() => setViewMode('grid')}
                 className={`p-2 rounded-lg transition-all duration-200 ${
@@ -652,6 +711,12 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
                       <div className={`flex items-center space-x-3 text-gray-400 ${
                         viewMode === 'grid' ? 'text-xs' : 'text-xs sm:text-sm'
                       }`}>
+                        {article.readMin && (
+                          <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 rounded-full px-2.5 py-1">
+                            <BookOpen className="hidden sm:inline h-3.5 w-3.5" />
+                            <span>{tArticle('minRead', { count: article.readMin })}</span>
+                          </div>
+                        )}
                         <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 rounded-full px-2.5 py-1">
                           <Eye className="h-3 w-3" />
                           <span>{article.viewCount || 0}</span>

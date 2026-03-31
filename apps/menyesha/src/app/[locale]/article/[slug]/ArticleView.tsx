@@ -429,6 +429,9 @@ export default function ArticleView({ slug }: { slug: string }) {
                 <Calendar className="h-4 w-4" />
                 <span>{formatDate(article.createdAt)}</span>
               </div>
+              {article.readMin && (
+                <span>{t('minRead', { count: article.readMin })}</span>
+              )}
               {article.viewCount > 0 && (
                 <div className="flex items-center space-x-1">
                   <Eye className="h-4 w-4" />
