@@ -45,12 +45,21 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       siteName: 'Menyesha',
       title: m.title,
       description: m.description,
+      images: [
+        {
+          url: 'https://menyesha.vand.rw/menyesha.png',
+          width: 1200,
+          height: 630,
+          alt: m.title,
+        },
+      ],
     },
     twitter: {
       card: 'summary_large_image',
       title: m.title,
       description: m.description,
       creator: '@menyesha',
+      images: ['https://menyesha.vand.rw/menyesha.png'],
     },
   };
 }
