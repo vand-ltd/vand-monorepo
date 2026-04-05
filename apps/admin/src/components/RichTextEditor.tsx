@@ -10,6 +10,10 @@ import TextAlign from '@tiptap/extension-text-align';
 import Highlight from '@tiptap/extension-highlight';
 import { TextStyle, FontFamily } from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
+import { Table } from '@tiptap/extension-table';
+import { TableRow } from '@tiptap/extension-table-row';
+import { TableCell } from '@tiptap/extension-table-cell';
+import { TableHeader } from '@tiptap/extension-table-header';
 import {
   Bold,
   Italic,
@@ -33,8 +37,12 @@ import {
   Highlighter,
   Minus,
   RemoveFormatting,
+  Table2,
+  Rows3,
+  Columns3,
+  Trash2,
 } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { uploadMedia } from '@org/api';
 
 const ImageWithCaption = TiptapImage.extend({
@@ -130,6 +138,9 @@ function ToolbarDivider() {
 export function RichTextEditor({ content, onChange, placeholder }: RichTextEditorProps) {
   const [linkUrl, setLinkUrl] = useState('');
   const [showLinkInput, setShowLinkInput] = useState(false);
+  const [showTablePicker, setShowTablePicker] = useState(false);
+  const [tableHover, setTableHover] = useState({ rows: 0, cols: 0 });
+  const tablePickerRef = useRef<HTMLDivElement>(null);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -153,6 +164,10 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
       TextStyle.configure(),
       FontFamily.configure(),
       Color,
+      Table.configure({ resizable: true }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
     content,
     onCreate: ({ editor }) => {
@@ -169,7 +184,9 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
           'prose-p:text-gray-700 dark:prose-p:text-gray-300 ' +
           'prose-a:text-[#003153] dark:prose-a:text-[#F59E0B] ' +
           'prose-blockquote:border-l-[#003153] dark:prose-blockquote:border-l-[#F59E0B] ' +
-          'prose-code:bg-gray-100 dark:prose-code:bg-gray-800 prose-code:rounded prose-code:px-1',
+          'prose-code:bg-gray-100 dark:prose-code:bg-gray-800 prose-code:rounded prose-code:px-1 ' +
+          'prose-table:border-collapse prose-td:border prose-td:border-gray-300 dark:prose-td:border-gray-600 prose-td:p-2 ' +
+          'prose-th:border prose-th:border-gray-300 dark:prose-th:border-gray-600 prose-th:p-2 prose-th:bg-gray-100 dark:prose-th:bg-gray-700',
       },
     },
   });
@@ -219,6 +236,17 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
     setPendingImageUrl('');
     setImageCaption('');
     setShowCaptionInput(false);
+  }, []);
+
+  // Close table picker on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (tablePickerRef.current && !tablePickerRef.current.contains(e.target as Node)) {
+        setShowTablePicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const toggleLink = useCallback(() => {
@@ -361,6 +389,59 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
           <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Horizontal Rule">
             <Minus className="w-4 h-4" />
           </ToolbarButton>
+
+          <ToolbarDivider />
+
+          {/* Table */}
+          <div className="relative" ref={tablePickerRef}>
+            <ToolbarButton onClick={() => setShowTablePicker(!showTablePicker)} isActive={editor.isActive('table')} title="Insert Table">
+              <Table2 className="w-4 h-4" />
+            </ToolbarButton>
+            {showTablePicker && (
+              <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-3 z-50">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                  {tableHover.rows > 0 ? `${tableHover.rows} × ${tableHover.cols}` : 'Select size'}
+                </p>
+                <div className="grid grid-cols-6 gap-1">
+                  {Array.from({ length: 36 }, (_, i) => {
+                    const row = Math.floor(i / 6) + 1;
+                    const col = (i % 6) + 1;
+                    const isHighlighted = row <= tableHover.rows && col <= tableHover.cols;
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        className={`w-5 h-5 rounded-sm border transition-colors ${
+                          isHighlighted
+                            ? 'bg-[#003153] border-[#003153]'
+                            : 'bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600'
+                        }`}
+                        onMouseEnter={() => setTableHover({ rows: row, cols: col })}
+                        onClick={() => {
+                          editor.chain().focus().insertTable({ rows: row, cols: col, withHeaderRow: true }).run();
+                          setShowTablePicker(false);
+                          setTableHover({ rows: 0, cols: 0 });
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+          {editor.isActive('table') && (
+            <>
+              <ToolbarButton onClick={() => editor.chain().focus().addRowAfter().run()} title="Add Row">
+                <Rows3 className="w-4 h-4" />
+              </ToolbarButton>
+              <ToolbarButton onClick={() => editor.chain().focus().addColumnAfter().run()} title="Add Column">
+                <Columns3 className="w-4 h-4" />
+              </ToolbarButton>
+              <ToolbarButton onClick={() => editor.chain().focus().deleteTable().run()} title="Delete Table">
+                <Trash2 className="w-4 h-4" />
+              </ToolbarButton>
+            </>
+          )}
 
           <ToolbarDivider />
 

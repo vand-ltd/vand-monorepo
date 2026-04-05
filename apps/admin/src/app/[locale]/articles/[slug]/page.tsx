@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import {
   FileText,
@@ -16,6 +16,7 @@ import {
   Loader2,
   ArrowLeft,
   Star,
+  Languages,
 } from 'lucide-react';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { AuthGuard } from '@/components/AuthGuard';
@@ -26,17 +27,24 @@ import {
   updateArticle,
   uploadMedia,
   getTags,
+  translateArticle,
 } from '@org/api';
 import { Link } from '@/i18n/navigation';
 import { toast } from 'sonner';
 
 type ArticleStatus = 'Draft' | 'InReview' | 'Published' | 'Rejected' | 'Archived';
 const FEATURED_TYPES = ['Hero', 'Secondary', 'Spotlight'] as const;
+const ALL_LANGUAGES = [
+  { code: 'en', label: 'English' },
+  { code: 'fr', label: 'Français' },
+  { code: 'rw', label: 'Kinyarwanda' },
+] as const;
 
 export default function EditArticlePage() {
   const t = useTranslations('editArticle');
   const params = useParams();
   const locale = useLocale();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const slug = params.slug as string;
 
@@ -56,6 +64,8 @@ export default function EditArticlePage() {
   const [featuredType, setFeaturedType] = useState<string>('');
   const [isPreview, setIsPreview] = useState(false);
   const [language, setLanguage] = useState(locale);
+  const [showTranslateMenu, setShowTranslateMenu] = useState(false);
+  const translateMenuRef = useRef<HTMLDivElement>(null);
   const [initialized, setInitialized] = useState(false);
   const [userRole, setUserRole] = useState('');
 
@@ -141,6 +151,39 @@ export default function EditArticlePage() {
       toast.error(message);
     },
   });
+
+  const translateMutation = useMutation({
+    mutationFn: (targetLanguage: string) => translateArticle(article.id, targetLanguage),
+    onSuccess: (data, targetLanguage) => {
+      toast.success(t('translateSuccess'));
+      setShowTranslateMenu(false);
+      if (data?.slug) {
+        router.push(`/${targetLanguage}/articles/${data.slug}`);
+      }
+    },
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || t('translateFailed');
+      toast.error(message);
+    },
+  });
+
+  // Close translate menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (translateMenuRef.current && !translateMenuRef.current.contains(e.target as Node)) {
+        setShowTranslateMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const existingTranslations = new Set(
+    (article?.translations || []).map((t: any) => t.language)
+  );
+  const translateLanguages = ALL_LANGUAGES.filter(
+    (l) => l.code !== language && !existingTranslations.has(l.code)
+  );
 
   const addTag = (tag: { id: string; label: string }) => {
     if (!tags.some((t) => t.id === tag.id)) {
@@ -260,6 +303,36 @@ export default function EditArticlePage() {
                       <Eye className="w-4 h-4" />
                       {isPreview ? t('editMode') : t('preview')}
                     </button>
+                    {/* Translate — only for published original articles with languages left */}
+                    {status === 'Published' && !article.translatedFromId && translateLanguages.length > 0 && <div className="relative" ref={translateMenuRef}>
+                      <button
+                        type="button"
+                        onClick={() => setShowTranslateMenu(!showTranslateMenu)}
+                        disabled={translateMutation.isPending}
+                        className="flex items-center gap-1.5 px-3 h-9 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                      >
+                        {translateMutation.isPending ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Languages className="w-4 h-4" />
+                        )}
+                        {translateMutation.isPending ? t('translating') : t('translateTo')}
+                      </button>
+                      {showTranslateMenu && (
+                        <div className="absolute right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50 min-w-[160px]">
+                          {translateLanguages.map((lang) => (
+                            <button
+                              key={lang.code}
+                              type="button"
+                              onClick={() => translateMutation.mutate(lang.code)}
+                              className="w-full text-left px-4 py-2.5 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors first:rounded-t-lg last:rounded-b-lg"
+                            >
+                              {lang.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>}
                     {/* Save as draft */}
                     <button
                       type="button"

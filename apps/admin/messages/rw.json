@@ -265,7 +265,11 @@
     "articleUpdateFailed": "Guhindura inkuru byanze. Ongera ugerageze.",
     "articleNotFound": "Inkuru ntibashije kuboneka",
     "backToArticles": "Subira ku nyandiko",
-    "featureToggled": "Imiterere y'ibikunzwe yahinduwe"
+    "featureToggled": "Imiterere y'ibikunzwe yahinduwe",
+    "translateTo": "Hindura mu",
+    "translating": "Guhindura...",
+    "translateSuccess": "Inkuru yahinduwe neza!",
+    "translateFailed": "Guhindura inkuru byanze."
   },
   "profile": {
     "pageTitle": "Umwirondoro w'umwanditsi",

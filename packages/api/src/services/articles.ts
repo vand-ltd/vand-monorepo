@@ -92,6 +92,11 @@ export async function removeArticleTags(
   return data.data;
 }
 
+export async function translateArticle(articleId: string, language: string) {
+  const { data } = await api.post(`/api/menyesha/articles/${articleId}/translate`, { language });
+  return data.data;
+}
+
 export async function getRelatedArticles(slug: string) {
   const { data } = await api.get(`/api/menyesha/articles/slug/${slug}/related`);
   return data.data;

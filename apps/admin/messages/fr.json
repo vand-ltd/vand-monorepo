@@ -265,7 +265,11 @@
     "articleUpdateFailed": "Échec de la mise à jour de l'article. Veuillez réessayer.",
     "articleNotFound": "Article introuvable",
     "backToArticles": "Retour aux articles",
-    "featureToggled": "Statut mis en avant mis à jour"
+    "featureToggled": "Statut mis en avant mis à jour",
+    "translateTo": "Traduire en",
+    "translating": "Traduction...",
+    "translateSuccess": "Article traduit avec succès !",
+    "translateFailed": "Échec de la traduction de l'article."
   },
   "profile": {
     "pageTitle": "Profil de l'auteur",

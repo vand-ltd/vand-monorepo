@@ -265,7 +265,11 @@
     "articleUpdateFailed": "Failed to update article. Please try again.",
     "articleNotFound": "Article not found",
     "backToArticles": "Back to Articles",
-    "featureToggled": "Featured status updated"
+    "featureToggled": "Featured status updated",
+    "translateTo": "Translate to",
+    "translating": "Translating...",
+    "translateSuccess": "Article translated successfully!",
+    "translateFailed": "Failed to translate article."
   },
   "profile": {
     "pageTitle": "Author Profile",
