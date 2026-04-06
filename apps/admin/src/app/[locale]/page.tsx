@@ -167,7 +167,7 @@ export default function DashboardPage() {
     try {
       const tagsPayload = selectedTags.map((tag) => ({
         name: tag.name,
-        translations: tag.translations,
+        translations: tag.translations.map(({ label, language }: any) => ({ label, language })),
       }));
       await assignArticleTags(tagDialogArticleId, tagsPayload);
       submitWithStatus.mutate({ articleId: tagDialogArticleId, status: pendingStatus });

@@ -182,6 +182,36 @@ function renderTiptapNode(node: any, index: number, onImageClick?: (src: string,
     case 'hardBreak':
       return <br key={index} />;
 
+    case 'table':
+      return (
+        <div key={index} className="my-6 overflow-x-auto">
+          <table className="w-full border-collapse border border-gray-300 dark:border-gray-600">
+            {node.content?.map((child: any, i: number) => renderTiptapNode(child, i, onImageClick))}
+          </table>
+        </div>
+      );
+
+    case 'tableRow':
+      return (
+        <tr key={index}>
+          {node.content?.map((child: any, i: number) => renderTiptapNode(child, i, onImageClick))}
+        </tr>
+      );
+
+    case 'tableHeader':
+      return (
+        <th key={index} className="border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 p-2 text-left text-sm font-semibold text-gray-900 dark:text-white" colSpan={node.attrs?.colspan} rowSpan={node.attrs?.rowspan}>
+          {node.content?.map((child: any, i: number) => renderTiptapNode(child, i, onImageClick))}
+        </th>
+      );
+
+    case 'tableCell':
+      return (
+        <td key={index} className="border border-gray-300 dark:border-gray-600 p-2 text-sm text-gray-700 dark:text-gray-300" colSpan={node.attrs?.colspan} rowSpan={node.attrs?.rowspan}>
+          {node.content?.map((child: any, i: number) => renderTiptapNode(child, i, onImageClick))}
+        </td>
+      );
+
     default:
       return null;
   }
