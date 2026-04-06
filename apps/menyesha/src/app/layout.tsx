@@ -2,6 +2,7 @@
 import "./globals.css";
 import type { Metadata, Viewport } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
+import Script from 'next/script';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -61,6 +62,18 @@ export default function RootLayout({
   return (
     <html className={`scroll-smooth ${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
       <head>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-LLP15XRGE9"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-LLP15XRGE9');
+          `}
+        </Script>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Menyesha" />
