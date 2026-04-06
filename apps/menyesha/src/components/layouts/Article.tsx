@@ -347,7 +347,7 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
          ══════════════════════════════════════════════════════════ */}
       {heroArticle && (
         <section>
-          <Link href={`/article/${heroArticle.slug}`} className="group block">
+          <Link href={`/${locale}/article/${heroArticle.slug}`} className="group block">
             <div className="relative h-[400px] sm:h-[500px] lg:h-[600px] rounded-xl lg:rounded-2xl overflow-hidden bg-gradient-to-br from-gray-900 to-black shadow-2xl">
               <ArticleThumbnail
                 article={heroArticle}
@@ -415,7 +415,7 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
           <div className={`grid grid-cols-1 sm:grid-cols-2 ${secondaryArticles.length >= 3 ? 'lg:grid-cols-3' : ''} ${secondaryArticles.length === 4 ? 'xl:grid-cols-4' : ''} gap-4 lg:gap-6`}>
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {secondaryArticles.map((article: any) => (
-              <Link key={article.id} href={`/article/${article.slug}`} className="group block">
+              <Link key={article.id} href={`/${locale}/article/${article.slug}`} className="group block">
                 <div className="relative h-[240px] sm:h-[280px] rounded-xl overflow-hidden bg-gray-900 shadow-lg">
                   <ArticleThumbnail
                     article={article}
@@ -482,7 +482,7 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
           </div>
 
           {/* First spotlight article — featured horizontal card */}
-          <Link href={`/article/${spotlightArticles[0].slug}`} className="group block mb-6">
+          <Link href={`/${locale}/article/${spotlightArticles[0].slug}`} className="group block mb-6">
             <div className="flex flex-col md:flex-row bg-white dark:bg-gray-800 rounded-xl lg:rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl hover:border-brand-primary/40 transition-all duration-300">
               <div className="relative w-full md:w-1/2 h-[250px] sm:h-[300px] md:h-[320px]">
                 <ArticleThumbnail
@@ -540,7 +540,7 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {spotlightArticles.slice(1).map((article: any) => (
-                <Link key={article.id} href={`/article/${article.slug}`} className="group block h-full">
+                <Link key={article.id} href={`/${locale}/article/${article.slug}`} className="group block h-full">
                   <div className="h-full flex flex-col bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg hover:border-brand-primary/40 transition-all duration-300">
                     <div className="relative h-[180px] flex-shrink-0">
                       <ArticleThumbnail
@@ -643,7 +643,7 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
             {feedArticles.map((article: any) => (
               <Link
                 key={article.id}
-                href={`/article/${article.slug}`}
+                href={`/${locale}/article/${article.slug}`}
                 className={`group block ${viewMode === 'grid' ? 'h-full' : ''}`}
               >
                 <article className={`relative ${

@@ -271,8 +271,8 @@ export default function ArticleView({ slug }: { slug: string }) {
   }, [slug]);
 
   const { data: article, isLoading, error } = useQuery({
-    queryKey: ['article', slug],
-    queryFn: () => getArticleBySlug(slug),
+    queryKey: ['article', slug, locale],
+    queryFn: () => getArticleBySlug(slug, locale),
   });
 
   const { data: relatedArticles = [] } = useQuery({
