@@ -87,6 +87,16 @@ const Footer = () => {
                   {tNav('contact')}
                 </Link>
               </li>
+              <li>
+                <Link href={`/${locale}/privacy-policy`} className="text-sm text-gray-400 hover:text-brand-accent transition-colors">
+                  {tNav('privacyPolicy')}
+                </Link>
+              </li>
+              <li>
+                <Link href={`/${locale}/terms-of-service`} className="text-sm text-gray-400 hover:text-brand-accent transition-colors">
+                  {tNav('termsOfService')}
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

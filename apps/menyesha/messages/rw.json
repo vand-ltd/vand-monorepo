@@ -18,11 +18,13 @@
     "contact": "Twandikire",
     "africa": "Afurika",
     "europe": "Uburayi",
-    "international": "Mpuzamahanga"
+    "international": "Mpuzamahanga",
+    "privacyPolicy": "Amabwiriza y'ibanga",
+    "termsOfService": "Amategeko n'Amabwiriza"
   },
   "breakingNews": {
     "label": "BREAKING",
-    "readMore": "Soma byinshi"
+    "readMore": "Soma ibindi"
   },
   "toggleTheme": {
     "light": "Umucyo",
@@ -68,6 +70,8 @@
   },
   "sidebar": {
     "trendingNow": "Ibikunzwe",
+    "relatedStories": "Inkuru zijyanye",
+    "moreInCategory": "Izindi muri iki cyiciro",
     "todaysStats": "Imibare y'uyu munsi",
     "articlesPublished": "Inyandiko zatanzwe",
     "totalReaders": "Abasomyi bose",
@@ -133,7 +137,7 @@
     "storyTipDescription": "Ufite amakuru ku nkuru yihutirwa? Itsinda ryacu ry'abanyamakuru rigenzura buri makuru. Amazina yawe azabikwa mu ibanga.",
     "sendTip": "Ohereza inkuru",
     "advertisingTitle": "Kwamamaza",
-    "advertisingDescription": "Urashaka kugera ku basomyi bacu? Twandikire ku byerekeye kwamamaza no ku binyandiko bifashishijwe."
+    "advertisingDescription": "Urashaka kugera ku basomyi bacu? Twandikire ku byerekeye kwamamaza cyangwa ku byerekeye inkuru zishyurwa."
   },
   "aboutPage": {
     "heroTitle": "Ibyerekeye Menyesha",
@@ -192,5 +196,63 @@
     "cookiePolicy": "Politiki ya cookies",
     "allRightsReserved": "Uburenganzira bwose burarinzwe.",
     "socialMedia": "Imbuga nkoranyambaga"
+  },
+  "cookies": {
+    "title": "Dukoresha cookies",
+    "description": "Dukoresha cookies kugira ngo dusesengure abashyitsi ku rubuga rwacu kandi twongere uburambe bwawe. Ushobora kwemera cyangwa kwanga cookies zitari iz'ibanze.",
+    "accept": "Emera",
+    "decline": "Hakanira"
+  },
+  "privacyPage": {
+    "title": "Politiki y'Ibanga",
+    "lastUpdated": "Iheruka guhindurwa: 8 Mata 2026",
+    "introTitle": "Intangiriro",
+    "introText": "Menyesha (\"twe\") ikoresha urubuga menyesha.vand.rw. Iyi Politiki y'Ibanga isobanura uburyo dukusanya, dukoresha kandi turinda amakuru yawe igihe usura urubuga rwacu.",
+    "collectTitle": "Amakuru Dukusanya",
+    "collectAnalytics": "Amakuru y'isesengura",
+    "collectAnalyticsText": "Iyo wemeye cookies, dukoresha Google Analytics kugira ngo dukusanye amakuru y'ikoreshwa atazwi harimo impapuro zasurwe, igihe cyamaze ku mpapuro, ubwoko bw'igikoresho, mushakisha, igihugu, n'aho amakuru aturuka. Aya makuru ntabwo akumenyekanisha ku giti cyawe.",
+    "collectLocale": "Ururimi ukunda",
+    "collectLocaleText": "Tubika ururimi ukunda (Icyongereza, Igifaransa cyangwa Ikinyarwanda) muri cookie kugira ngo urubuga rugaragare mu rurimi wahisemo.",
+    "collectComments": "Ibitekerezo",
+    "collectCommentsText": "Niba wanditse igitekerezo ku nkuru, dukusanya ibiri mu gitekerezo cyawe kandi tubihuzanya na konti yawe.",
+    "cookiesTitle": "Cookies",
+    "cookiesText": "Dukoresha cookies ku mpamvu zikurikira:",
+    "cookieEssential": "Cookies z'ibanze: Ururimi ukunda (NEXT_LOCALE)",
+    "cookieAnalytics": "Cookies z'isesengura: Google Analytics (_ga, _ga_*) — zishyirwaho gusa nyuma yo kwemera kwawe",
+    "cookiesNote": "Ushobora kwemera cyangwa kwanga cookies zitari iz'ibanze igihe usura urubuga bwa mbere. Ushobora guhindura ihitamo ryawe igihe icyo ari cyo cyose usiba ububiko bw'aho hantu bwa mushakisha wawe.",
+    "sharingTitle": "Gusangira Amakuru",
+    "sharingText": "Ntitugurisha amakuru yawe bwite. Amakuru y'isesengura akorerwa na Google Analytics hakurikijwe politiki y'ibanga ya Google. Ntitusangira amakuru yawe n'undi muntu uwo ari we wese.",
+    "rightsTitle": "Uburenganzira Bwawe",
+    "rightsText": "Ufite uburenganzira bwo:",
+    "rightAccess": "Kwanga cookies z'isesengura igihe ubisabwe",
+    "rightDelete": "Gusaba gusiba ibitekerezo byawe",
+    "rightPortability": "Kubona amakuru dufite kuri wowe",
+    "contactTitle": "Twandikire",
+    "contactText": "Niba ufite ibibazo kuri iyi Politiki y'Ibanga, twandikire kuri:"
+  },
+  "termsPage": {
+    "title": "Amategeko n'Amabwiriza",
+    "lastUpdated": "Iheruka guhindurwa: 8 Mata 2026",
+    "introTitle": "Intangiriro",
+    "introText": "Mu gukoresha Menyesha (menyesha.vand.rw), wemera aya Mabwiriza y'Ikoreshwa. Niba utabyemeye, ntukoreshe urubuga rwacu.",
+    "useTitle": "Ikoreshwa ry'Ibikubiyemo",
+    "useText1": "Ibikubiyemo byose bishyizwe ahagaragara kuri Menyesha, harimo inkuru, amafoto, n'ibishushanyo, ni iby'Menyesha cyangwa abanditsi bayo kandi birindwa n'amategeko y'uburenganzira bw'umwanditsi.",
+    "useText2": "Ushobora gusangira inkuru zacu kuri rubuga nkoranyambaga cyangwa gushyiraho umuyoboro ujyana kuri zo, ukagaragaza ko zivuye kuri Menyesha. Ntushobora gusubiramo, kongera gutangaza cyangwa gukwirakwiza ibikubiyemo byacu udafite uruhushya rwanditse.",
+    "conductTitle": "Imyitwarire y'Abakoresha",
+    "conductText": "Mu gihe ukoresha urubuga rwacu, harimo igice cy'ibitekerezo, wiyemeza kutazakora ibi bikurikira:",
+    "conductItem1": "Gutangaza ibikubiyemo by'ibinyoma, biyobya cyangwa bisebya",
+    "conductItem2": "Gutoteza, gutera ubwoba cyangwa gukoresha nabi abandi bakoresha",
+    "conductItem3": "Gutangaza spam, kwamamaza cyangwa ibikoresho by'ubucuruzi",
+    "conductItem4": "Kugerageza kwangiza imikorere y'urubuga",
+    "commentsTitle": "Ibitekerezo",
+    "commentsText": "Dufite uburenganzira bwo kugenzura, guhindura cyangwa gukuraho ibitekerezo byica aya mabwiriza. Ibitekerezo bigaragaza ibitekerezo by'abanditsi babyo, ntabwo ari ibya Menyesha.",
+    "disclaimerTitle": "Itangazo",
+    "disclaimerText": "Menyesha ikora uko ishoboye kugira ngo amakuru yose abe ay'ukuri. Ariko, ntidushobora kwemeza ko amakuru yose auzuye, ay'ukuri cyangwa ari mashya. Amakuru atangwa \"uko ari\" nta garanti n'imwe.",
+    "liabilityTitle": "Igipimo cy'Inshingano",
+    "liabilityText": "Menyesha ntizaryozwa ibihombo bituruka ku gukoresha cyangwa kutabasha gukoresha uru rubuga cyangwa kwizera ibikubiyemo byose bishyizwe ahagaragara.",
+    "changesTitle": "Ihindurwa ry'Amabwiriza",
+    "changesText": "Dushobora guhindura aya Mabwiriza y'Ikoreshwa igihe icyo ari cyo cyose. Gukomeza gukoresha urubuga nyuma y'ihinduka bivuze ko wemeye amabwiriza mashya.",
+    "contactTitle": "Twandikire",
+    "contactText": "Niba ufite ibibazo kuri aya Mabwiriza y'Ikoreshwa, twandikire kuri:"
   }
 }

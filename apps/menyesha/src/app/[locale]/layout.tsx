@@ -11,6 +11,7 @@ import AsideBanner from '@/components/layouts/AsideBanner';
 import Footer from '@/components/layouts/Footer';
 import { QueryProvider } from '@org/api'
 import NextTopLoader from 'nextjs-toploader'
+import { CookieConsent } from '@/components/CookieConsent'
 
 // Font loaders must be called at module scope
 const geistSans = Geist({
@@ -98,6 +99,7 @@ export default async function LocaleLayout({
             </div>
             <Footer />
           </div>
+          <CookieConsent />
         </QueryProvider>
       </ThemeProvider>
     </NextIntlClientProvider>

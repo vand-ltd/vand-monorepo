@@ -52,12 +52,38 @@ function getCategoryColors(slug: string) {
 }
 
 // Tiptap JSON renderer
-function renderTiptapNode(node: any, index: number, onImageClick?: (src: string, caption?: string) => void): React.ReactNode {
+function InArticleAd({ label }: { label: string }) {
+  return (
+    <div className="my-8 w-full max-w-[728px] mx-auto">
+      <p className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-gray-500 text-center mb-2">Advertisement</p>
+      <div className="w-full h-[120px] sm:h-[200px] rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center text-center px-4">
+        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{label}</p>
+        <p className="text-[10px] text-gray-400 dark:text-gray-500">300 × 250 · Medium Rectangle</p>
+      </div>
+    </div>
+  );
+}
+
+function renderTiptapNode(node: any, index: number, onImageClick?: (src: string, caption?: string) => void, adLabel?: string): React.ReactNode {
   if (!node) return null;
 
   switch (node.type) {
-    case 'doc':
-      return node.content?.map((child: any, i: number) => renderTiptapNode(child, i, onImageClick));
+    case 'doc': {
+      // Inject in-article ads after 2nd and 6th paragraphs
+      const children = node.content || [];
+      let paragraphCount = 0;
+      const result: React.ReactNode[] = [];
+      children.forEach((child: any, i: number) => {
+        result.push(renderTiptapNode(child, i, onImageClick, adLabel));
+        if (child.type === 'paragraph') {
+          paragraphCount++;
+          if (paragraphCount === 2 || paragraphCount === 6) {
+            result.push(<InArticleAd key={`ad-${i}`} label={adLabel || 'Ad space available'} />);
+          }
+        }
+      });
+      return result;
+    }
 
     case 'paragraph':
       return (
@@ -249,6 +275,7 @@ function ArticleSkeleton() {
 export default function ArticleView({ slug }: { slug: string }) {
   const locale = useLocale();
   const t = useTranslations('article');
+  const tSidebar = useTranslations('sidebar');
   const router = useRouter();
   const [lightbox, setLightbox] = useState<{ src: string; caption?: string } | null>(null);
 
@@ -508,21 +535,13 @@ export default function ArticleView({ slug }: { slug: string }) {
                 ? article.content.split('\n').map((paragraph: string, i: number) => (
                     paragraph.trim() ? <p key={i} className="mb-4 leading-relaxed text-gray-700 dark:text-gray-300">{paragraph}</p> : null
                   ))
-                : renderTiptapNode(article.content, 0, openLightbox)
+                : renderTiptapNode(article.content, 0, openLightbox, tSidebar('adSpaceAvailable'))
             )}
           </div>
 
           {/* Share — after content */}
           <div className="mt-6 mb-2">
             <ShareButton title={article.title} excerpt={article.excerpt} slug={slug} />
-          </div>
-
-          {/* In-Article Ad */}
-          <div className="my-8 w-full max-w-[728px] mx-auto h-[90px] bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center text-sm text-gray-500 dark:text-gray-400 relative overflow-hidden">
-            <div className="text-center">
-              <div className="text-xs font-medium mb-0.5">Advertisement</div>
-              <span className="text-[10px]">728 × 90</span>
-            </div>
           </div>
 
           {/* Tags */}

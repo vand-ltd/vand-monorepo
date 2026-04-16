@@ -2,7 +2,6 @@
 import "./globals.css";
 import type { Metadata, Viewport } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
-import Script from 'next/script';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -60,26 +59,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html className={`scroll-smooth ${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
+    <html className={`scroll-smooth ${inter.variable} ${playfair.variable} overflow-x-clip`} suppressHydrationWarning>
       <head>
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-LLP15XRGE9"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-LLP15XRGE9');
-          `}
-        </Script>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Menyesha" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
-      <body className={`min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased ${inter.className} overflow-x-hidden`} suppressHydrationWarning>
+      <body className={`min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased ${inter.className}`} suppressHydrationWarning>
         {children}
       </body>
     </html>

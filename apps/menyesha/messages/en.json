@@ -18,7 +18,9 @@
     "contact": "Contact",
     "africa": "Africa",
     "europe": "Europe",
-    "international": "International"
+    "international": "International",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service"
   },
   "breakingNews": {
     "label": "BREAKING",
@@ -68,6 +70,8 @@
   },
   "sidebar": {
     "trendingNow": "Trending Now",
+    "relatedStories": "Related Stories",
+    "moreInCategory": "More in this Category",
     "todaysStats": "Today's Stats",
     "articlesPublished": "Articles Published",
     "totalReaders": "Total Readers",
@@ -192,5 +196,63 @@
     "cookiePolicy": "Cookie Policy",
     "allRightsReserved": "All rights reserved.",
     "socialMedia": "Social Media"
+  },
+  "cookies": {
+    "title": "We use cookies",
+    "description": "We use cookies to analyze site traffic and improve your experience. You can accept or decline non-essential cookies.",
+    "accept": "Accept",
+    "decline": "Decline"
+  },
+  "privacyPage": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: April 8, 2026",
+    "introTitle": "Introduction",
+    "introText": "Menyesha (\"we\", \"us\", or \"our\") operates the website menyesha.vand.rw. This Privacy Policy explains how we collect, use, and protect your information when you visit our website.",
+    "collectTitle": "Information We Collect",
+    "collectAnalytics": "Analytics Data",
+    "collectAnalyticsText": "When you accept cookies, we use Google Analytics to collect anonymous usage data including pages visited, time spent on pages, device type, browser, country, and referral source. This data does not identify you personally.",
+    "collectLocale": "Language Preference",
+    "collectLocaleText": "We store your preferred language (English, French, or Kinyarwanda) in a cookie so the site displays in your chosen language.",
+    "collectComments": "Comments",
+    "collectCommentsText": "If you post a comment on an article, we collect the content of your comment and associate it with your account.",
+    "cookiesTitle": "Cookies",
+    "cookiesText": "We use cookies for the following purposes:",
+    "cookieEssential": "Essential cookies: Language preference (NEXT_LOCALE)",
+    "cookieAnalytics": "Analytics cookies: Google Analytics (_ga, _ga_*) — only loaded after your consent",
+    "cookiesNote": "You can accept or decline non-essential cookies when you first visit the site. You can change your preference at any time by clearing your browser's local storage.",
+    "sharingTitle": "Data Sharing",
+    "sharingText": "We do not sell your personal data. Analytics data is processed by Google Analytics under Google's privacy policy. We do not share your information with any other third parties.",
+    "rightsTitle": "Your Rights",
+    "rightsText": "You have the right to:",
+    "rightAccess": "Decline analytics cookies when prompted",
+    "rightDelete": "Request deletion of your comments",
+    "rightPortability": "Access information we hold about you",
+    "contactTitle": "Contact Us",
+    "contactText": "If you have questions about this Privacy Policy, contact us at:"
+  },
+  "termsPage": {
+    "title": "Terms of Service",
+    "lastUpdated": "Last updated: April 8, 2026",
+    "introTitle": "Introduction",
+    "introText": "By accessing and using Menyesha (menyesha.vand.rw), you agree to these Terms of Service. If you do not agree, please do not use our website.",
+    "useTitle": "Use of Content",
+    "useText1": "All content published on Menyesha, including articles, images, and graphics, is owned by Menyesha or its content creators and is protected by copyright law.",
+    "useText2": "You may share our articles via social media or link to them, provided you credit Menyesha as the source. You may not reproduce, republish, or redistribute our content without prior written permission.",
+    "conductTitle": "User Conduct",
+    "conductText": "When using our website, including the comments section, you agree not to:",
+    "conductItem1": "Post false, misleading, or defamatory content",
+    "conductItem2": "Harass, threaten, or abuse other users",
+    "conductItem3": "Post spam, advertisements, or promotional material",
+    "conductItem4": "Attempt to interfere with the website's operation",
+    "commentsTitle": "Comments",
+    "commentsText": "We reserve the right to moderate, edit, or remove comments that violate these terms. Comments represent the views of their authors, not of Menyesha.",
+    "disclaimerTitle": "Disclaimer",
+    "disclaimerText": "Menyesha strives for accuracy in all reporting. However, we do not guarantee that all information is complete, accurate, or up to date. News content is provided \"as is\" without warranties of any kind.",
+    "liabilityTitle": "Limitation of Liability",
+    "liabilityText": "Menyesha shall not be liable for any damages arising from the use of or inability to use this website or reliance on any content published on it.",
+    "changesTitle": "Changes to Terms",
+    "changesText": "We may update these Terms of Service at any time. Continued use of the website after changes constitutes acceptance of the updated terms.",
+    "contactTitle": "Contact Us",
+    "contactText": "If you have questions about these Terms of Service, contact us at:"
   }
 }

@@ -18,7 +18,9 @@
     "contact": "Contact",
     "africa": "Afrique",
     "europe": "Europe",
-    "international": "International"
+    "international": "International",
+    "privacyPolicy": "Politique de confidentialité",
+    "termsOfService": "Conditions d'utilisation"
   },
   "breakingNews": {
     "label": "BREAKING",
@@ -68,6 +70,8 @@
   },
   "sidebar": {
     "trendingNow": "Tendances",
+    "relatedStories": "Articles similaires",
+    "moreInCategory": "Plus dans cette catégorie",
     "todaysStats": "Statistiques du jour",
     "articlesPublished": "Articles publiés",
     "totalReaders": "Lecteurs totaux",
@@ -192,5 +196,63 @@
     "cookiePolicy": "Politique des cookies",
     "allRightsReserved": "Tous droits réservés.",
     "socialMedia": "Réseaux sociaux"
+  },
+  "cookies": {
+    "title": "Nous utilisons des cookies",
+    "description": "Nous utilisons des cookies pour analyser le trafic du site et améliorer votre expérience. Vous pouvez accepter ou refuser les cookies non essentiels.",
+    "accept": "Accepter",
+    "decline": "Refuser"
+  },
+  "privacyPage": {
+    "title": "Politique de Confidentialité",
+    "lastUpdated": "Dernière mise à jour : 8 avril 2026",
+    "introTitle": "Introduction",
+    "introText": "Menyesha (« nous ») exploite le site menyesha.vand.rw. Cette Politique de Confidentialité explique comment nous collectons, utilisons et protégeons vos informations lorsque vous visitez notre site.",
+    "collectTitle": "Informations Collectées",
+    "collectAnalytics": "Données analytiques",
+    "collectAnalyticsText": "Lorsque vous acceptez les cookies, nous utilisons Google Analytics pour collecter des données d'utilisation anonymes : pages visitées, temps passé, type d'appareil, navigateur, pays et source de référence. Ces données ne vous identifient pas personnellement.",
+    "collectLocale": "Préférence linguistique",
+    "collectLocaleText": "Nous enregistrons votre langue préférée (anglais, français ou kinyarwanda) dans un cookie pour afficher le site dans la langue choisie.",
+    "collectComments": "Commentaires",
+    "collectCommentsText": "Si vous publiez un commentaire sur un article, nous collectons son contenu et l'associons à votre compte.",
+    "cookiesTitle": "Cookies",
+    "cookiesText": "Nous utilisons des cookies aux fins suivantes :",
+    "cookieEssential": "Cookies essentiels : Préférence linguistique (NEXT_LOCALE)",
+    "cookieAnalytics": "Cookies analytiques : Google Analytics (_ga, _ga_*) — chargés uniquement après votre consentement",
+    "cookiesNote": "Vous pouvez accepter ou refuser les cookies non essentiels lors de votre première visite. Vous pouvez modifier votre choix à tout moment en effaçant le stockage local de votre navigateur.",
+    "sharingTitle": "Partage des Données",
+    "sharingText": "Nous ne vendons pas vos données personnelles. Les données analytiques sont traitées par Google Analytics conformément à la politique de confidentialité de Google. Nous ne partageons vos informations avec aucun tiers.",
+    "rightsTitle": "Vos Droits",
+    "rightsText": "Vous avez le droit de :",
+    "rightAccess": "Refuser les cookies analytiques lorsque vous y êtes invité",
+    "rightDelete": "Demander la suppression de vos commentaires",
+    "rightPortability": "Accéder aux informations que nous détenons sur vous",
+    "contactTitle": "Nous Contacter",
+    "contactText": "Si vous avez des questions sur cette Politique de Confidentialité, contactez-nous à :"
+  },
+  "termsPage": {
+    "title": "Conditions d'Utilisation",
+    "lastUpdated": "Dernière mise à jour : 8 avril 2026",
+    "introTitle": "Introduction",
+    "introText": "En accédant et en utilisant Menyesha (menyesha.vand.rw), vous acceptez ces Conditions d'Utilisation. Si vous n'êtes pas d'accord, veuillez ne pas utiliser notre site.",
+    "useTitle": "Utilisation du Contenu",
+    "useText1": "Tout le contenu publié sur Menyesha, y compris les articles, images et graphiques, appartient à Menyesha ou à ses créateurs de contenu et est protégé par le droit d'auteur.",
+    "useText2": "Vous pouvez partager nos articles via les réseaux sociaux ou créer des liens vers eux, à condition de créditer Menyesha comme source. Vous ne pouvez pas reproduire, republier ou redistribuer notre contenu sans autorisation écrite préalable.",
+    "conductTitle": "Conduite des Utilisateurs",
+    "conductText": "Lors de l'utilisation de notre site, y compris la section commentaires, vous vous engagez à ne pas :",
+    "conductItem1": "Publier du contenu faux, trompeur ou diffamatoire",
+    "conductItem2": "Harceler, menacer ou abuser d'autres utilisateurs",
+    "conductItem3": "Publier du spam, des publicités ou du matériel promotionnel",
+    "conductItem4": "Tenter d'interférer avec le fonctionnement du site",
+    "commentsTitle": "Commentaires",
+    "commentsText": "Nous nous réservons le droit de modérer, modifier ou supprimer les commentaires qui violent ces conditions. Les commentaires représentent les opinions de leurs auteurs, pas celles de Menyesha.",
+    "disclaimerTitle": "Avertissement",
+    "disclaimerText": "Menyesha s'efforce d'être précis dans tous ses reportages. Cependant, nous ne garantissons pas que toutes les informations sont complètes, exactes ou à jour. Le contenu d'actualité est fourni « tel quel » sans garantie d'aucune sorte.",
+    "liabilityTitle": "Limitation de Responsabilité",
+    "liabilityText": "Menyesha ne sera pas responsable des dommages résultant de l'utilisation ou de l'impossibilité d'utiliser ce site ou de la confiance accordée à tout contenu publié sur celui-ci.",
+    "changesTitle": "Modifications des Conditions",
+    "changesText": "Nous pouvons mettre à jour ces Conditions d'Utilisation à tout moment. L'utilisation continue du site après les modifications constitue une acceptation des conditions mises à jour.",
+    "contactTitle": "Nous Contacter",
+    "contactText": "Si vous avez des questions sur ces Conditions d'Utilisation, contactez-nous à :"
   }
 }
