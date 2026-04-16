@@ -64,10 +64,10 @@ function CategoryBadges({ article, className = "" }: { article: any; className?:
       {/* Always show parent category if it exists */}
       {parent && (
         <span
-          className="px-2.5 py-1 rounded-md text-[11px] font-bold backdrop-blur-md shadow-sm border border-white/20 dark:border-white/10"
+          className="px-2.5 py-1 rounded-md text-[11px] font-bold shadow-md"
           style={{
-            backgroundColor: `light-dark(${parentStyle!.lightBg}, ${parentStyle!.darkBg})`,
-            color: `light-dark(${parentStyle!.lightText}, ${parentStyle!.darkText})`,
+            backgroundColor: parentStyle!.dot,
+            color: '#ffffff',
           }}
         >
           {parent.name}
@@ -75,10 +75,10 @@ function CategoryBadges({ article, className = "" }: { article: any; className?:
       )}
       {/* Show category (either the main category or subcategory) */}
       <span
-        className="px-2.5 py-1 rounded-md text-[11px] font-bold backdrop-blur-md shadow-sm border border-white/20 dark:border-white/10"
+        className="px-2.5 py-1 rounded-md text-[11px] font-bold shadow-md"
         style={{
-          backgroundColor: `light-dark(${childStyle.lightBg}, ${childStyle.darkBg})`,
-          color: `light-dark(${childStyle.lightText}, ${childStyle.darkText})`,
+          backgroundColor: childStyle.dot,
+          color: '#ffffff',
         }}
       >
         {category.name || "General"}
