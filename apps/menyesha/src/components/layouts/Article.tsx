@@ -38,12 +38,6 @@ const categoryStyles: Record<string, { lightBg: string; darkBg: string; lightTex
 
 const defaultCategoryStyle = { lightBg: "#f3f4f6", darkBg: "#374151", lightText: "#374151", darkText: "#d1d5db", dot: "#6b7280" };
 
-const featuredTypeStyles: Record<string, { bg: string; text: string; darkBg: string; darkText: string; icon: string }> = {
-  Hero:      { bg: '#dc2626', text: '#ffffff', darkBg: '#dc2626', darkText: '#ffffff', icon: '🔥' },
-  Secondary: { bg: '#003153', text: '#ffffff', darkBg: '#F59E0B', darkText: '#1f2937', icon: '⚡' },
-  Spotlight: { bg: '#7c3aed', text: '#ffffff', darkBg: '#a78bfa', darkText: '#1f2937', icon: '✨' },
-};
-
 function SponsoredBadge({ className = "" }: { className?: string }) {
   return (
     <span
@@ -55,40 +49,40 @@ function SponsoredBadge({ className = "" }: { className?: string }) {
   );
 }
 
-function FeaturedBadge({ type, className = "" }: { type?: string; className?: string }) {
-  if (!type || !featuredTypeStyles[type]) return null;
-  const style = featuredTypeStyles[type];
-  return (
-    <span
-      className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-1 ${className}`}
-      style={{
-        backgroundColor: `light-dark(${style.bg}, ${style.darkBg})`,
-        color: `light-dark(${style.text}, ${style.darkText})`,
-      }}
-    >
-      {style.icon} {type}
-    </span>
-  );
-}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function CategoryBadges({ article, className = "" }: { article: any; className?: string }) {
   const category = article.category;
   if (!category) return null;
 
-  // Show the most specific category (child over parent)
-  const displayName = category.name || "General";
-  const style = categoryStyles[category.slug || ""] || defaultCategoryStyle;
+  const parent = category.parent;
+  const parentStyle = parent ? (categoryStyles[parent.slug || ""] || defaultCategoryStyle) : null;
+  const childStyle = categoryStyles[category.slug || ""] || defaultCategoryStyle;
 
   return (
-    <span
-      className={`px-2 py-0.5 rounded text-[11px] font-semibold backdrop-blur-sm ${className}`}
-      style={{
-        backgroundColor: `light-dark(${style.lightBg}e6, ${style.darkBg})`,
-        color: `light-dark(${style.lightText}, ${style.darkText})`,
-      }}
-    >
-      {displayName}
+    <span className={`inline-flex items-center gap-1 ${className}`}>
+      {/* Always show parent category if it exists */}
+      {parent && (
+        <span
+          className="px-2.5 py-1 rounded-md text-[11px] font-bold backdrop-blur-md shadow-sm border border-white/20 dark:border-white/10"
+          style={{
+            backgroundColor: `light-dark(${parentStyle!.lightBg}, ${parentStyle!.darkBg})`,
+            color: `light-dark(${parentStyle!.lightText}, ${parentStyle!.darkText})`,
+          }}
+        >
+          {parent.name}
+        </span>
+      )}
+      {/* Show category (either the main category or subcategory) */}
+      <span
+        className="px-2.5 py-1 rounded-md text-[11px] font-bold backdrop-blur-md shadow-sm border border-white/20 dark:border-white/10"
+        style={{
+          backgroundColor: `light-dark(${childStyle.lightBg}, ${childStyle.darkBg})`,
+          color: `light-dark(${childStyle.lightText}, ${childStyle.darkText})`,
+        }}
+      >
+        {category.name || "General"}
+      </span>
     </span>
   );
 }
@@ -359,7 +353,6 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
               {/* Category badges — top-left */}
               <div className="absolute top-3 left-3 sm:top-4 sm:left-4 lg:top-6 lg:left-6 flex flex-wrap items-center gap-1.5">
                 {heroArticle.isSponsored && <SponsoredBadge />}
-                <FeaturedBadge type={heroArticle.featuredType} />
                 <CategoryBadges article={heroArticle} />
               </div>
 
@@ -427,7 +420,6 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
                   {/* Category badges — top-left */}
                   <div className="absolute top-3 left-3 flex flex-wrap items-center gap-1.5">
                     {article.isSponsored && <SponsoredBadge />}
-                    <FeaturedBadge type={article.featuredType} />
                     <CategoryBadges article={article} />
                   </div>
 
@@ -492,7 +484,6 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
                 />
                 <div className="absolute top-3 left-3 flex flex-wrap items-center gap-1.5">
                   {spotlightArticles[0].isSponsored && <SponsoredBadge />}
-                  <FeaturedBadge type={spotlightArticles[0].featuredType} />
                   <CategoryBadges article={spotlightArticles[0]} />
                 </div>
               </div>
@@ -550,8 +541,7 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
                       />
                       <div className="absolute top-3 left-3 flex flex-wrap items-center gap-1.5">
                         {article.isSponsored && <SponsoredBadge />}
-                        <FeaturedBadge type={article.featuredType} />
-                        <CategoryBadges article={article} />
+                            <CategoryBadges article={article} />
                       </div>
                     </div>
                     <div className="p-4 flex flex-col flex-1">
