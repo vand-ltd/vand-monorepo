@@ -66,7 +66,7 @@ function CategoryBadges({ article, className = "" }: { article: any; className?:
         <span
           className="px-2.5 py-1 rounded-md text-[11px] font-bold shadow-md"
           style={{
-            backgroundColor: parentStyle!.dot,
+            backgroundColor: parentStyle!.lightText,
             color: '#ffffff',
           }}
         >
@@ -77,7 +77,7 @@ function CategoryBadges({ article, className = "" }: { article: any; className?:
       <span
         className="px-2.5 py-1 rounded-md text-[11px] font-bold shadow-md"
         style={{
-          backgroundColor: childStyle.dot,
+          backgroundColor: childStyle.lightText,
           color: '#ffffff',
         }}
       >
@@ -465,14 +465,6 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
          ══════════════════════════════════════════════════════════ */}
       {spotlightArticles.length > 0 && (
         <section>
-          <div className="flex items-center space-x-2 mb-6">
-            <Star className="h-5 w-5 text-brand-accent" />
-            <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{t('editorsPicks')}</h2>
-            <span className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-1 rounded-full">
-              {spotlightArticles.length}
-            </span>
-          </div>
-
           {/* First spotlight article — featured horizontal card */}
           <Link href={`/${locale}/article/${spotlightArticles[0].slug}`} className="group block mb-6">
             <div className="flex flex-col md:flex-row bg-white dark:bg-gray-800 rounded-xl lg:rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl hover:border-brand-primary/40 transition-all duration-300">

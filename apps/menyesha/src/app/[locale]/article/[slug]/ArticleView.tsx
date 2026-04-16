@@ -332,8 +332,10 @@ export default function ArticleView({ slug }: { slug: string }) {
   const categoryName = article.category?.name || '';
   const categorySlug = article.category?.slug || '';
   const catColors = getCategoryColors(categorySlug);
+  const catSolid = (categoryColorMap[categorySlug] || { lightText: '#6b7280' }).lightText;
   const parentCategory = article.category?.parent;
   const parentColors = parentCategory ? getCategoryColors(parentCategory.slug) : null;
+  const parentSolid = parentCategory ? (categoryColorMap[parentCategory.slug] || { lightText: '#6b7280' }).lightText : null;
 
   return (
     <div className="w-full max-w-4xl mx-auto">
@@ -408,17 +410,17 @@ export default function ArticleView({ slug }: { slug: string }) {
           {/* Category Badges */}
           {categoryName && (
             <div className="absolute top-6 left-6 flex flex-wrap items-center gap-2">
-              {parentCategory && (
+              {parentCategory && parentSolid && (
                 <span
-                  className="px-4 py-2 rounded-full text-sm font-semibold uppercase tracking-wide"
-                  style={parentColors!}
+                  className="px-3 py-1.5 rounded-md text-xs font-bold shadow-md"
+                  style={{ backgroundColor: parentSolid, color: '#ffffff' }}
                 >
                   {parentCategory.name}
                 </span>
               )}
               <span
-                className="px-4 py-2 rounded-full text-sm font-semibold uppercase tracking-wide"
-                style={catColors}
+                className="px-3 py-1.5 rounded-md text-xs font-bold shadow-md"
+                style={{ backgroundColor: catSolid, color: '#ffffff' }}
               >
                 {categoryName}
               </span>
@@ -652,16 +654,16 @@ export default function ArticleView({ slug }: { slug: string }) {
                     <div className="flex flex-wrap items-center gap-1 mb-2">
                       {related.category?.parent && (
                         <span
-                          className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
-                          style={getCategoryColors(related.category.parent.slug || '')}
+                          className="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold shadow-sm"
+                          style={{ backgroundColor: (categoryColorMap[related.category.parent.slug] || { lightText: '#6b7280' }).lightText, color: '#ffffff' }}
                         >
                           {related.category.parent.name}
                         </span>
                       )}
                       {related.category?.name && (
                         <span
-                          className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
-                          style={getCategoryColors(related.category?.slug || '')}
+                          className="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold shadow-sm"
+                          style={{ backgroundColor: (categoryColorMap[related.category?.slug] || { lightText: '#6b7280' }).lightText, color: '#ffffff' }}
                         >
                           {related.category.name}
                         </span>
