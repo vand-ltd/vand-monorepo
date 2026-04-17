@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import { MessageCircle, Clock, Eye, Grid, List, Zap, Loader2, ChevronDown, Star, ArrowUp, BookOpen } from "lucide-react";
+import { MessageCircle, Clock, Eye, Grid, List, Zap, Loader2, ChevronDown, ArrowUp, BookOpen } from "lucide-react";
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight as ChevronRightIcon } from 'lucide-react';
 import { getArticlesFeed, getArticles } from '@org/api';

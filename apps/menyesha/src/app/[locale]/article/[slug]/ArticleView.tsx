@@ -334,7 +334,6 @@ export default function ArticleView({ slug }: { slug: string }) {
   const catColors = getCategoryColors(categorySlug);
   const catSolid = (categoryColorMap[categorySlug] || { lightText: '#6b7280' }).lightText;
   const parentCategory = article.category?.parent;
-  const parentColors = parentCategory ? getCategoryColors(parentCategory.slug) : null;
   const parentSolid = parentCategory ? (categoryColorMap[parentCategory.slug] || { lightText: '#6b7280' }).lightText : null;
 
   return (
