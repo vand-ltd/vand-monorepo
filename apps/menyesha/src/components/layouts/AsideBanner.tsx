@@ -110,8 +110,8 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
 
   return (
     <>
-      {/* Top Banner Ads — sticky below header */}
-      <div className='bg-background border-b sticky z-40' style={{ top: headerHeight }}>
+      {/* Top Banner Ads — scrolls away with the page */}
+      <div className='bg-background border-b'>
         <div className="max-w-screen-xl mx-auto my-4 px-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Ad #1 — always visible */}
           <div className="h-[100px] sm:h-[140px] border-2 border-dashed border-gray-200 dark:border-gray-700 flex items-center justify-center gap-3 text-sm text-gray-500 dark:text-gray-400 rounded-lg">
