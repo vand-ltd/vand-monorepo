@@ -2,6 +2,7 @@
 import "./globals.css";
 import type { Metadata, Viewport } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
+import { GoogleAnalytics } from '@next/third-parties/google';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -27,6 +28,9 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: '/favicon.svg',
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
   },
   robots: {
     index: true,
@@ -69,6 +73,9 @@ export default function RootLayout({
       <body className={`min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased ${inter.className}`} suppressHydrationWarning>
         {children}
       </body>
+      {process.env.NEXT_PUBLIC_GA_ID && (
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+      )}
     </html>
   )
 }
