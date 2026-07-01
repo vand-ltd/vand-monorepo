@@ -680,7 +680,7 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
 
                     <div className={`flex ${
                       viewMode === 'grid'
-                        ? 'flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0'
+                        ? 'flex-col items-start space-y-2'
                         : 'flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0'
                     }`}>
                       <AuthorLink author={article.author} className="flex items-center space-x-3 hover:opacity-80 transition-opacity">

@@ -69,7 +69,7 @@
     "copied": "Byakopowe!"
   },
   "sidebar": {
-    "trendingNow": "Ibikunzwe",
+    "trendingNow": "Inkuru zikunzwe ubu",
     "relatedStories": "Inkuru zijyanye",
     "moreInCategory": "Izindi muri iki cyiciro",
     "todaysStats": "Imibare y'uyu munsi",
@@ -81,11 +81,11 @@
     "enterEmail": "Andika imeyili yawe",
     "subscribeNow": "Iyandikishe",
     "backToTop": "Subira hejuru",
-    "advertiseTitle": "Tangaza Iwanyu",
-    "advertiseDescription": "Gera ku bihumbi by'abasomyi bo mu Rwanda no hanze yayo. Ahantu heza ho kwamamaza umurongo wanyu.",
+    "advertiseTitle": "Tugane tukwamamarize",
+    "advertiseDescription": "Urashaka ko tukwamamariza? Twandikire kuri iyo email iri hasi.",
     "advertiseReach": "100K+ abasomyi/ukwezi",
     "advertiseGrowth": "Abasomyi biyongera",
-    "adSpaceAvailable": "Ikibanza cy'Ibyamamare",
+    "adSpaceAvailable": "Amamaza hano",
     "advertiseContact": "Twandikire",
     "advertiseEmailSubject": "Gusaba kwamamaza - Menyesha",
     "adLeaderboard": "Ikibanza cyo hejuru",

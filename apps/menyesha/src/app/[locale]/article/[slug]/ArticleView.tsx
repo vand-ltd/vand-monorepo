@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getArticleBySlug, getRelatedArticles } from '@org/api';
+import { getArticleBySlug, getRelatedArticles, getCommentCount } from '@org/api';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -11,6 +11,8 @@ import {
   Eye,
   ArrowLeft,
   Calendar,
+  Clock,
+  MessageCircle,
   Tag,
   User,
   Zap,
@@ -308,6 +310,12 @@ export default function ArticleView({ slug }: { slug: string }) {
     enabled: !!article,
   });
 
+  const { data: commentCount = 0 } = useQuery({
+    queryKey: ['comment-count', article?.id],
+    queryFn: () => getCommentCount(article.id),
+    enabled: !!article?.id,
+  });
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString(locale, {
       year: 'numeric',
@@ -454,9 +462,12 @@ export default function ArticleView({ slug }: { slug: string }) {
 
         {/* Article Meta */}
         <div className="p-6 border-b">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-            {/* Author Info */}
-            <Link href={article.author?.user?.slug ? `/${locale}/author/${article.author.user.slug}` : '#'} className="flex items-center space-x-4 group">
+          <div className="flex items-start space-x-4">
+            {/* Avatar */}
+            <Link
+              href={article.author?.user?.slug ? `/${locale}/author/${article.author.user.slug}` : '#'}
+              className="flex-shrink-0 group"
+            >
               {article.author?.avatar ? (
                 <div className="relative w-12 h-12">
                   <Image
@@ -471,31 +482,49 @@ export default function ArticleView({ slug }: { slug: string }) {
                   <User className="h-6 w-6 text-white" />
                 </div>
               )}
-              <div>
+            </Link>
+
+            {/* Name + stats */}
+            <div className="min-w-0">
+              <Link
+                href={article.author?.user?.slug ? `/${locale}/author/${article.author.user.slug}` : '#'}
+                className="group"
+              >
                 <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-brand-primary dark:group-hover:text-brand-accent transition-colors">
                   {article.author?.user?.fullName || 'Unknown Author'}
                 </h3>
-                {article.author?.bio && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{article.author.bio}</p>
-                )}
-              </div>
-            </Link>
+              </Link>
 
-            {/* Article Stats */}
-            <div className="flex items-center space-x-6 text-sm text-gray-600 dark:text-gray-400">
-              <div className="flex items-center space-x-1">
-                <Calendar className="h-4 w-4" />
-                <span>{formatDate(article.createdAt)}</span>
+              {/* Byline meta line */}
+              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-4 w-4" />
+                  {formatDate(article.createdAt)}
+                </span>
+                {article.readMin && (
+                  <>
+                    <span aria-hidden>·</span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      {t('minRead', { count: article.readMin })}
+                    </span>
+                  </>
+                )}
+                {article.viewCount > 0 && (
+                  <>
+                    <span aria-hidden>·</span>
+                    <span className="flex items-center gap-1">
+                      <Eye className="h-4 w-4" />
+                      {article.viewCount}
+                    </span>
+                  </>
+                )}
+                <span aria-hidden>·</span>
+                <a href="#comments" className="flex items-center gap-1 hover:text-brand-primary dark:hover:text-brand-accent transition-colors">
+                  <MessageCircle className="h-4 w-4" />
+                  {commentCount}
+                </a>
               </div>
-              {article.readMin && (
-                <span>{t('minRead', { count: article.readMin })}</span>
-              )}
-              {article.viewCount > 0 && (
-                <div className="flex items-center space-x-1">
-                  <Eye className="h-4 w-4" />
-                  <span>{article.viewCount}</span>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -683,7 +712,9 @@ export default function ArticleView({ slug }: { slug: string }) {
       )}
 
       {/* Comments */}
-      <CommentSection articleId={article.id} />
+      <div id="comments" className="scroll-mt-24">
+        <CommentSection articleId={article.id} />
+      </div>
 
       {/* Image Lightbox */}
       {lightbox && (
