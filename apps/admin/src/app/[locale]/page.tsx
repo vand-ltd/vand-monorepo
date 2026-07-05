@@ -181,8 +181,8 @@ export default function DashboardPage() {
   };
 
   const { data: me, isLoading } = useQuery({
-    queryKey: ['me'],
-    queryFn: getMe,
+    queryKey: ['me', locale],
+    queryFn: () => getMe(locale),
   });
 
   const slug = me?.slug;

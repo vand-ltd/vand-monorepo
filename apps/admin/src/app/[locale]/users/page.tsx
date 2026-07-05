@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getUsers, getRoles, activateUser, deactivateUser, deleteUser, enable2fa, disable2fa } from '@org/api';
 import { getMe } from '@org/api';
 import { toast } from 'sonner';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { AdminGuard } from '@/components/AdminGuard';
 import {
@@ -40,6 +40,7 @@ import {
 
 export default function UsersPage() {
   const t = useTranslations('users');
+  const locale = useLocale();
 
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
@@ -93,8 +94,8 @@ export default function UsersPage() {
   });
 
   const { data: currentUser } = useQuery({
-    queryKey: ['me'],
-    queryFn: getMe,
+    queryKey: ['me', locale],
+    queryFn: () => getMe(locale),
   });
 
   const { data: roles = [] } = useQuery({

@@ -5,8 +5,10 @@ export async function login(email: string, password: string) {
   return data;
 }
 
-export async function getMe() {
-  const { data } = await api.get('/api/auth/me');
+export async function getMe(language?: string) {
+  const { data } = await api.get('/api/auth/me', {
+    params: language ? { language } : undefined,
+  });
   return data.data;
 }
 

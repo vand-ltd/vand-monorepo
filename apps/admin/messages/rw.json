@@ -208,7 +208,15 @@
     "publish": "Sohora",
     "unpublish": "Kuraho gusohora",
     "statusUpdated": "Imiterere y'inkuru yahinduwe",
-    "statusUpdateFailed": "Guhindura imiterere byanze"
+    "statusUpdateFailed": "Guhindura imiterere byanze",
+    "deleteArticle": "Siba burundu",
+    "deleteOnlyDraftRejected": "Ni inkuru ziri muri Draft cyangwa Rejected zishobora gusibwa",
+    "confirmDeleteTitle": "Gusiba inkuru burundu?",
+    "confirmDelete": "Ibi bizasiba burundu \"{title}\". Iki gikorwa ntigishobora gusubizwa inyuma.",
+    "cancel": "Kureka",
+    "delete": "Siba",
+    "articleDeleted": "Inkuru yasibwe burundu",
+    "articleDeleteFailed": "Gusiba inkuru byanze"
   },
   "editArticle": {
     "pageTitle": "Hindura Inkuru",

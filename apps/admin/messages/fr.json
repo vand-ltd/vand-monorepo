@@ -208,7 +208,15 @@
     "publish": "Publier",
     "unpublish": "Dépublier",
     "statusUpdated": "Statut de l'article mis à jour",
-    "statusUpdateFailed": "Échec de la mise à jour du statut"
+    "statusUpdateFailed": "Échec de la mise à jour du statut",
+    "deleteArticle": "Supprimer définitivement",
+    "deleteOnlyDraftRejected": "Seuls les articles en brouillon ou rejetés peuvent être supprimés",
+    "confirmDeleteTitle": "Supprimer définitivement l’article ?",
+    "confirmDelete": "Ceci supprimera définitivement « {title} ». Cette action est irréversible.",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "articleDeleted": "Article supprimé définitivement",
+    "articleDeleteFailed": "Échec de la suppression de l’article"
   },
   "editArticle": {
     "pageTitle": "Modifier l'article",

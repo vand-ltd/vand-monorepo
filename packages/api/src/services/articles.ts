@@ -56,6 +56,11 @@ export async function getArticles(params: {
   return data.data;
 }
 
+export async function hardDeleteArticle(articleId: string): Promise<any> {
+  const { data } = await api.delete(`/api/menyesha/articles/${articleId}/hard`);
+  return data;
+}
+
 export async function toggleFeaturedArticle(articleId: string) {
   const { data } = await api.patch(`/api/menyesha/articles/${articleId}/feature`);
   return data.data;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getMe, updateProfile, uploadMedia } from '@org/api';
 import { AuthGuard } from '@/components/AuthGuard';
@@ -11,6 +11,7 @@ import Image from 'next/image';
 
 export default function ProfilePage() {
   const t = useTranslations('editProfile');
+  const locale = useLocale();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -22,8 +23,8 @@ export default function ProfilePage() {
   const [uploading, setUploading] = useState(false);
 
   const { data: me, isLoading } = useQuery({
-    queryKey: ['me'],
-    queryFn: getMe,
+    queryKey: ['me', locale],
+    queryFn: () => getMe(locale),
   });
 
   // Populate form once data loads

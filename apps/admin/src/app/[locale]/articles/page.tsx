@@ -2,10 +2,21 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getArticles, updateArticle } from '@org/api';
+import { getArticles, updateArticle, hardDeleteArticle } from '@org/api';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { AuthGuard } from '@/components/AuthGuard';
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog';
 import {
   ChevronLeft,
   ChevronRight,
@@ -17,6 +28,7 @@ import {
   Filter,
   Plus,
   Loader2,
+  Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -118,6 +130,18 @@ export default function ArticlesPage() {
     },
     onError: (error: any) => {
       const message = error?.response?.data?.message || t('statusUpdateFailed');
+      toast.error(Array.isArray(message) ? message.join(', ') : message);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => hardDeleteArticle(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
+      toast.success(t('articleDeleted'));
+    },
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || t('articleDeleteFailed');
       toast.error(Array.isArray(message) ? message.join(', ') : message);
     },
   });
@@ -449,6 +473,36 @@ export default function ArticlesPage() {
                           >
                             <Eye className="h-4 w-4" />
                           </Link>
+                          {(article.status === 'Draft' || article.status === 'Rejected') && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <button
+                                  disabled={deleteMutation.isPending}
+                                  className="p-1.5 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
+                                  title={t('deleteArticle')}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>{t('confirmDeleteTitle')}</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    {t('confirmDelete', { title: article.title })}
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => deleteMutation.mutate(article.id)}
+                                    className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                                  >
+                                    {t('delete')}
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
                         </div>
                       </td>
                     </tr>

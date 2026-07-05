@@ -208,7 +208,15 @@
     "publish": "Publish",
     "unpublish": "Unpublish",
     "statusUpdated": "Article status updated",
-    "statusUpdateFailed": "Failed to update article status"
+    "statusUpdateFailed": "Failed to update article status",
+    "deleteArticle": "Delete permanently",
+    "deleteOnlyDraftRejected": "Only draft or rejected articles can be deleted",
+    "confirmDeleteTitle": "Delete article permanently?",
+    "confirmDelete": "This will permanently delete \"{title}\". This action cannot be undone.",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "articleDeleted": "Article deleted permanently",
+    "articleDeleteFailed": "Failed to delete article"
   },
   "editArticle": {
     "pageTitle": "Edit Article",
