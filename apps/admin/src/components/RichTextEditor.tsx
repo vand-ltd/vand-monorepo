@@ -137,6 +137,7 @@ function ToolbarDivider() {
 
 export function RichTextEditor({ content, onChange, placeholder }: RichTextEditorProps) {
   const [linkUrl, setLinkUrl] = useState('');
+  const [linkText, setLinkText] = useState('');
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [showTablePicker, setShowTablePicker] = useState(false);
   const [tableHover, setTableHover] = useState({ rows: 0, cols: 0 });
@@ -257,15 +258,32 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
       return;
     }
 
+    // Prefill the display text with the current selection (if any), and the URL if editing a link.
+    const { from, to } = editor.state.selection;
+    setLinkText(editor.state.doc.textBetween(from, to, ' '));
+    setLinkUrl(editor.getAttributes('link').href || '');
     setShowLinkInput(true);
   }, [editor]);
 
   const applyLink = useCallback(() => {
     if (!editor || !linkUrl) return;
-    editor.chain().focus().extendMarkRange('link').setLink({ href: linkUrl }).run();
+    const text = linkText.trim();
+    if (text) {
+      // Insert the display text as a link (replaces the selection, or inserts at the cursor).
+      editor
+        .chain()
+        .focus()
+        .insertContent([{ type: 'text', text, marks: [{ type: 'link', attrs: { href: linkUrl } }] }])
+        .unsetMark('link')
+        .run();
+    } else {
+      // No display text given — link whatever is currently selected.
+      editor.chain().focus().extendMarkRange('link').setLink({ href: linkUrl }).run();
+    }
     setLinkUrl('');
+    setLinkText('');
     setShowLinkInput(false);
-  }, [editor, linkUrl]);
+  }, [editor, linkUrl, linkText]);
 
   if (!editor) return null;
 
@@ -467,7 +485,19 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
 
         {/* Link input */}
         {showLinkInput && (
-          <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+            <input
+              type="text"
+              value={linkText}
+              onChange={(e) => setLinkText(e.target.value)}
+              placeholder="Text to display (e.g. amahugurwa yasojwe)"
+              className="flex-1 h-8 px-3 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003153]"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') { e.preventDefault(); applyLink(); }
+                if (e.key === 'Escape') { setShowLinkInput(false); setLinkUrl(''); setLinkText(''); }
+              }}
+              autoFocus
+            />
             <input
               type="url"
               value={linkUrl}
@@ -476,16 +506,17 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
               className="flex-1 h-8 px-3 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003153]"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') { e.preventDefault(); applyLink(); }
-                if (e.key === 'Escape') { setShowLinkInput(false); setLinkUrl(''); }
+                if (e.key === 'Escape') { setShowLinkInput(false); setLinkUrl(''); setLinkText(''); }
               }}
-              autoFocus
             />
-            <button type="button" onClick={applyLink} className="h-8 px-3 text-sm font-medium text-white bg-[#003153] rounded-lg hover:opacity-90">
-              Apply
-            </button>
-            <button type="button" onClick={() => { setShowLinkInput(false); setLinkUrl(''); }} className="h-8 px-3 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
-              Cancel
-            </button>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={applyLink} className="h-8 px-3 text-sm font-medium text-white bg-[#003153] rounded-lg hover:opacity-90">
+                Apply
+              </button>
+              <button type="button" onClick={() => { setShowLinkInput(false); setLinkUrl(''); setLinkText(''); }} className="h-8 px-3 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                Cancel
+              </button>
+            </div>
           </div>
         )}
 
