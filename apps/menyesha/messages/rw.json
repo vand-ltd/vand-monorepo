@@ -307,6 +307,9 @@
     "movementSame": "No change",
     "orderNewest": "Newest first",
     "orderOldest": "Oldest first",
-    "filters": "Filters"
+    "filters": "Filters",
+    "pageInfo": "Page {current} of {total}",
+    "prevPage": "Previous",
+    "nextPage": "Next"
   }
 }

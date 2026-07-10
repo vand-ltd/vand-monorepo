@@ -506,6 +506,9 @@
     "confirmDeleteTitle": "Delete this record?",
     "confirmDelete": "This will permanently delete the {fuel} price effective {date}. This action cannot be undone.",
     "deleted": "Record deleted",
-    "deleteFailed": "Failed to delete record"
+    "deleteFailed": "Failed to delete record",
+    "pageInfo": "Page {current} of {total}",
+    "prevPage": "Previous",
+    "nextPage": "Next"
   }
 }

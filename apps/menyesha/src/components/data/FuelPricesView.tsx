@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import {
@@ -27,6 +27,8 @@ import {
   X,
   ArrowDownUp,
   SlidersHorizontal,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
 } from 'lucide-react';
 import { FuelPriceChart, type FuelChartPoint } from './FuelPriceChart';
 
@@ -51,8 +53,10 @@ export function FuelPricesView() {
   const t = useTranslations('fuelPrices');
   const locale = useLocale();
 
+  // The data section renders in English on the Kinyarwanda locale, so format dates to match.
+  const dateLocale = locale === 'rw' ? 'en' : locale;
   const formatDate = (iso: string, opts?: Intl.DateTimeFormatOptions) =>
-    new Date(iso).toLocaleDateString(locale, opts ?? { year: 'numeric', month: 'short', day: 'numeric' });
+    new Date(iso).toLocaleDateString(dateLocale, opts ?? { year: 'numeric', month: 'short', day: 'numeric' });
 
   const currentQuery = useQuery({
     queryKey: ['fuel-prices-current'],
@@ -80,8 +84,18 @@ export function FuelPricesView() {
     return map;
   }, [current]);
 
-  // Fuel types offered in the history filter (all known types, incl. ones without history)
-  const allFuelTypes = useMemo(() => current.map((c) => c.fuelType), [current]);
+  // Only show fuel types that actually have a current price (e.g. Kerosene is hidden until it has data)
+  const currentWithData = useMemo(
+    () => current.filter((c) => toNumber(c.pricePerLiter) != null),
+    [current]
+  );
+
+  // Fuel types offered in the history filter — only those that have records
+  const allFuelTypes = useMemo(() => {
+    const set = new Set<string>();
+    for (const rec of history) set.add(rec.fuelType);
+    return Array.from(set);
+  }, [history]);
 
   // Years present in the (unfiltered) history, newest first
   const availableYears = useMemo(() => {
@@ -177,6 +191,26 @@ export function FuelPricesView() {
   // Server returns rows already sorted per the `order` param — render as-is.
   const sortedHistory = tableHistory;
 
+  // Client-side pagination: 10 rows per page
+  const HIST_PAGE_SIZE = 10;
+  const [histPage, setHistPage] = useState(1);
+  const histTotalPages = Math.max(1, Math.ceil(sortedHistory.length / HIST_PAGE_SIZE));
+  // Reset to first page whenever the filtered/sorted result changes
+  useEffect(() => {
+    setHistPage(1);
+  }, [
+    histFilters.from,
+    histFilters.to,
+    histFilters.fuelType,
+    histFilters.year,
+    histFilters.direction,
+    histFilters.order,
+  ]);
+  const pagedHistory = sortedHistory.slice(
+    (histPage - 1) * HIST_PAGE_SIZE,
+    histPage * HIST_PAGE_SIZE
+  );
+
   const isLoading = currentQuery.isLoading || historyQuery.isLoading;
   const isError = currentQuery.isError && historyQuery.isError;
 
@@ -215,7 +249,7 @@ export function FuelPricesView() {
           {t('currentPrices')}
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {current.map((item) => (
+          {currentWithData.map((item) => (
             <CurrentCard key={item.fuelType} item={item} t={t} formatDate={formatDate} />
           ))}
         </div>
@@ -551,7 +585,7 @@ export function FuelPricesView() {
                     </td>
                   </tr>
                 ) : (
-                  sortedHistory.map((rec: FuelPriceRecord) => (
+                  pagedHistory.map((rec: FuelPriceRecord) => (
                   <tr key={rec.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30">
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
                       {formatDate(rec.effectiveDate)}
@@ -643,6 +677,34 @@ export function FuelPricesView() {
               </tbody>
             </table>
           </div>
+
+          {histTotalPages > 1 && (
+            <div className="flex items-center justify-between gap-3 border-t border-gray-200 px-4 py-3 dark:border-gray-700">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {t('pageInfo', { current: histPage, total: histTotalPages })}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setHistPage((p) => Math.max(1, p - 1))}
+                  disabled={histPage === 1}
+                  className="rounded-lg border border-gray-300 p-2 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-600 dark:hover:bg-gray-700"
+                  aria-label={t('prevPage')}
+                >
+                  <ChevronLeftIcon className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHistPage((p) => Math.min(histTotalPages, p + 1))}
+                  disabled={histPage >= histTotalPages}
+                  className="rounded-lg border border-gray-300 p-2 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-600 dark:hover:bg-gray-700"
+                  aria-label={t('nextPage')}
+                >
+                  <ChevronRightIcon className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 

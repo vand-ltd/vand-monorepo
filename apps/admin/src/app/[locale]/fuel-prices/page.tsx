@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getFuelPriceHistory, deleteFuelPrice, type FuelPriceRecord } from '@org/api';
 import { useLocale, useTranslations } from 'next-intl';
@@ -28,6 +28,8 @@ import {
   FileText,
   X,
   Trash2,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 const FUEL_TYPES = ['Petrol', 'Diesel', 'Kerosene'] as const;
@@ -65,8 +67,10 @@ export default function FuelPricesListPage() {
     },
   });
 
+  // Admin renders in English on the Kinyarwanda locale, so format dates to match.
+  const dateLocale = locale === 'rw' ? 'en' : locale;
   const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' });
+    new Date(iso).toLocaleDateString(dateLocale, { year: 'numeric', month: 'short', day: 'numeric' });
 
   const [filters, setFilters] = useState<{
     fuelType: string;
@@ -98,6 +102,15 @@ export default function FuelPricesListPage() {
     return Array.from(set).sort((a, b) => b - a);
   }, [allHistoryQuery.data]);
 
+  // Only fuel types that actually have records (e.g. Kerosene is hidden until it has data)
+  const fuelOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const rec of allHistoryQuery.data ?? []) set.add(rec.fuelType);
+    const known = FUEL_TYPES.filter((ft) => set.has(ft));
+    const extra = Array.from(set).filter((ft) => !FUEL_TYPES.includes(ft as (typeof FUEL_TYPES)[number]));
+    return [...known, ...extra];
+  }, [allHistoryQuery.data]);
+
   const historyQuery = useQuery({
     queryKey: [
       'admin-fuel-history',
@@ -119,6 +132,15 @@ export default function FuelPricesListPage() {
       }),
   });
   const rows = historyQuery.data ?? [];
+
+  // Client-side pagination: 10 rows per page
+  const PAGE_SIZE = 2;
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  useEffect(() => {
+    setPage(1);
+  }, [filters.fuelType, filters.year, filters.direction, filters.from, filters.to, filters.order]);
+  const pagedRows = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const selectClass =
     'px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003153]';
@@ -154,7 +176,7 @@ export default function FuelPricesListPage() {
               className={selectClass}
             >
               <option value="">{t('allFuels')}</option>
-              {FUEL_TYPES.map((ft) => (
+              {fuelOptions.map((ft) => (
                 <option key={ft} value={ft}>
                   {ft}
                 </option>
@@ -267,7 +289,7 @@ export default function FuelPricesListPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {rows.map((rec: FuelPriceRecord) => (
+                  {pagedRows.map((rec: FuelPriceRecord) => (
                     <tr key={rec.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors">
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-900 dark:text-white">
                         {formatDate(rec.effectiveDate)}
@@ -388,6 +410,34 @@ export default function FuelPricesListPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {t('pageInfo', { current: page, total: totalPages })}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  aria-label={t('prevPage')}
+                >
+                  <ChevronLeft className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                  className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  aria-label={t('nextPage')}
+                >
+                  <ChevronRight className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                </button>
+              </div>
             </div>
           )}
         </div>

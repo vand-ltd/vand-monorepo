@@ -506,6 +506,9 @@
     "confirmDeleteTitle": "Supprimer cet enregistrement ?",
     "confirmDelete": "Ceci supprimera définitivement le prix {fuel} en vigueur le {date}. Cette action est irréversible.",
     "deleted": "Enregistrement supprimé",
-    "deleteFailed": "Échec de la suppression"
+    "deleteFailed": "Échec de la suppression",
+    "pageInfo": "Page {current} sur {total}",
+    "prevPage": "Précédent",
+    "nextPage": "Suivant"
   }
 }
