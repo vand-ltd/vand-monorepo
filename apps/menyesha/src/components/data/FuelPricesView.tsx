@@ -53,7 +53,7 @@ export function FuelPricesView() {
   const t = useTranslations('fuelPrices');
   const locale = useLocale();
 
-  // The data section renders in English on the Kinyarwanda locale, so format dates to match.
+  // Only the title/subtitle are Kinyarwanda on rw; the rest of the data UI is English, so format dates in English there.
   const dateLocale = locale === 'rw' ? 'en' : locale;
   const formatDate = (iso: string, opts?: Intl.DateTimeFormatOptions) =>
     new Date(iso).toLocaleDateString(dateLocale, opts ?? { year: 'numeric', month: 'short', day: 'numeric' });

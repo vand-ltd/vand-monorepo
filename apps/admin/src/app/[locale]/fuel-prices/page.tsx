@@ -134,7 +134,7 @@ export default function FuelPricesListPage() {
   const rows = historyQuery.data ?? [];
 
   // Client-side pagination: 10 rows per page
-  const PAGE_SIZE = 2;
+  const PAGE_SIZE = 10;
   const [page, setPage] = useState(1);
   const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   useEffect(() => {

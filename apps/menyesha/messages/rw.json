@@ -260,12 +260,12 @@
     "title": "Data",
     "subtitle": "Numbers and trends we track over time.",
     "fuelPricesTitle": "Fuel Prices",
-    "fuelPricesDescription": "Official pump prices set by RURA, with history and trends.",
+    "fuelPricesDescription": "Petrol and diesel pump prices in Rwanda, with history and trends.",
     "viewAll": "All data"
   },
   "fuelPrices": {
-    "title": "Fuel Prices",
-    "subtitle": "Official pump prices set by RURA.",
+    "title": "Ibiciro bya Lisansi na Mazutu mu Rwanda",
+    "subtitle": "Ibiciro bishyirwaho na RURA hashingiwe ku impinduka ziri ku isoko mpuzamahanga ry'ibikomoka kuri peterol.",
     "unit": "RWF/L",
     "currentPrices": "Current prices",
     "statistics": "Statistics",
@@ -310,6 +310,11 @@
     "filters": "Filters",
     "pageInfo": "Page {current} of {total}",
     "prevPage": "Previous",
-    "nextPage": "Next"
+    "nextPage": "Next",
+    "fuel": {
+      "Petrol": "Petrol",
+      "Diesel": "Diesel",
+      "Kerosene": "Kerosene"
+    }
   }
 }

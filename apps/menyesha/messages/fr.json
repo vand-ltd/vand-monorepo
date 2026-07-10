@@ -260,12 +260,12 @@
     "title": "Données",
     "subtitle": "Chiffres et tendances que nous suivons dans le temps.",
     "fuelPricesTitle": "Prix du carburant",
-    "fuelPricesDescription": "Prix officiels à la pompe fixés par RURA, avec historique et tendances.",
+    "fuelPricesDescription": "Prix de l’essence et du diesel au Rwanda, avec historique et tendances.",
     "viewAll": "Toutes les données"
   },
   "fuelPrices": {
-    "title": "Prix du carburant",
-    "subtitle": "Prix officiels à la pompe fixés par RURA.",
+    "title": "Prix du carburant au Rwanda",
+    "subtitle": "Les prix sont fixés par la RURA en fonction des changements sur le marché international des produits pétroliers.",
     "unit": "RWF/L",
     "currentPrices": "Prix actuels",
     "statistics": "Statistiques",
@@ -310,6 +310,11 @@
     "filters": "Filtres",
     "pageInfo": "Page {current} sur {total}",
     "prevPage": "Précédent",
-    "nextPage": "Suivant"
+    "nextPage": "Suivant",
+    "fuel": {
+      "Petrol": "Essence",
+      "Diesel": "Diesel",
+      "Kerosene": "Pétrole lampant"
+    }
   }
 }
