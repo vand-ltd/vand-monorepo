@@ -39,6 +39,26 @@
 .text-success { color: var(--color-success) !important; }
 .text-error { color: var(--color-error) !important; }
 
+/* Article body hyperlinks — light: secondary → primary on hover; dark: accent → secondary on hover */
+.article-link {
+  color: var(--color-brand-secondary) !important;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--color-brand-secondary) 40%, transparent);
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+.article-link:hover {
+  color: var(--color-brand-primary) !important;
+  text-decoration-color: var(--color-brand-primary);
+}
+.dark .article-link {
+  color: var(--color-brand-accent) !important;
+  text-decoration-color: color-mix(in srgb, var(--color-brand-accent) 40%, transparent);
+}
+.dark .article-link:hover {
+  color: var(--color-brand-secondary) !important;
+  text-decoration-color: var(--color-brand-secondary);
+}
+
 .bg-brand-primary { background-color: var(--color-brand-primary) !important; }
 .bg-brand-secondary { background-color: var(--color-brand-secondary) !important; }
 .bg-brand-accent { background-color: var(--color-brand-accent) !important; }

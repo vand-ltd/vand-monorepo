@@ -10,13 +10,14 @@ const Footer = () => {
   const yearDisplay = currentYear > startYear ? `${startYear} – ${currentYear}` : `${startYear}`;
   const t = useTranslations('footer');
   const tNav = useTranslations('nav');
+  const tData = useTranslations('dataHub');
   const locale = useLocale();
 
   return (
     <footer className="bg-gray-900 text-gray-300">
       {/* Main Footer Content */}
       <div className="max-w-screen-xl mx-auto px-4 py-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Social Media */}
           <div>
             <h4 className="text-sm font-semibold text-white uppercase tracking-wide mb-4">{t('socialMedia')}</h4>
@@ -71,6 +72,23 @@ const Footer = () => {
                 <span>Kigali, Rwanda</span>
               </div>
             </div>
+          </div>
+
+          {/* Data */}
+          <div>
+            <h4 className="text-sm font-semibold text-white uppercase tracking-wide mb-4">{tData('title')}</h4>
+            <ul className="space-y-2.5">
+              <li>
+                <Link href={`/${locale}/data/fuel-prices`} className="text-sm text-gray-400 hover:text-brand-accent transition-colors">
+                  {tData('fuelPricesTitle')}
+                </Link>
+              </li>
+              <li>
+                <Link href={`/${locale}/data`} className="text-sm text-gray-400 hover:text-brand-accent transition-colors">
+                  {tData('viewAll')}
+                </Link>
+              </li>
+            </ul>
           </div>
 
           {/* Quick Links */}

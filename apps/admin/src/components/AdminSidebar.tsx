@@ -17,6 +17,7 @@ import {
   FolderPlus,
   ScrollText,
   BadgeDollarSign,
+  Fuel,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -48,6 +49,8 @@ export function AdminSidebar() {
     { href: '/create-user' as const, label: t('createUser'), icon: UserPlus, auth: true, adminOnly: true },
     { href: '/terms' as const, label: t('terms'), icon: ScrollText, auth: true, adminOnly: true },
     { href: '/create-sponsored-article' as const, label: t('createSponsoredArticle'), icon: BadgeDollarSign, auth: true },
+    { href: '/fuel-prices' as const, label: t('fuelPrices'), icon: Fuel, auth: true, adminOnly: true },
+    { href: '/create-fuel-prices' as const, label: t('createFuelPrices'), icon: Fuel, auth: true, adminOnly: true },
   ].filter((link) => {
     if (link.auth && !isLoggedIn) return false;
     if (link.hideWhenAuth && isLoggedIn) return false;

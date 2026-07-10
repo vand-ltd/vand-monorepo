@@ -99,6 +99,8 @@ export const Header = () => {
       });
     }
 
+    links.push({ href: '/data', label: t('data') });
+
     return links;
   }, [categories, t]);
 
