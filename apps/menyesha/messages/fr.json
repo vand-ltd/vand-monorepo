@@ -20,7 +20,8 @@
     "europe": "Europe",
     "international": "International",
     "privacyPolicy": "Politique de confidentialité",
-    "termsOfService": "Conditions d'utilisation"
+    "termsOfService": "Conditions d'utilisation",
+    "data": "Données"
   },
   "breakingNews": {
     "label": "BREAKING",
@@ -82,14 +83,14 @@
     "subscribeNow": "S'abonner",
     "backToTop": "Retour en haut",
     "advertiseTitle": "Annoncez Chez Nous",
-    "advertiseDescription": "Touchez des milliers de lecteurs engag\u00e9s au Rwanda et au-del\u00e0. Emplacements publicitaires premium pour votre marque.",
+    "advertiseDescription": "Touchez des milliers de lecteurs engagés au Rwanda et au-delà. Emplacements publicitaires premium pour votre marque.",
     "advertiseReach": "100K+ lecteurs/mois",
     "advertiseGrowth": "Audience croissante",
     "adSpaceAvailable": "Votre Pub Ici",
     "advertiseContact": "Contactez-nous",
     "advertiseEmailSubject": "Demande publicitaire - Menyesha",
-    "adLeaderboard": "Banni\u00e8re",
-    "adSidebar": "Barre lat\u00e9rale"
+    "adLeaderboard": "Bannière",
+    "adSidebar": "Barre latérale"
   },
   "feed": {
     "latestStories": "Actualités",
@@ -105,10 +106,10 @@
   },
   "search": {
     "placeholder": "Rechercher des articles...",
-    "title": "R\u00e9sultats de recherche",
-    "resultsFor": "R\u00e9sultats pour \"{query}\"",
-    "noResults": "Aucun article trouv\u00e9 pour \"{query}\"",
-    "tryAgain": "Essayez d'autres mots-cl\u00e9s ou parcourez nos cat\u00e9gories."
+    "title": "Résultats de recherche",
+    "resultsFor": "Résultats pour \"{query}\"",
+    "noResults": "Aucun article trouvé pour \"{query}\"",
+    "tryAgain": "Essayez d'autres mots-clés ou parcourez nos catégories."
   },
   "login": {
     "loginTab": "Connexion",
@@ -188,10 +189,10 @@
     "description": "Restez informé avec les dernières actualités, analyses et reportages du Rwanda et du monde entier."
   },
   "footer": {
-    "description": "Des informations pr\u00e9cises et impartiales et des analyses approfondies du Rwanda et du monde entier.",
+    "description": "Des informations précises et impartiales et des analyses approfondies du Rwanda et du monde entier.",
     "contact": "Contact",
-    "legal": "Mentions l\u00e9gales",
-    "privacyPolicy": "Politique de confidentialit\u00e9",
+    "legal": "Mentions légales",
+    "privacyPolicy": "Politique de confidentialité",
     "termsOfService": "Conditions d'utilisation",
     "cookiePolicy": "Politique des cookies",
     "allRightsReserved": "Tous droits réservés.",
@@ -254,5 +255,58 @@
     "changesText": "Nous pouvons mettre à jour ces Conditions d'Utilisation à tout moment. L'utilisation continue du site après les modifications constitue une acceptation des conditions mises à jour.",
     "contactTitle": "Nous Contacter",
     "contactText": "Si vous avez des questions sur ces Conditions d'Utilisation, contactez-nous à :"
+  },
+  "dataHub": {
+    "title": "Données",
+    "subtitle": "Chiffres et tendances que nous suivons dans le temps.",
+    "fuelPricesTitle": "Prix du carburant",
+    "fuelPricesDescription": "Prix officiels à la pompe fixés par RURA, avec historique et tendances.",
+    "viewAll": "Toutes les données"
+  },
+  "fuelPrices": {
+    "title": "Prix du carburant",
+    "subtitle": "Prix officiels à la pompe fixés par RURA.",
+    "unit": "RWF/L",
+    "currentPrices": "Prix actuels",
+    "statistics": "Statistiques",
+    "history": "Historique des prix",
+    "records": "Enregistrements",
+    "allTimeHigh": "Record le plus haut",
+    "allTimeLow": "Record le plus bas",
+    "average": "Moyenne ({year})",
+    "biggestIncrease": "Plus forte hausse",
+    "priceTrend": "Tendance du prix — {fuel}",
+    "notEnoughData": "Pas encore assez de données pour tracer une tendance.",
+    "notAvailable": "Non disponible",
+    "unchanged": "Inchangé",
+    "effectiveFrom": "En vigueur le {date}",
+    "upcomingFrom": "À partir du {date} : {price}",
+    "colDate": "Date d’effet",
+    "colFuel": "Carburant",
+    "colPrice": "Prix",
+    "colNote": "Note",
+    "loadError": "Impossible de charger les prix du carburant. Réessayez plus tard.",
+    "colSource": "Source",
+    "viewSource": "Voir le document source",
+    "view": "Voir",
+    "close": "Fermer",
+    "upcomingTitle": "Changements à venir",
+    "upcomingSubtitle": "Ajustements de prix programmés",
+    "colChange": "Variation",
+    "allFuels": "Tous les carburants",
+    "filterFrom": "Du",
+    "filterTo": "Au",
+    "clearFilters": "Effacer",
+    "noRecords": "Aucun enregistrement ne correspond à vos filtres",
+    "filterYear": "Année",
+    "allYears": "Toutes les années",
+    "filterMovement": "Variation",
+    "allMovements": "Toutes",
+    "movementUp": "Hausse",
+    "movementDown": "Baisse",
+    "movementSame": "Inchangé",
+    "orderNewest": "Plus récent d’abord",
+    "orderOldest": "Plus ancien d’abord",
+    "filters": "Filtres"
   }
 }

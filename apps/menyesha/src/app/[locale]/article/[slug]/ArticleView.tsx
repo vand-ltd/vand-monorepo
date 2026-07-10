@@ -129,7 +129,7 @@ function renderTiptapNode(node: any, index: number, onImageClick?: (src: string,
               break;
             case 'link':
               element = (
-                <a key={index} href={mark.attrs?.href} target="_blank" rel="noopener noreferrer" className="text-brand-secondary hover:text-brand-accent underline decoration-brand-secondary/40 hover:decoration-brand-accent transition-colors">
+                <a key={index} href={mark.attrs?.href} target="_blank" rel="noopener noreferrer" className="article-link">
                   {element}
                 </a>
               );

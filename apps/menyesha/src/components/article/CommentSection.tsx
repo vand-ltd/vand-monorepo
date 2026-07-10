@@ -38,7 +38,7 @@ export function CommentSection({ articleId }: { articleId: string }) {
 
   const { data: user } = useQuery({
     queryKey: ['me'],
-    queryFn: getMe,
+    queryFn: () => getMe(),
     retry: false,
   });
 
