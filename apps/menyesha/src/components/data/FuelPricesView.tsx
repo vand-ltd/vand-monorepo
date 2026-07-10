@@ -43,6 +43,24 @@ function colorFor(fuelType: string): string {
   return FUEL_COLORS[fuelType] ?? DEFAULT_COLOR;
 }
 
+// Display labels matching RURA's communiqué (raw API value stays "Petrol"). Same across locales.
+const FUEL_DISPLAY: Record<string, string> = {
+  Petrol: 'Gasoline (Petrol)',
+};
+function fuelLabel(fuelType: string): string {
+  return FUEL_DISPLAY[fuelType] ?? fuelType;
+}
+
+// Canonical display order everywhere: Gasoline (Petrol) → Diesel → Kerosene → (others)
+const FUEL_ORDER = ['Petrol', 'Diesel', 'Kerosene'];
+function fuelRank(fuelType: string): number {
+  const i = FUEL_ORDER.indexOf(fuelType);
+  return i === -1 ? FUEL_ORDER.length : i;
+}
+function byFuelOrder(a: string, b: string): number {
+  return fuelRank(a) - fuelRank(b);
+}
+
 function toNumber(value: string | null | undefined): number | null {
   if (value == null) return null;
   const n = parseFloat(value);
@@ -86,7 +104,10 @@ export function FuelPricesView() {
 
   // Only show fuel types that actually have a current price (e.g. Kerosene is hidden until it has data)
   const currentWithData = useMemo(
-    () => current.filter((c) => toNumber(c.pricePerLiter) != null),
+    () =>
+      current
+        .filter((c) => toNumber(c.pricePerLiter) != null)
+        .sort((a, b) => byFuelOrder(a.fuelType, b.fuelType)),
     [current]
   );
 
@@ -94,7 +115,7 @@ export function FuelPricesView() {
   const allFuelTypes = useMemo(() => {
     const set = new Set<string>();
     for (const rec of history) set.add(rec.fuelType);
-    return Array.from(set);
+    return Array.from(set).sort(byFuelOrder);
   }, [history]);
 
   // Years present in the (unfiltered) history, newest first
@@ -159,7 +180,7 @@ export function FuelPricesView() {
         ordered.push(rec.fuelType);
       }
     }
-    return ordered;
+    return ordered.sort(byFuelOrder);
   }, [history]);
 
   const [selectedFuel, setSelectedFuel] = useState<string | null>(null);
@@ -268,7 +289,7 @@ export function FuelPricesView() {
             </div>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {upcoming.map((item) => {
+            {[...upcoming].sort((a, b) => byFuelOrder(a.fuelType, b.fuelType)).map((item) => {
               const next = toNumber(item.pricePerLiter);
               const cur = currentByFuel[item.fuelType] ?? null;
               const delta = cur != null && next != null ? next - cur : null;
@@ -291,7 +312,7 @@ export function FuelPricesView() {
                         className="h-2.5 w-2.5 rounded-full"
                         style={{ backgroundColor: colorFor(item.fuelType) }}
                       />
-                      {item.fuelType}
+                      {fuelLabel(item.fuelType)}
                     </span>
                     {delta != null && (
                       <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${dirColor}`}>
@@ -333,7 +354,7 @@ export function FuelPricesView() {
                   }`}
                   style={isActive ? { backgroundColor: colorFor(fuel) } : undefined}
                 >
-                  {fuel}
+                  {fuelLabel(fuel)}
                 </button>
               );
             })}
@@ -397,7 +418,7 @@ export function FuelPricesView() {
           {/* Chart */}
           <section className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
             <h2 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">
-              {t('priceTrend', { fuel: activeFuel })}
+              {t('priceTrend', { fuel: fuelLabel(activeFuel) })}
             </h2>
             {chartData.length > 1 ? (
               <FuelPriceChart data={chartData} color={colorFor(activeFuel)} unit={t('unit')} />
@@ -468,7 +489,7 @@ export function FuelPricesView() {
                   <option value="">{t('allFuels')}</option>
                   {allFuelTypes.map((ft) => (
                     <option key={ft} value={ft}>
-                      {ft}
+                      {fuelLabel(ft)}
                     </option>
                   ))}
                 </select>
@@ -598,7 +619,7 @@ export function FuelPricesView() {
                           className="h-2 w-2 rounded-full"
                           style={{ backgroundColor: colorFor(rec.fuelType) }}
                         />
-                        {rec.fuelType}
+                        {fuelLabel(rec.fuelType)}
                       </span>
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">
@@ -757,7 +778,7 @@ function CurrentCard({ item, t, formatDate }: { item: CurrentFuelPrice; t: any; 
       <div className="flex items-center justify-between">
         <span className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400">
           <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
-          {item.fuelType}
+          {fuelLabel(item.fuelType)}
         </span>
         {price != null && item.change != null && (
           <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${dirColor}`}>
