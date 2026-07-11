@@ -9,7 +9,16 @@ const SITE_URL =
     : 'https://menyesha.vand.rw';
 
 // Static, non-category routes that exist for every locale (slug identical across locales).
-const STATIC_PATHS = ['', 'about', 'contact', 'privacy-policy', 'terms-of-service', 'data', 'data/fuel-prices'];
+const STATIC_PATHS = [
+  '',
+  'about',
+  'contact',
+  'privacy-policy',
+  'terms-of-service',
+  'data',
+  'data/fuel-prices',
+  'data/fuel-prices/statistics',
+];
 
 type Cat = { slug: string; updatedAt?: string; children?: { slug: string; updatedAt?: string }[] };
 type Article = { slug: string; updatedAt?: string; publishedAt?: string };
@@ -115,6 +124,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.8,
       });
     }
+  }
+
+  // Fuel-price year archives (data is locale-independent, so derive years once)
+  try {
+    const res = await fetch(`${API_URL}/api/menyesha/fuel-prices/history?order=desc`, {
+      headers: { 'Content-Type': 'application/json', Origin: SITE_URL },
+      next: { revalidate: 3600 },
+    });
+    if (res.ok) {
+      const json = await res.json();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const years = Array.from(
+        new Set((json.data || []).map((r: any) => new Date(r.effectiveDate).getFullYear()))
+      );
+      for (const y of years) {
+        for (const locale of locales) {
+          entries.push({
+            url: `${SITE_URL}/${locale}/data/fuel-prices/${y}`,
+            lastModified: now,
+            changeFrequency: 'monthly',
+            priority: 0.5,
+          });
+        }
+      }
+    }
+  } catch {
+    // ignore — year pages just won't be listed this build
   }
 
   return entries;

@@ -13,7 +13,6 @@ import {
   type FuelDirection,
 } from '@org/api';
 import {
-  Fuel,
   ArrowUp,
   ArrowDown,
   Minus,
@@ -251,19 +250,6 @@ export function FuelPricesView() {
 
   return (
     <div className="space-y-10">
-      {/* Header */}
-      <header className="flex items-start gap-3">
-        <div className="mt-1 flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-[#003153]/10 text-[#003153] dark:bg-[#F59E0B]/15 dark:text-[#F59E0B]">
-          <Fuel className="h-6 w-6" />
-        </div>
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-            {t('title')}
-          </h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t('subtitle')}</p>
-        </div>
-      </header>
-
       {/* Current price cards */}
       <section>
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">

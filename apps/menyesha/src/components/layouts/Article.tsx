@@ -492,7 +492,7 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
                 <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base leading-relaxed mb-4 line-clamp-3">
                   {spotlightArticles[0].excerpt}
                 </p>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="flex flex-col gap-2">
                   <AuthorLink author={spotlightArticles[0].author} className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
                     <AuthorAvatar author={spotlightArticles[0].author} size="md" />
                     <div className="font-semibold text-sm text-gray-900 dark:text-white">{spotlightArticles[0].author?.user?.fullName || 'Author'}</div>
