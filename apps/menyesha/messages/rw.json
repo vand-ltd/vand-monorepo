@@ -316,7 +316,7 @@
       "Diesel": "Diesel",
       "Kerosene": "Kerosene"
     },
-    "intro": "Guhera {date} RURA yashyizeho ibiciro bishya by'ibikomoka kuri peteroli aho kuri ubu lisansi iri kugura {petrol} RWF naho mazutu {diesel} RWF ikagura. Hano hepfo urabona ibiciro bya nonaha, impinduka ziteganyijwe, imigendekere n’imibare.",
+    "intro": "Guhera {date} RURA yashyizeho ibiciro bishya by'ibikomoka kuri peteroli aho kuri ubu lisansi iri kugura {petrol} RWF naho mazutu ikagura {diesel} RWF. Reba hasi ibiciro biriho ubu, impinduka ziteganyijwe, imigendekere n’imibare.",
     "insightsTitle": "Key insights",
     "insightChanges": "Since Menyesha began tracking, petrol has increased {up} times, decreased {down} times and stayed unchanged {same} times.",
     "insightTrendUp": "Petrol is currently {pct}% higher than when tracking began.",
