@@ -10,6 +10,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { formatTimeAgo } from "@/lib/timeago";
+import { FootballWidget } from "./FootballWidget";
 
 type AsideBannerProps = {
   children: ReactNode;
@@ -219,6 +220,8 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
             {/* Default sidebar (home, category, etc.) */}
             {!isArticleView && (
               <>
+            {/* Football — results / standings at a glance */}
+            <FootballWidget />
             <Card className="overflow-hidden !py-0 !gap-0">
               <div
                 className="relative overflow-hidden text-white px-4 py-3"

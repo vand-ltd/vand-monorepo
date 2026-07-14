@@ -352,5 +352,27 @@
     "byYear": "Browse by year",
     "highest": "Highest",
     "lowest": "Lowest"
+  },
+  "fuelStrip": {
+    "label": "Ibiciro bya Lisansi mu Rwanda",
+    "asOf": "guhera {date}"
+  },
+  "football": {
+    "title": "Football",
+    "results": "Results",
+    "fixtures": "Fixtures",
+    "noResults": "No results yet",
+    "noFixtures": "No upcoming fixtures",
+    "live": "LIVE",
+    "ft": "FT",
+    "allResults": "All football",
+    "pageTitle": "Football Results & Fixtures",
+    "backToSports": "Back to Sports",
+    "standings": "Standings",
+    "team": "Team",
+    "form": "Form",
+    "noStandings": "No standings yet",
+    "backToFootball": "Back to Football",
+    "matchNotFound": "Match not found"
   }
 }

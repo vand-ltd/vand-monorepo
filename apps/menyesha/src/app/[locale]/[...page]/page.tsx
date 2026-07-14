@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Article from "@/components/layouts/Article";
+import { FootballScoreboard } from "@/components/layouts/FootballScoreboard";
 
 type Props = {
   params: Promise<{ locale: string; page: string[] }>;
@@ -44,6 +45,8 @@ export default async function DynamicPage(props: Props) {
       <div className="w-full max-w-full bg-gray-50 dark:bg-gray-900">
         <section className="py-8">
           <div className="max-w-screen-xl mx-auto px-4">
+            {/* Football results/fixtures at the top of the sports landing */}
+            {mainPage === 'sports' && !subPage && <FootballScoreboard />}
             <Article categoryKey={mainPage} subCategoryKey={subPage} />
           </div>
         </section>

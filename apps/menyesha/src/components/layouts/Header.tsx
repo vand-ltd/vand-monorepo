@@ -10,6 +10,7 @@ import LanguageSwitcher from "./LanguageSwitcher"
 import { Button } from "@/components/ui/button"
 import { Menu, User, ChevronDown, ChevronRight, ChevronLeft } from "lucide-react"
 import { BreakingNewsTicker } from "./BreakingNewsTicker"
+import { FuelPriceStrip } from "./FuelPriceStrip"
 import { useTranslations, useLocale } from "next-intl"
 import { usePathname } from "next/navigation"
 import { useClientDateTime } from "@/hooks/useClientDateTime"
@@ -149,6 +150,9 @@ export const Header = () => {
     <>
       {/* Breaking News Ticker */}
       <BreakingNewsTicker />
+
+      {/* Current fuel prices strip */}
+      <FuelPriceStrip />
 
       <header className="w-full bg-background border-b shadow-sm sticky top-0 z-50">
         <div className="max-w-screen-xl mx-auto px-4 py-4">

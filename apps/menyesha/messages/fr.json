@@ -352,5 +352,27 @@
     "byYear": "Parcourir par année",
     "highest": "Maximum",
     "lowest": "Minimum"
+  },
+  "fuelStrip": {
+    "label": "Prix du carburant au Rwanda",
+    "asOf": "au {date}"
+  },
+  "football": {
+    "title": "Football",
+    "results": "Résultats",
+    "fixtures": "Calendrier",
+    "noResults": "Aucun résultat pour l'instant",
+    "noFixtures": "Aucun match à venir",
+    "live": "DIRECT",
+    "ft": "FT",
+    "allResults": "Tout le football",
+    "pageTitle": "Résultats et calendrier",
+    "backToSports": "Retour aux Sports",
+    "standings": "Classement",
+    "team": "Équipe",
+    "form": "Forme",
+    "noStandings": "Pas encore de classement",
+    "backToFootball": "Retour au Football",
+    "matchNotFound": "Match introuvable"
   }
 }

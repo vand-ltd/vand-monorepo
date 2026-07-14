@@ -241,6 +241,15 @@ html.dark .dark\:hover\:text-brand-secondary:hover,
   animation-play-state: paused;
 }
 
+/* Hide scrollbar while keeping horizontal scroll (fuel price strip chips) */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 @keyframes pulse-slow {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.85; }
