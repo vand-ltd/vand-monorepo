@@ -78,6 +78,7 @@ export interface Venue {
 
 export interface Player {
   id: string;
+  membershipId?: string; // squad-row id (for DELETE /teams/:id/squad/:membershipId)
   name: string;
   shirtNumber?: number;
   position?: PlayerPosition | string;
@@ -137,6 +138,12 @@ export async function createTeamsBulk(payload: { teams: TeamInput[] }): Promise<
   return unwrap<Team[]>(data);
 }
 
+// DELETE /api/menyesha/teams/:id -> delete a team.
+export async function deleteTeam(teamId: string): Promise<any> {
+  const { data } = await api.delete(`/api/menyesha/teams/${teamId}`);
+  return unwrap<any>(data);
+}
+
 export interface PlayerInput {
   name: string;
   shirtNumber?: number;
@@ -156,6 +163,12 @@ export async function addSquadPlayers(
     { params: { seasonId } }
   );
   return unwrap<Player[]>(data);
+}
+
+// DELETE /api/menyesha/teams/:id/squad/:membershipId -> remove a squad member.
+export async function removeSquadPlayer(teamId: string, membershipId: string): Promise<any> {
+  const { data } = await api.delete(`/api/menyesha/teams/${teamId}/squad/${membershipId}`);
+  return unwrap<any>(data);
 }
 
 export interface MatchInput {
@@ -179,6 +192,12 @@ export async function addSeasonEntries(
   payload: { teamIds: string[] }
 ): Promise<any> {
   const { data } = await api.post(`/api/menyesha/seasons/${seasonId}/entries`, payload);
+  return unwrap<any>(data);
+}
+
+// DELETE /api/menyesha/seasons/:id/entries/:teamId -> unroll a team from a season.
+export async function removeSeasonEntry(seasonId: string, teamId: string): Promise<any> {
+  const { data } = await api.delete(`/api/menyesha/seasons/${seasonId}/entries/${teamId}`);
   return unwrap<any>(data);
 }
 
@@ -207,6 +226,12 @@ export async function updateMatch(
 ): Promise<Match> {
   const { data } = await api.patch(`/api/menyesha/matches/${matchId}`, payload);
   return unwrap<Match>(data);
+}
+
+// DELETE /api/menyesha/matches/:id -> delete a match.
+export async function deleteMatch(matchId: string): Promise<any> {
+  const { data } = await api.delete(`/api/menyesha/matches/${matchId}`);
+  return unwrap<any>(data);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -311,10 +336,11 @@ export async function getSquad(teamId: string, seasonId?: string): Promise<Playe
   return rows
     .map((r: any) => {
       // A squad row wraps the player and carries season-specific fields
-      // (shirtNumber). The player itself uses `fullName`, not `name`.
+      // (shirtNumber) plus the membership id. The player uses `fullName`.
       const pl = r && r.player ? r.player : r ?? {};
       return {
         ...pl,
+        membershipId: r && r.player ? r.id : undefined,
         name: pl.name ?? pl.fullName,
         shirtNumber: r?.shirtNumber ?? pl.shirtNumber,
         position: r?.position ?? pl.position,
@@ -357,7 +383,8 @@ export async function getMatches(params?: {
   return unwrap<Match[]>(data);
 }
 
-export async function getMatch(id: string): Promise<Match> {
-  const { data } = await api.get(`/api/menyesha/matches/${id}`);
+// GET /api/menyesha/matches/slug/:slug -> one match by slug (SEO-friendly URLs).
+export async function getMatch(slug: string): Promise<Match> {
+  const { data } = await api.get(`/api/menyesha/matches/slug/${slug}`);
   return unwrap<Match>(data);
 }

@@ -6,8 +6,10 @@ import {
   createCompetition,
   createSeason,
   createTeamsBulk,
+  deleteTeam,
   createVenuesBulk,
   addSeasonEntries,
+  removeSeasonEntry,
   getTeams,
   getVenues,
   getSeasons,
@@ -21,7 +23,17 @@ import {
   type VenueInput,
 } from '@org/api';
 import { toast } from 'sonner';
-import { Loader2, Plus, Trash2, Upload, MapPin } from 'lucide-react';
+import { Loader2, Plus, Trash2, Upload, MapPin, X } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog';
 import { cardClass, inputClass, primaryBtn, ghostBtn } from './styles';
 
 function errMessage(error: any, fallback: string) {
@@ -218,6 +230,35 @@ export function SetupTab({
       qc.invalidateQueries({ queryKey: ['football', 'entries', seasonId] });
     },
     onError: (e) => toast.error(errMessage(e, 'Failed to enroll teams')),
+  });
+
+  const [removeEntryTarget, setRemoveEntryTarget] = useState<{
+    teamId: string;
+    name: string;
+  } | null>(null);
+  const removeEntryMut = useMutation({
+    mutationFn: (teamId: string) => removeSeasonEntry(seasonId, teamId),
+    onSuccess: () => {
+      toast.success('Team unrolled from season');
+      setRemoveEntryTarget(null);
+      qc.invalidateQueries({ queryKey: ['football', 'entries', seasonId] });
+    },
+    onError: (e) => toast.error(errMessage(e, 'Failed to unroll team')),
+  });
+
+  const [deleteTeamTarget, setDeleteTeamTarget] = useState<{
+    teamId: string;
+    name: string;
+  } | null>(null);
+  const deleteTeamMut = useMutation({
+    mutationFn: (teamId: string) => deleteTeam(teamId),
+    onSuccess: () => {
+      toast.success('Team deleted');
+      setDeleteTeamTarget(null);
+      qc.invalidateQueries({ queryKey: ['football', 'teams'] });
+      qc.invalidateQueries({ queryKey: ['football', 'entries', seasonId] });
+    },
+    onError: (e) => toast.error(errMessage(e, 'Failed to delete team')),
   });
 
   return (
@@ -460,7 +501,7 @@ export function SetupTab({
                 return (
                 <div
                   key={t.id}
-                  className="flex items-center gap-2.5 rounded-lg border border-gray-200 dark:border-gray-700 p-2"
+                  className="group flex items-center gap-2.5 rounded-lg border border-gray-200 dark:border-gray-700 p-2"
                 >
                   {logoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -474,7 +515,7 @@ export function SetupTab({
                       {teamInitials(t)}
                     </span>
                   )}
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
                       {t.name}
                     </p>
@@ -483,6 +524,14 @@ export function SetupTab({
                       {t.city ? ` · ${t.city}` : ''}
                     </p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteTeamTarget({ teamId: t.id, name: t.name })}
+                    title="Delete team"
+                    className="shrink-0 p-1.5 rounded-md text-gray-300 dark:text-gray-600 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
                 </div>
                 );
               })}
@@ -681,7 +730,7 @@ export function SetupTab({
                     return (
                       <span
                         key={t.id}
-                        className="inline-flex items-center gap-2 rounded-full border border-gray-200 dark:border-gray-700 py-1 pl-1 pr-3"
+                        className="inline-flex items-center gap-2 rounded-full border border-gray-200 dark:border-gray-700 py-1 pl-1 pr-2"
                       >
                         {url ? (
                           // eslint-disable-next-line @next/next/no-img-element
@@ -692,6 +741,14 @@ export function SetupTab({
                           </span>
                         )}
                         <span className="text-sm text-gray-900 dark:text-white">{t.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => setRemoveEntryTarget({ teamId: t.id, name: t.name })}
+                          title="Unroll team from season"
+                          className="p-0.5 rounded-full text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
                       </span>
                     );
                   })}
@@ -765,6 +822,54 @@ export function SetupTab({
           </>
         )}
       </section>
+
+      <AlertDialog
+        open={!!removeEntryTarget}
+        onOpenChange={(open) => !open && setRemoveEntryTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unroll team from season?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Remove {removeEntryTarget?.name} from this season? Its squad and any matches for this
+              season may be affected. The team record itself is kept.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => removeEntryTarget && removeEntryMut.mutate(removeEntryTarget.teamId)}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              Unroll
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={!!deleteTeamTarget}
+        onOpenChange={(open) => !open && setDeleteTeamTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete team?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Permanently delete {deleteTeamTarget?.name}? This removes the team from the database
+              along with its squads and season enrollments. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteTeamTarget && deleteTeamMut.mutate(deleteTeamTarget.teamId)}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

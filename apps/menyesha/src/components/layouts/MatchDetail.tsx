@@ -21,21 +21,21 @@ function initials(t?: { name?: string; shortName?: string }): string {
   return (t?.shortName || (t?.name ?? '').replace(/[^a-zA-Z]/g, '').slice(0, 3)).toUpperCase() || '?';
 }
 
-export function MatchDetail({ id }: { id: string }) {
+export function MatchDetail({ slug }: { slug: string }) {
   const locale = useLocale();
   const t = useTranslations('football');
   const dateLocale = locale === 'rw' ? 'en' : locale;
 
   const { data: m, isLoading } = useQuery({
-    queryKey: ['match', id],
-    queryFn: () => getMatch(id),
+    queryKey: ['match', slug],
+    queryFn: () => getMatch(slug),
     refetchInterval: 30000,
   });
 
   return (
     <div>
       <Link
-        href="/sports/football"
+        href="/football"
         className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors mb-5"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -102,10 +102,14 @@ function MatchCardDetail({
       {/* Meta */}
       <div className="px-4 sm:px-6 py-3 border-b border-gray-100 dark:border-gray-700 text-center">
         <p className="text-sm font-medium text-gray-900 dark:text-white">{competition}</p>
-        <p className="text-xs text-gray-400 mt-0.5">
-          {m.round ? `${m.round} · ` : ''}
-          {kickoff}
-        </p>
+        <div className="flex items-center justify-center gap-2 mt-1">
+          {m.round && (
+            <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">
+              {m.round}
+            </span>
+          )}
+          <span className="text-xs text-gray-400">{kickoff}</span>
+        </div>
       </div>
 
       {/* Scoreline */}

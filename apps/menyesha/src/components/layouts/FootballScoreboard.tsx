@@ -1,10 +1,10 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getMatches, type Match } from '@org/api';
 import { useLocale, useTranslations } from 'next-intl';
-import { Loader2, Trophy, ChevronRight } from 'lucide-react';
+import { Loader2, Trophy, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 
 function teamName(t?: { name?: string; shortName?: string }): string {
@@ -29,6 +29,17 @@ export function FootballScoreboard() {
   const locale = useLocale();
   const t = useTranslations('football');
   const [view, setView] = useState<'results' | 'fixtures'>('results');
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(false);
+  const updateArrows = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 4);
+    setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  };
+  const scrollByCards = (dir: number) =>
+    scrollRef.current?.scrollBy({ left: dir * 260, behavior: 'smooth' });
 
   const { data: all = [], isLoading } = useQuery({
     queryKey: ['public-matches'],
@@ -48,6 +59,14 @@ export function FootballScoreboard() {
       .slice(0, 8);
     return { live, results, fixtures };
   }, [all]);
+
+  // Re-measure which arrows to show when the shown set changes / on resize.
+  useEffect(() => {
+    updateArrows();
+    window.addEventListener('resize', updateArrows);
+    return () => window.removeEventListener('resize', updateArrows);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, all]);
 
   // Nothing to show at all — don't render the block.
   if (!isLoading && live.length === 0 && results.length === 0 && fixtures.length === 0) {
@@ -81,7 +100,7 @@ export function FootballScoreboard() {
             ))}
           </div>
           <Link
-            href="/sports/football"
+            href="/football"
             className="hidden sm:inline-flex items-center gap-0.5 text-xs font-medium text-[#003153] dark:text-[#F59E0B] hover:underline whitespace-nowrap"
           >
             {t('allResults')}
@@ -101,10 +120,37 @@ export function FootballScoreboard() {
           </p>
         </div>
       ) : (
-        <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
-          {shown.map((m) => (
-            <MatchCard key={m.id} m={m} dateLocale={dateLocale} t={t} />
-          ))}
+        <div className="relative">
+          <div
+            ref={scrollRef}
+            onScroll={updateArrows}
+            className="flex gap-3 overflow-x-auto pb-2 no-scrollbar"
+          >
+            {shown.map((m) => (
+              <MatchCard key={m.id} m={m} dateLocale={dateLocale} t={t} />
+            ))}
+          </div>
+          {/* Desktop scroll arrows (mobile scrolls by touch) — hidden at each end */}
+          {canLeft && (
+            <button
+              type="button"
+              onClick={() => scrollByCards(-1)}
+              aria-label="Scroll left"
+              className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 h-8 w-8 items-center justify-center rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-md text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+          )}
+          {canRight && (
+            <button
+              type="button"
+              onClick={() => scrollByCards(1)}
+              aria-label="Scroll right"
+              className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 items-center justify-center rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-md text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          )}
         </div>
       )}
     </section>
@@ -150,7 +196,7 @@ function MatchCard({
 
   return (
     <Link
-      href={`/sports/football/match/${m.id}`}
+      href={`/football/${(m as any).season?.competition?.slug ?? 'match'}/${(m as any).slug ?? m.id}`}
       className="shrink-0 w-[240px] rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 hover:border-[#003153] dark:hover:border-[#F59E0B] transition-colors"
     >
       <div className="flex items-center justify-between text-[11px] mb-2">

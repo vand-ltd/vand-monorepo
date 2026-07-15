@@ -250,6 +250,12 @@ html.dark .dark\:hover\:text-brand-secondary:hover,
   display: none;
 }
 
+/* Tailwind v4 Preflight drops the default button pointer — restore it. */
+button:not(:disabled),
+[role='button']:not([aria-disabled='true']) {
+  cursor: pointer;
+}
+
 @keyframes pulse-slow {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.85; }

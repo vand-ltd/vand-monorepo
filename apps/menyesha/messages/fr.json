@@ -373,6 +373,23 @@
     "form": "Forme",
     "noStandings": "Pas encore de classement",
     "backToFootball": "Retour au Football",
-    "matchNotFound": "Match introuvable"
+    "matchNotFound": "Match introuvable",
+    "allDays": "Tous les jours",
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "tomorrow": "Demain",
+    "allCompetitions": "Toutes les compétitions",
+    "selectCompetition": "Sélectionnez une compétition pour voir le classement",
+    "noMatches": "Aucun match ce jour",
+    "seasons": "Saisons",
+    "nMatches": "{count} matchs",
+    "overview": "Aperçu",
+    "viewMore": "Voir plus",
+    "noMatchesToday": "Aucun match aujourd'hui — voici les derniers",
+    "latestResults": "Derniers résultats",
+    "upcomingFixtures": "Prochains matchs",
+    "matches": "Matchs",
+    "competitions": "Compétitions",
+    "allRounds": "Toutes les journées"
   }
 }

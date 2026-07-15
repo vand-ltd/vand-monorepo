@@ -6,6 +6,7 @@ import {
   getSeasonEntries,
   getSquad,
   addSquadPlayers,
+  removeSquadPlayer,
   uploadMedia,
   PLAYER_POSITIONS,
   type Team,
@@ -15,6 +16,16 @@ import {
 } from '@org/api';
 import { toast } from 'sonner';
 import { Loader2, Plus, Trash2, Shirt, Upload } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog';
 import { cardClass, inputClass, labelClass, primaryBtn, ghostBtn } from './styles';
 
 function errMessage(error: any, fallback: string) {
@@ -100,6 +111,19 @@ export function SquadsTab({ seasonId, season }: { seasonId: string; season: Seas
       qc.invalidateQueries({ queryKey: ['football', 'squad', teamId, seasonId] });
     },
     onError: (e) => toast.error(errMessage(e, 'Failed to add players')),
+  });
+
+  const [removeTarget, setRemoveTarget] = useState<{ membershipId: string; name: string } | null>(
+    null
+  );
+  const removeMut = useMutation({
+    mutationFn: (membershipId: string) => removeSquadPlayer(teamId, membershipId),
+    onSuccess: () => {
+      toast.success('Player removed from squad');
+      setRemoveTarget(null);
+      qc.invalidateQueries({ queryKey: ['football', 'squad', teamId, seasonId] });
+    },
+    onError: (e) => toast.error(errMessage(e, 'Failed to remove player')),
   });
 
   if (!seasonId) {
@@ -322,6 +346,18 @@ export function SquadsTab({ seasonId, season }: { seasonId: string; season: Seas
                       <span className="font-mono text-sm text-gray-400 shrink-0">
                         {p.shirtNumber ?? '—'}
                       </span>
+                      {p.membershipId && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setRemoveTarget({ membershipId: p.membershipId!, name: p.name })
+                          }
+                          title="Remove from squad"
+                          className="p-1.5 shrink-0 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                   );
                 })}
@@ -330,6 +366,27 @@ export function SquadsTab({ seasonId, season }: { seasonId: string; season: Seas
           </div>
         </>
       )}
+
+      <AlertDialog open={!!removeTarget} onOpenChange={(open) => !open && setRemoveTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove from squad?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Remove {removeTarget?.name} from this season&apos;s squad? This only removes the squad
+              membership, not the player record.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => removeTarget && removeMut.mutate(removeTarget.membershipId)}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

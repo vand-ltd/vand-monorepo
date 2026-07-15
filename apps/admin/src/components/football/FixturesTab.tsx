@@ -8,6 +8,7 @@ import {
   getMatches,
   createMatchesBulk,
   updateMatch,
+  deleteMatch,
   MATCH_STATUSES,
   type Team,
   type Venue,
@@ -19,6 +20,16 @@ import {
 import { toast } from 'sonner';
 import { Loader2, Plus, Trash2, CalendarDays, Save } from 'lucide-react';
 import { cardClass, inputClass, labelClass, primaryBtn, ghostBtn } from './styles';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 function errMessage(error: any, fallback: string) {
   const m = error?.response?.data?.message || fallback;
@@ -248,6 +259,7 @@ function MatchRow({
   const [home, setHome] = useState<string>(match.homeScore != null ? String(match.homeScore) : '');
   const [away, setAway] = useState<string>(match.awayScore != null ? String(match.awayScore) : '');
   const [minute, setMinute] = useState<string>(match.minute != null ? String(match.minute) : '');
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const saveMut = useMutation({
     mutationFn: () =>
@@ -262,6 +274,16 @@ function MatchRow({
       onSaved();
     },
     onError: (e) => toast.error(errMessage(e, 'Failed to update match')),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: () => deleteMatch(match.id),
+    onSuccess: () => {
+      toast.success('Match deleted');
+      setConfirmDelete(false);
+      onSaved();
+    },
+    onError: (e) => toast.error(errMessage(e, 'Failed to delete match')),
   });
 
   const kickoff = match.kickoffAt
@@ -332,6 +354,40 @@ function MatchRow({
         {saveMut.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
         Save
       </button>
+      <button
+        type="button"
+        onClick={() => setConfirmDelete(true)}
+        disabled={deleteMut.isPending}
+        title="Delete match"
+        className="p-1.5 rounded-md text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
+      >
+        {deleteMut.isPending ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Trash2 className="h-4 w-4" />
+        )}
+      </button>
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete match?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Permanently delete {homeName} vs {awayName}? This removes the fixture and any recorded
+              score. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteMut.mutate()}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

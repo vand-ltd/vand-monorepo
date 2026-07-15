@@ -373,6 +373,23 @@
     "form": "Form",
     "noStandings": "No standings yet",
     "backToFootball": "Back to Football",
-    "matchNotFound": "Match not found"
+    "matchNotFound": "Match not found",
+    "allDays": "All days",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "tomorrow": "Tomorrow",
+    "allCompetitions": "All competitions",
+    "selectCompetition": "Select a competition to see its table",
+    "noMatches": "No matches on this day",
+    "seasons": "Seasons",
+    "nMatches": "{count} matches",
+    "overview": "Overview",
+    "viewMore": "View more",
+    "noMatchesToday": "No matches today — here is the latest",
+    "latestResults": "Latest results",
+    "upcomingFixtures": "Upcoming fixtures",
+    "matches": "Matches",
+    "competitions": "Competitions",
+    "allRounds": "All matchdays"
   }
 }

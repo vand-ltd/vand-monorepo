@@ -1,10 +1,17 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getMatches, getCompetitionStandings, type Match, type StandingRow } from '@org/api';
+import {
+  getMatches,
+  getSeasons,
+  getCompetition,
+  getCompetitionStandings,
+  type Match,
+  type StandingRow,
+} from '@org/api';
 import { useLocale, useTranslations } from 'next-intl';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ChevronRight, ChevronLeft, ArrowLeft, Calendar } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 
 function teamName(t?: { name?: string; shortName?: string }): string {
@@ -20,137 +27,585 @@ function initials(t?: { name?: string; shortName?: string }): string {
   return (t?.shortName || (t?.name ?? '').replace(/[^a-zA-Z]/g, '').slice(0, 3)).toUpperCase() || '?';
 }
 
+// Local YYYY-MM-DD, to match an <input type="date"> value.
+function dateKey(iso: string): string {
+  const d = new Date(iso);
+  const y = d.getFullYear();
+  const mo = String(d.getMonth() + 1).padStart(2, '0');
+  const da = String(d.getDate()).padStart(2, '0');
+  return `${y}-${mo}-${da}`;
+}
+
+// Local YYYY-MM-DD for today + offset days.
+function dayOffsetKey(offset: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  return dateKey(d.toISOString());
+}
+
+// Shift a YYYY-MM-DD date by delta days.
+function shiftDate(date: string, delta: number): string {
+  const d = new Date(`${date}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return date;
+  d.setDate(d.getDate() + delta);
+  return dateKey(d.toISOString());
+}
+
+// Compact date navigation: ‹ Today ›  + a calendar-icon-only picker.
+// The middle label shows "Today", or the date once you step away with the arrows.
+function DateNav({ date, onChange }: { date: string; onChange: (d: string) => void }) {
+  const t = useTranslations('football');
+  const locale = useLocale();
+  const dateLocale = locale === 'rw' ? 'en' : locale;
+  const inputRef = useRef<HTMLInputElement>(null);
+  const isToday = date === dayOffsetKey(0);
+  let label = '';
+  if (isToday) label = t('today');
+  else if (date === dayOffsetKey(1)) label = t('tomorrow');
+  else if (date === dayOffsetKey(-1)) label = t('yesterday');
+  else if (date) {
+    const d = new Date(`${date}T00:00:00`);
+    // e.g. "Friday, 19 Jul" (day before month, regardless of locale order)
+    label = `${d.toLocaleDateString(dateLocale, { weekday: 'long' })}, ${d.getDate()} ${d.toLocaleDateString(
+      dateLocale,
+      { month: 'short' }
+    )}`;
+  }
+  const btn =
+    'p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors';
+  return (
+    <div className="flex items-center gap-1">
+      <button
+        type="button"
+        onClick={() => onChange(shiftDate(date, -1))}
+        className={btn}
+        aria-label={t('yesterday')}
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange(dayOffsetKey(0))}
+        className={`px-2.5 py-2 rounded-lg text-xs font-medium min-w-[64px] whitespace-nowrap text-center transition-colors ${
+          isToday
+            ? 'bg-[#003153] text-white dark:bg-[#F59E0B] dark:text-gray-900'
+            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700'
+        }`}
+      >
+        {label}
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange(shiftDate(date, 1))}
+        className={btn}
+        aria-label={t('tomorrow')}
+      >
+        <ChevronRight className="h-4 w-4" />
+      </button>
+      <div className="relative inline-flex">
+        <button
+          type="button"
+          onClick={() => (inputRef.current as any)?.showPicker?.()}
+          className={btn}
+          aria-label="Pick date"
+        >
+          <Calendar className="h-4 w-4" />
+        </button>
+        <input
+          ref={inputRef}
+          type="date"
+          value={date}
+          onChange={(e) => e.target.value && onChange(e.target.value)}
+          className="absolute inset-0 opacity-0 pointer-events-none"
+          tabIndex={-1}
+          aria-hidden
+        />
+      </div>
+    </div>
+  );
+}
+
 const LIVE_STATUSES = ['Live', 'HalfTime'];
 
-export function FootballResultsBoard() {
+// Competition tabs, in display order. 'overview' is the default (bare URL);
+// the rest are reflected in the path as /…/<tab>. Add future tabs here.
+const COMPETITION_TABS = ['overview', 'fixtures', 'results', 'standings'] as const;
+type CompetitionTab = (typeof COMPETITION_TABS)[number];
+const isCompetitionTab = (v?: string): v is CompetitionTab =>
+  !!v && (COMPETITION_TABS as readonly string[]).includes(v);
+
+export function FootballResultsBoard({
+  initialDate,
+  initialCompetition,
+  initialSeason,
+  initialTab,
+}: {
+  initialDate?: string;
+  initialCompetition?: string; // competition slug (or id)
+  initialSeason?: string; // season slug (or id)
+  initialTab?: string; // one of COMPETITION_TABS (defaults to overview)
+}) {
   const locale = useLocale();
   const t = useTranslations('football');
   const dateLocale = locale === 'rw' ? 'en' : locale;
 
   const [competitionId, setCompetitionId] = useState('');
-  const [view, setView] = useState<'results' | 'fixtures' | 'standings'>('results');
+  const [selectedSeasonId, setSelectedSeasonId] = useState('');
+  const [view, setView] = useState<CompetitionTab>(
+    isCompetitionTab(initialTab) ? initialTab : 'overview'
+  );
+  const [selectedDate, setSelectedDate] = useState(initialDate ?? '');
+  const [selectedRound, setSelectedRound] = useState(''); // '' = all matchdays
+  const didInitComp = useRef(false);
 
-  // Same call the (working) sports teaser uses — the whole matches feed.
+  // Default to today. Set on the client (effect) to avoid an SSR/CSR mismatch.
+  useEffect(() => {
+    if (!selectedDate) setSelectedDate(dayOffsetKey(0));
+  }, [selectedDate]);
+
+  // Sole source: the selected day's matches from the server (?date=).
   const matchesQuery = useQuery({
+    queryKey: ['public-matches-date', selectedDate],
+    queryFn: () => getMatches({ date: selectedDate }),
+    enabled: !!selectedDate,
+    refetchInterval: 30000,
+  });
+  const dayMatches = (matchesQuery.data ?? []) as Match[];
+
+  // Fallback for empty days (sparse leagues): the latest results + next
+  // fixtures across all competitions, so the landing is never blank.
+  const recentQuery = useQuery({
     queryKey: ['public-all-matches'],
     queryFn: () => getMatches({ order: 'desc' }),
+    enabled: !competitionId,
     refetchInterval: 60000,
   });
-  const allMatches = (matchesQuery.data ?? []) as Match[];
+  const fallback = useMemo(() => {
+    const all = (recentQuery.data ?? []) as Match[];
+    const byDate = (list: Match[]) => {
+      const m = new Map<string, Match[]>();
+      for (const x of list) {
+        const k = dateKey(x.kickoffAt);
+        if (!m.has(k)) m.set(k, []);
+        m.get(k)!.push(x);
+      }
+      return Array.from(m.entries());
+    };
+    const results = all
+      .filter((m) => m.status === 'FullTime' || LIVE_STATUSES.includes(m.status))
+      .sort((a, b) => new Date(b.kickoffAt).getTime() - new Date(a.kickoffAt).getTime())
+      .slice(0, 8);
+    const upcoming = all
+      .filter((m) => m.status === 'Scheduled')
+      .sort((a, b) => new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime())
+      .slice(0, 8);
+    return {
+      hasAny: results.length > 0 || upcoming.length > 0,
+      results: byDate(results),
+      upcoming: byDate(upcoming),
+    };
+  }, [recentQuery.data]);
 
-  // Build the competition list from the matches themselves — no separate,
-  // possibly-blocked call to getCompetitions.
+  // Competition list from the day's matches.
   const competitions = useMemo(() => {
-    const map = new Map<string, { id: string; name: string }>();
-    for (const m of allMatches) {
+    const map = new Map<string, { id: string; name: string; slug?: string }>();
+    for (const m of dayMatches) {
       const c = (m as any).season?.competition;
-      if (c?.id && !map.has(c.id)) map.set(c.id, { id: c.id, name: c.name });
+      if (c?.id && !map.has(c.id)) map.set(c.id, { id: c.id, name: c.name, slug: c.slug });
     }
     return Array.from(map.values());
-  }, [allMatches]);
+  }, [dayMatches]);
 
-  // Default to the first competition once matches load.
-  useEffect(() => {
-    if (!competitionId && competitions.length > 0) setCompetitionId(competitions[0].id);
-  }, [competitions, competitionId]);
-
-  const matches = useMemo(
-    () => allMatches.filter((m) => (m as any).season?.competition?.id === competitionId),
-    [allMatches, competitionId]
+  // All seasons (each with competition slug/id) — a date-less resolver for
+  // /football/<competition>/<season> URLs, and the source for the season nav.
+  const allSeasonsQuery = useQuery({
+    queryKey: ['all-seasons'],
+    queryFn: () => getSeasons(),
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const allSeasons = (allSeasonsQuery.data ?? []) as any[];
+  const seasons = useMemo(
+    () => allSeasons.filter((s) => (s.competitionId ?? s.competition?.id) === competitionId),
+    [allSeasons, competitionId]
   );
 
-  // Season id from the most recent match of this competition (newest-first).
-  const seasonId = matches[0]?.seasonId ?? (matches[0] as any)?.season?.id ?? '';
+  // Resolve the competition (+ season) from the URL slugs, once seasons load.
+  useEffect(() => {
+    if (didInitComp.current || !initialCompetition || allSeasons.length === 0) return;
+    const compSeasons = allSeasons.filter(
+      (s) => s.competition?.slug === initialCompetition || s.competition?.id === initialCompetition
+    );
+    if (compSeasons.length === 0) return;
+    const season =
+      (initialSeason
+        ? compSeasons.find((s) => s.slug === initialSeason || s.id === initialSeason)
+        : undefined) ??
+      compSeasons.find((s) => s.isCurrent) ??
+      compSeasons[0];
+    setCompetitionId(season.competition?.id ?? season.competitionId);
+    setSelectedSeasonId(season.id);
+    didInitComp.current = true;
+  }, [allSeasons, initialCompetition, initialSeason]);
 
-  // Standings by competition (+ season) — server resolves the table.
+  // Default to the current season (or first) whenever the season set changes
+  // (e.g. picking a competition from the all-view dropdown).
+  useEffect(() => {
+    if (seasons.length === 0) return;
+    if (selectedSeasonId && seasons.some((s) => s.id === selectedSeasonId)) return;
+    setSelectedSeasonId((seasons.find((s) => s.isCurrent) ?? seasons[0]).id);
+  }, [seasons, selectedSeasonId]);
+
+  // Reflect the scope in the path so it's shareable/crawlable:
+  //   /football/YYYY-MM-DD                      (all competitions, a day)
+  //   /football/<competition>/<season>[/<tab>]  (a competition's season)
+  useEffect(() => {
+    if (competitionId) {
+      const season = allSeasons.find((s) => s.id === selectedSeasonId);
+      const compSlug =
+        season?.competition?.slug ??
+        competitions.find((c) => c.id === competitionId)?.slug ??
+        competitionId;
+      const seasonSlug = season?.slug ?? selectedSeasonId;
+      if (!compSlug || !seasonSlug) return;
+      let path = `/${locale}/football/${compSlug}/${seasonSlug}`;
+      if (view !== 'overview') path += `/${view}`;
+      if (window.location.pathname !== path) window.history.replaceState(null, '', path);
+      return;
+    }
+    if (!selectedDate) return;
+    const path = `/${locale}/football/${selectedDate}`;
+    if (window.location.pathname !== path) window.history.replaceState(null, '', path);
+  }, [competitionId, selectedSeasonId, allSeasons, competitions, selectedDate, view, locale]);
+
+  // A selected competition shows a whole season's matches (grouped by date).
+  const compMatchesQuery = useQuery({
+    queryKey: ['season-matches', selectedSeasonId],
+    queryFn: () => getMatches({ seasonId: selectedSeasonId }),
+    enabled: !!competitionId && !!selectedSeasonId,
+    refetchInterval: 30000,
+  });
+  const matches = useMemo(
+    () => ((competitionId ? compMatchesQuery.data : dayMatches) ?? []) as Match[],
+    [competitionId, compMatchesQuery.data, dayMatches]
+  );
+
+  // Rounds (matchdays) available in the season, for the round filter.
+  const rounds = useMemo(() => {
+    const set = new Set<string>();
+    for (const m of matches) if (m.round) set.add(m.round);
+    return Array.from(set).sort((a, b) => {
+      const na = parseInt(a.replace(/\D/g, ''), 10);
+      const nb = parseInt(b.replace(/\D/g, ''), 10);
+      if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
+      return a.localeCompare(b);
+    });
+  }, [matches]);
+  // Reset the round filter when the competition/season changes.
+  useEffect(() => {
+    setSelectedRound('');
+  }, [competitionId, selectedSeasonId]);
+
+  // Standings by competition + selected season.
   const standingsQuery = useQuery({
-    queryKey: ['public-standings', competitionId, seasonId],
-    queryFn: () => getCompetitionStandings(competitionId, seasonId || undefined),
-    enabled: !!competitionId && view === 'standings',
+    queryKey: ['public-standings', competitionId, selectedSeasonId],
+    queryFn: () => getCompetitionStandings(competitionId, selectedSeasonId || undefined),
+    enabled: !!competitionId && !!selectedSeasonId && view === 'standings',
     refetchInterval: 60000,
   });
 
-  // Split, then group by matchday (round).
-  const groups = useMemo(() => {
-    const filtered =
+  // Competition info (name + logo) for the selected-competition card.
+  const competitionQuery = useQuery({
+    queryKey: ['competition', competitionId],
+    queryFn: () => getCompetition(competitionId),
+    enabled: !!competitionId,
+  });
+  const compName =
+    competitionQuery.data?.name ??
+    competitions.find((c) => c.id === competitionId)?.name ??
+    (matches[0] as any)?.season?.competition?.name ??
+    '';
+  const compLogo = crestUrl(competitionQuery.data);
+
+  const listLoading = competitionId
+    ? allSeasonsQuery.isLoading || !selectedSeasonId || compMatchesQuery.isLoading
+    : !selectedDate || matchesQuery.isLoading;
+
+  // Uniform group shape: all-competitions view groups by competition (name +
+  // slug for the header link); a selected competition groups by date.
+  type Group = { key: string; name?: string; slug?: string; date?: string; list: Match[] };
+  const groups = useMemo<Group[]>(() => {
+    if (!competitionId) {
+      const filtered = [...matches].sort(
+        (a, b) => new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime()
+      );
+      const byComp = new Map<string, Group>();
+      for (const m of filtered) {
+        const c = (m as any).season?.competition;
+        const key = c?.id ?? 'other';
+        if (!byComp.has(key)) byComp.set(key, { key, name: c?.name ?? '', slug: c?.slug, list: [] });
+        byComp.get(key)!.list.push(m);
+      }
+      return Array.from(byComp.values());
+    }
+
+    const filtered = (
       view === 'results'
         ? matches.filter((m) => m.status === 'FullTime' || LIVE_STATUSES.includes(m.status))
-        : matches.filter((m) => m.status === 'Scheduled');
-
-    // Fixtures read soonest-first; results newest-first.
+        : matches.filter((m) => m.status === 'Scheduled')
+    ).filter((m) => !selectedRound || m.round === selectedRound);
     filtered.sort((a, b) => {
       const ta = new Date(a.kickoffAt).getTime();
       const tb = new Date(b.kickoffAt).getTime();
       return view === 'fixtures' ? ta - tb : tb - ta;
     });
-
-    const byRound = new Map<string, Match[]>();
+    const byDate = new Map<string, Group>();
     for (const m of filtered) {
-      const key = m.round || '—';
-      if (!byRound.has(key)) byRound.set(key, []);
-      byRound.get(key)!.push(m);
+      const key = dateKey(m.kickoffAt);
+      if (!byDate.has(key)) byDate.set(key, { key, date: key, list: [] });
+      byDate.get(key)!.list.push(m);
     }
-    return Array.from(byRound.entries());
-  }, [matches, view]);
+    return Array.from(byDate.values());
+  }, [matches, view, competitionId, selectedRound]);
+
+  // Overview: one combined list — the 5 matches closest to today (recent
+  // results + imminent fixtures), shown chronologically. "View more" when >5.
+  const overview = useMemo(() => {
+    const now = Date.now();
+    const top = [...matches]
+      .sort(
+        (a, b) =>
+          Math.abs(new Date(a.kickoffAt).getTime() - now) -
+          Math.abs(new Date(b.kickoffAt).getTime() - now)
+      )
+      .slice(0, 5)
+      .sort((a, b) => new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime());
+    const hasMore = matches.length > 5;
+    // Upcoming to see -> Fixtures; otherwise the season's done -> Results.
+    const moreTarget: 'results' | 'fixtures' = matches.some((m) => m.status === 'Scheduled')
+      ? 'fixtures'
+      : 'results';
+    return { top, hasMore, moreTarget };
+  }, [matches]);
 
   const selectClass =
     'px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003153] min-w-[200px]';
 
   return (
-    <div>
-      {/* Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-        <select
-          value={competitionId}
-          onChange={(e) => setCompetitionId(e.target.value)}
-          className={selectClass}
-        >
-          {competitions.length === 0 && <option value="">…</option>}
-          {competitions.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-        <div className="flex gap-1 rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5">
-          {(['results', 'fixtures', 'standings'] as const).map((v) => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => setView(v)}
-              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                view === v
-                  ? 'bg-white dark:bg-gray-700 text-[#003153] dark:text-[#F59E0B] shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-              }`}
-            >
-              {t(v)}
-            </button>
-          ))}
+    <div className={competitionId ? 'flex flex-col lg:flex-row gap-6' : undefined}>
+      {competitionId && (
+        <aside className="lg:w-52 lg:shrink-0">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2 px-1">
+            {t('seasons')}
+          </h3>
+          <div className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible pb-1 lg:pb-0">
+            {seasons.map((s) => {
+              const active = s.id === selectedSeasonId;
+              const count = (s as any)._count?.matches;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setSelectedSeasonId(s.id)}
+                  className={`shrink-0 lg:w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    active
+                      ? 'bg-[#003153] text-white dark:bg-[#F59E0B] dark:text-gray-900'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5 whitespace-nowrap">
+                    {s.name}
+                    {s.isCurrent && (
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${
+                          active ? 'bg-white dark:bg-gray-900' : 'bg-green-500'
+                        }`}
+                      />
+                    )}
+                  </span>
+                  {count != null && (
+                    <span
+                      className={`block text-[11px] ${
+                        active ? 'text-white/70 dark:text-gray-900/70' : 'text-gray-400'
+                      }`}
+                    >
+                      {t('nMatches', { count })}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </aside>
+      )}
+      <div className={competitionId ? 'flex-1 min-w-0' : ''}>
+        {/* Controls */}
+      {competitionId ? (
+        <div className="mb-5">
+          {/* Competition card (replaces the selector + date picker) */}
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 mb-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <button
+                type="button"
+                onClick={() => setCompetitionId('')}
+                title={t('allCompetitions')}
+                className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors shrink-0"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+              {compLogo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={compLogo}
+                  alt=""
+                  className="h-9 w-9 rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0"
+                />
+              ) : (
+                <span className="h-9 w-9 rounded-full bg-[#003153] text-white text-xs font-bold flex items-center justify-center shrink-0">
+                  {initials({ name: compName })}
+                </span>
+              )}
+              <span className="font-bold text-gray-900 dark:text-white truncate">{compName}</span>
+            </div>
+          </div>
+          {/* Tabs */}
+          <div className="flex gap-1 rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5 w-fit">
+            {COMPETITION_TABS.map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setView(v)}
+                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  view === v
+                    ? 'bg-white dark:bg-gray-700 text-[#003153] dark:text-[#F59E0B] shadow-sm'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                }`}
+              >
+                {t(v)}
+              </button>
+            ))}
+          </div>
+          {/* Matchday (round) filter — Results & Fixtures only */}
+          {(view === 'results' || view === 'fixtures') && rounds.length > 0 && (
+            <div className="mt-3">
+              <select
+                value={selectedRound}
+                onChange={(e) => setSelectedRound(e.target.value)}
+                className={selectClass}
+              >
+                <option value="">{t('allRounds')}</option>
+                {rounds.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
-      </div>
+      ) : (
+        <div className="flex flex-wrap items-center gap-2 mb-5">
+          <select
+            value={competitionId}
+            onChange={(e) => setCompetitionId(e.target.value)}
+            className={selectClass}
+          >
+            <option value="">{t('allCompetitions')}</option>
+            {competitions.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          <DateNav date={selectedDate} onChange={setSelectedDate} />
+        </div>
+      )}
 
-      {view === 'standings' ? (
+      {competitionId && view === 'standings' ? (
         <StandingsTable query={standingsQuery} t={t} />
-      ) : matchesQuery.isLoading ? (
+      ) : listLoading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-7 w-7 animate-spin text-[#003153] dark:text-[#F59E0B]" />
         </div>
+      ) : competitionId && view === 'overview' ? (
+        overview.top.length === 0 ? (
+          <div className="rounded-xl border border-gray-200 dark:border-gray-700 py-16 text-center">
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t('noMatches')}</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700">
+              {overview.top.map((m) => (
+                <MatchListRow key={m.id} m={m} dateLocale={dateLocale} t={t} />
+              ))}
+            </div>
+            {overview.hasMore && (
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setView(overview.moreTarget)}
+                  className="inline-flex items-center gap-0.5 text-sm font-medium text-[#003153] dark:text-[#F59E0B] hover:underline"
+                >
+                  {t('viewMore')}
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </div>
+        )
       ) : groups.length === 0 ? (
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 py-16 text-center">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {view === 'results' ? t('noResults') : t('noFixtures')}
-          </p>
-        </div>
+        !competitionId && fallback.hasAny ? (
+          <div className="space-y-8">
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t('noMatchesToday')}</p>
+            <FallbackSection
+              title={t('latestResults')}
+              groups={fallback.results}
+              dateLocale={dateLocale}
+              t={t}
+            />
+            <FallbackSection
+              title={t('upcomingFixtures')}
+              groups={fallback.upcoming}
+              dateLocale={dateLocale}
+              t={t}
+            />
+          </div>
+        ) : (
+          <div className="rounded-xl border border-gray-200 dark:border-gray-700 py-16 text-center">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {!competitionId
+                ? t('noMatches')
+                : view === 'results'
+                  ? t('noResults')
+                  : t('noFixtures')}
+            </p>
+          </div>
+        )
       ) : (
         <div className="space-y-6">
-          {groups.map(([round, list]) => (
-            <div key={round}>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">
-                {round}
-              </h3>
+          {groups.map((group) => (
+            <div key={group.key}>
+              {group.date ? (
+                // Competition view: one section per matchday date
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">
+                  {new Date(`${group.date}T00:00:00`).toLocaleDateString(dateLocale, {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                </h3>
+              ) : (
+                // All-competitions view: league header links to the competition
+                <Link
+                  href={`/football/${group.slug || group.key}`}
+                  className="inline-flex items-center gap-1 mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 hover:text-[#003153] dark:hover:text-[#F59E0B] transition-colors"
+                >
+                  {group.name}
+                  <ChevronRight className="h-3 w-3" />
+                </Link>
+              )}
               <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700">
-                {list.map((m) => (
+                {group.list.map((m) => (
                   <MatchListRow key={m.id} m={m} dateLocale={dateLocale} t={t} />
                 ))}
               </div>
@@ -158,7 +613,45 @@ export function FootballResultsBoard() {
           ))}
         </div>
       )}
+      </div>
     </div>
+  );
+}
+
+function FallbackSection({
+  title,
+  groups,
+  dateLocale,
+  t,
+}: {
+  title: string;
+  groups: [string, Match[]][];
+  dateLocale: string;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  if (groups.length === 0) return null;
+  return (
+    <section>
+      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">{title}</h3>
+      <div className="space-y-4">
+        {groups.map(([date, list]) => (
+          <div key={date}>
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">
+              {new Date(`${date}T00:00:00`).toLocaleDateString(dateLocale, {
+                weekday: 'short',
+                day: 'numeric',
+                month: 'short',
+              })}
+            </h4>
+            <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700">
+              {list.map((m) => (
+                <MatchListRow key={m.id} m={m} dateLocale={dateLocale} t={t} />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -186,29 +679,33 @@ function StandingsTable({
   }
   const th = 'px-2 py-2 text-center font-medium';
   const td = 'px-2 py-2.5 text-center tabular-nums text-gray-600 dark:text-gray-300';
+  // Pinned (sticky) first columns keep team visible while the stats scroll.
+  const stickyBg = 'bg-white dark:bg-gray-800';
+  const posSticky = `sticky left-0 z-10 ${stickyBg} w-10`;
+  const teamSticky = `sticky left-10 z-10 ${stickyBg} w-40 pr-2 border-r border-gray-100 dark:border-gray-700`;
   return (
     <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-      <table className="w-full text-sm">
+      <table className="min-w-[640px] w-full text-sm">
         <thead>
           <tr className="text-[11px] uppercase tracking-wide text-gray-400 border-b border-gray-200 dark:border-gray-700">
-            <th className="px-3 py-2 text-center font-medium w-8">#</th>
-            <th className="px-2 py-2 text-left font-medium">{t('team')}</th>
+            <th className={`${posSticky} py-2 text-center font-medium`}>#</th>
+            <th className={`${teamSticky} py-2 text-left font-medium`}>{t('team')}</th>
             <th className={th}>P</th>
-            <th className={`${th} hidden sm:table-cell`}>W</th>
-            <th className={`${th} hidden sm:table-cell`}>D</th>
-            <th className={`${th} hidden sm:table-cell`}>L</th>
-            <th className={`${th} hidden md:table-cell`}>GF</th>
-            <th className={`${th} hidden md:table-cell`}>GA</th>
+            <th className={th}>W</th>
+            <th className={th}>D</th>
+            <th className={th}>L</th>
+            <th className={th}>GF</th>
+            <th className={th}>GA</th>
             <th className={th}>GD</th>
             <th className={th}>Pts</th>
-            <th className={`${th} hidden sm:table-cell`}>{t('form')}</th>
+            <th className={`${th} min-w-[116px]`}>{t('form')}</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((r) => (
             <tr key={r.team?.id ?? r.position} className="border-b border-gray-100 dark:border-gray-700 last:border-0">
-              <td className="px-3 py-2.5 text-center text-gray-400">{r.position}</td>
-              <td className="px-2 py-2.5">
+              <td className={`${posSticky} py-2.5 text-center text-gray-400`}>{r.position}</td>
+              <td className={`${teamSticky} py-2.5`}>
                 <span className="flex items-center gap-2 min-w-0">
                   <Crest team={r.team} />
                   <span className="truncate font-medium text-gray-900 dark:text-white">
@@ -217,16 +714,16 @@ function StandingsTable({
                 </span>
               </td>
               <td className={td}>{r.played}</td>
-              <td className={`${td} hidden sm:table-cell`}>{r.won}</td>
-              <td className={`${td} hidden sm:table-cell`}>{r.drawn}</td>
-              <td className={`${td} hidden sm:table-cell`}>{r.lost}</td>
-              <td className={`${td} hidden md:table-cell`}>{r.goalsFor}</td>
-              <td className={`${td} hidden md:table-cell`}>{r.goalsAgainst}</td>
+              <td className={td}>{r.won}</td>
+              <td className={td}>{r.drawn}</td>
+              <td className={td}>{r.lost}</td>
+              <td className={td}>{r.goalsFor}</td>
+              <td className={td}>{r.goalsAgainst}</td>
               <td className={td}>{r.goalDifference > 0 ? `+${r.goalDifference}` : r.goalDifference}</td>
               <td className="px-2 py-2.5 text-center font-bold text-gray-900 dark:text-white">
                 {r.points}
               </td>
-              <td className="px-2 py-2.5 hidden sm:table-cell">
+              <td className="px-2 py-2.5">
                 <FormBadges form={r.form} />
               </td>
             </tr>
@@ -288,49 +785,66 @@ function MatchListRow({
     <span className="text-gray-400">{t('ft')}</span>
   ) : (
     <span className="text-gray-400">
-      {new Date(m.kickoffAt).toLocaleString(dateLocale, {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })}
+      {new Date(m.kickoffAt).toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' })}
     </span>
   );
 
   const homeWin = hasScore && (m.homeScore as number) > (m.awayScore as number);
   const awayWin = hasScore && (m.awayScore as number) > (m.homeScore as number);
 
+  const nameCls = (win: boolean) =>
+    `flex-1 truncate ${win ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`;
+  const scoreCls = (win: boolean) =>
+    `shrink-0 tabular-nums ${win ? 'font-bold text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`;
+
   return (
     <Link
-      href={`/sports/football/match/${m.id}`}
-      className="flex items-center gap-3 px-3 sm:px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-gray-900/40 transition-colors"
+      href={`/football/${(m as any).season?.competition?.slug ?? 'match'}/${(m as any).slug ?? m.id}`}
+      className="block hover:bg-gray-50 dark:hover:bg-gray-900/40 transition-colors"
     >
-      <span className="w-20 sm:w-24 shrink-0 text-xs">{status}</span>
-      {/* Home (right-aligned) */}
-      <div className="flex-1 flex items-center justify-end gap-2 min-w-0">
-        <span
-          className={`truncate text-right ${
-            homeWin ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'
-          }`}
-        >
-          {teamName(home)}
-        </span>
-        <Crest team={home} />
+      {/* Mobile: teams stacked, one above the other */}
+      <div className="sm:hidden flex items-center gap-3 px-3 py-2.5 text-sm">
+        <span className="w-12 shrink-0 text-center text-[11px]">{status}</span>
+        <div className="flex-1 min-w-0 space-y-1.5">
+          <div className="flex items-center gap-2">
+            <Crest team={home} />
+            <span className={nameCls(homeWin)}>{teamName(home)}</span>
+            {hasScore && <span className={scoreCls(homeWin)}>{m.homeScore}</span>}
+          </div>
+          <div className="flex items-center gap-2">
+            <Crest team={away} />
+            <span className={nameCls(awayWin)}>{teamName(away)}</span>
+            {hasScore && <span className={scoreCls(awayWin)}>{m.awayScore}</span>}
+          </div>
+        </div>
       </div>
-      {/* Score */}
-      <span className="shrink-0 w-14 text-center font-bold tabular-nums text-gray-900 dark:text-white">
-        {hasScore ? `${m.homeScore} - ${m.awayScore}` : 'v'}
-      </span>
-      {/* Away (left-aligned) */}
-      <div className="flex-1 flex items-center gap-2 min-w-0">
-        <Crest team={away} />
-        <span
-          className={`truncate ${
-            awayWin ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'
-          }`}
-        >
-          {teamName(away)}
+
+      {/* Desktop: flat home | score | away */}
+      <div className="hidden sm:flex items-center gap-3 px-4 py-3 text-sm">
+        <span className="w-24 shrink-0 text-xs">{status}</span>
+        <div className="flex-1 flex items-center justify-end gap-2 min-w-0">
+          <span
+            className={`truncate text-right ${
+              homeWin ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'
+            }`}
+          >
+            {teamName(home)}
+          </span>
+          <Crest team={home} />
+        </div>
+        <span className="shrink-0 w-14 text-center font-bold tabular-nums text-gray-900 dark:text-white">
+          {hasScore ? `${m.homeScore} - ${m.awayScore}` : 'v'}
         </span>
+        <div className="flex-1 flex items-center gap-2 min-w-0">
+          <Crest team={away} />
+          <span
+            className={`truncate ${
+              awayWin ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'
+            }`}
+          >
+            {teamName(away)}
+          </span>
+        </div>
       </div>
     </Link>
   );
