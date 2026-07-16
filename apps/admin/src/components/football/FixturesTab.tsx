@@ -18,8 +18,9 @@ import {
   type Season,
 } from '@org/api';
 import { toast } from 'sonner';
-import { Loader2, Plus, Trash2, CalendarDays, Save } from 'lucide-react';
+import { Loader2, Plus, Trash2, CalendarDays, Save, ListPlus } from 'lucide-react';
 import { cardClass, inputClass, labelClass, primaryBtn, ghostBtn } from './styles';
+import { MatchEventsPanel } from './MatchEventsPanel';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -260,6 +261,7 @@ function MatchRow({
   const [away, setAway] = useState<string>(match.awayScore != null ? String(match.awayScore) : '');
   const [minute, setMinute] = useState<string>(match.minute != null ? String(match.minute) : '');
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showEvents, setShowEvents] = useState(false);
 
   const saveMut = useMutation({
     mutationFn: () =>
@@ -299,7 +301,8 @@ function MatchRow({
     'w-12 px-2 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-center text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-[#003153] outline-none';
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2.5">
+    <div className="rounded-lg border border-gray-200 dark:border-gray-700">
+    <div className="flex flex-wrap items-center gap-2 px-3 py-2.5">
       <span className="text-xs text-gray-400 w-24 shrink-0">{kickoff}</span>
       <span className="flex-1 min-w-[120px] text-right text-sm font-medium text-gray-900 dark:text-white truncate">
         {homeName}
@@ -356,6 +359,20 @@ function MatchRow({
       </button>
       <button
         type="button"
+        onClick={() => setShowEvents((v) => !v)}
+        title="Goals, cards & subs"
+        aria-expanded={showEvents}
+        className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+          showEvents
+            ? 'bg-[#003153]/10 dark:bg-[#F59E0B]/10 text-[#003153] dark:text-[#F59E0B]'
+            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+        }`}
+      >
+        <ListPlus className="h-3.5 w-3.5" />
+        Events
+      </button>
+      <button
+        type="button"
         onClick={() => setConfirmDelete(true)}
         disabled={deleteMut.isPending}
         title="Delete match"
@@ -388,6 +405,13 @@ function MatchRow({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
+
+      {showEvents && (
+        <div className="px-3 pb-3">
+          <MatchEventsPanel match={match} homeName={homeName} awayName={awayName} />
+        </div>
+      )}
     </div>
   );
 }

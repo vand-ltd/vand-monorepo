@@ -7,8 +7,11 @@ import {
   getSeasons,
   getCompetition,
   getCompetitionStandings,
+  getTopScorers,
+  getTopAssists,
   type Match,
   type StandingRow,
+  type StatLeaderRow,
 } from '@org/api';
 import { useLocale, useTranslations } from 'next-intl';
 import { Loader2, ChevronRight, ChevronLeft, ArrowLeft, Calendar } from 'lucide-react';
@@ -129,7 +132,14 @@ const LIVE_STATUSES = ['Live', 'HalfTime'];
 
 // Competition tabs, in display order. 'overview' is the default (bare URL);
 // the rest are reflected in the path as /…/<tab>. Add future tabs here.
-const COMPETITION_TABS = ['overview', 'fixtures', 'results', 'standings'] as const;
+const COMPETITION_TABS = [
+  'overview',
+  'fixtures',
+  'results',
+  'standings',
+  'scorers',
+  'assists',
+] as const;
 type CompetitionTab = (typeof COMPETITION_TABS)[number];
 const isCompetitionTab = (v?: string): v is CompetitionTab =>
   !!v && (COMPETITION_TABS as readonly string[]).includes(v);
@@ -313,6 +323,36 @@ export function FootballResultsBoard({
     refetchInterval: 60000,
   });
 
+  // Top scorers / assists leaderboards for the selected season.
+  const scorersQuery = useQuery({
+    queryKey: ['top-scorers', selectedSeasonId],
+    queryFn: () => getTopScorers(selectedSeasonId),
+    enabled: !!selectedSeasonId && view === 'scorers',
+  });
+  const assistsQuery = useQuery({
+    queryKey: ['top-assists', selectedSeasonId],
+    queryFn: () => getTopAssists(selectedSeasonId),
+    enabled: !!selectedSeasonId && view === 'assists',
+  });
+
+  // Desktop scroll arrows for the competition tab bar (mobile scrolls by touch).
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const [tabCanLeft, setTabCanLeft] = useState(false);
+  const [tabCanRight, setTabCanRight] = useState(false);
+  const updateTabArrows = () => {
+    const el = tabsRef.current;
+    if (!el) return;
+    setTabCanLeft(el.scrollLeft > 4);
+    setTabCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  };
+  const scrollTabs = (dir: number) =>
+    tabsRef.current?.scrollBy({ left: dir * 160, behavior: 'smooth' });
+  useEffect(() => {
+    updateTabArrows();
+    window.addEventListener('resize', updateTabArrows);
+    return () => window.removeEventListener('resize', updateTabArrows);
+  }, [competitionId, view]);
+
   // Competition info (name + logo) for the selected-competition card.
   const competitionQuery = useQuery({
     queryKey: ['competition', competitionId],
@@ -467,22 +507,49 @@ export function FootballResultsBoard({
               <span className="font-bold text-gray-900 dark:text-white truncate">{compName}</span>
             </div>
           </div>
-          {/* Tabs */}
-          <div className="flex gap-1 rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5 w-fit">
-            {COMPETITION_TABS.map((v) => (
+          {/* Tabs — scroll by touch on mobile, by arrows on desktop */}
+          <div className="relative w-fit max-w-full">
+            <div
+              ref={tabsRef}
+              onScroll={updateTabArrows}
+              className="flex flex-nowrap overflow-x-auto no-scrollbar gap-1 rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5"
+            >
+              {COMPETITION_TABS.map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setView(v)}
+                  className={`shrink-0 whitespace-nowrap px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    view === v
+                      ? 'bg-white dark:bg-gray-700 text-[#003153] dark:text-[#F59E0B] shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                  }`}
+                >
+                  {t(v)}
+                </button>
+              ))}
+            </div>
+            {/* Desktop arrows — auto-hidden at each end */}
+            {tabCanLeft && (
               <button
-                key={v}
                 type="button"
-                onClick={() => setView(v)}
-                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  view === v
-                    ? 'bg-white dark:bg-gray-700 text-[#003153] dark:text-[#F59E0B] shadow-sm'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                }`}
+                onClick={() => scrollTabs(-1)}
+                aria-label="Scroll tabs left"
+                className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 h-7 w-7 items-center justify-center rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 shadow-md text-gray-600 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
               >
-                {t(v)}
+                <ChevronLeft className="h-4 w-4" />
               </button>
-            ))}
+            )}
+            {tabCanRight && (
+              <button
+                type="button"
+                onClick={() => scrollTabs(1)}
+                aria-label="Scroll tabs right"
+                className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 h-7 w-7 items-center justify-center rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 shadow-md text-gray-600 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            )}
           </div>
           {/* Matchday (round) filter — Results & Fixtures only */}
           {(view === 'results' || view === 'fixtures') && rounds.length > 0 && (
@@ -522,6 +589,10 @@ export function FootballResultsBoard({
 
       {competitionId && view === 'standings' ? (
         <StandingsTable query={standingsQuery} t={t} />
+      ) : competitionId && view === 'scorers' ? (
+        <StatLeaders query={scorersQuery} metric="goals" t={t} />
+      ) : competitionId && view === 'assists' ? (
+        <StatLeaders query={assistsQuery} metric="assists" t={t} />
       ) : listLoading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-7 w-7 animate-spin text-[#003153] dark:text-[#F59E0B]" />
@@ -731,6 +802,115 @@ function StandingsTable({
         </tbody>
       </table>
     </div>
+  );
+}
+
+function StatLeaders({
+  query,
+  metric,
+  t,
+}: {
+  query: { data?: StatLeaderRow[]; isLoading: boolean };
+  metric: 'goals' | 'assists';
+  t: ReturnType<typeof useTranslations>;
+}) {
+  const rows = query.data ?? [];
+  if (query.isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-7 w-7 animate-spin text-[#003153] dark:text-[#F59E0B]" />
+      </div>
+    );
+  }
+  if (rows.length === 0) {
+    return (
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 py-16 text-center">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          {metric === 'goals' ? t('noScorers') : t('noAssists')}
+        </p>
+      </div>
+    );
+  }
+  const th = 'px-2 py-2 text-center font-medium w-12';
+  // Lead with the ranked metric's column (A first on the assists tab, G first on scorers).
+  const statCols =
+    metric === 'goals'
+      ? ([
+          { key: 'goals', label: t('goalsAbbr') },
+          { key: 'assists', label: t('assistsAbbr') },
+        ] as const)
+      : ([
+          { key: 'assists', label: t('assistsAbbr') },
+          { key: 'goals', label: t('goalsAbbr') },
+        ] as const);
+  return (
+    <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="text-[11px] uppercase tracking-wide text-gray-400 border-b border-gray-200 dark:border-gray-700">
+            <th className="px-2 py-2 text-center font-medium w-10">#</th>
+            <th className="px-2 py-2 text-left font-medium">{t('player')}</th>
+            {statCols.map((c) => (
+              <th key={c.key} className={th}>
+                {c.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr
+              key={r.player?.id ?? r.rank}
+              className="border-b border-gray-100 dark:border-gray-700 last:border-0"
+            >
+              <td className="px-2 py-2.5 text-center text-gray-400 tabular-nums">{r.rank}</td>
+              <td className="px-2 py-2.5">
+                <span className="flex items-center gap-2.5 min-w-0">
+                  <PlayerAvatar player={r.player} />
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium text-gray-900 dark:text-white">
+                      {r.player?.fullName}
+                    </span>
+                    <span className="flex items-center gap-1 text-xs text-gray-400 min-w-0">
+                      <Crest team={r.team} />
+                      <span className="truncate">{teamName(r.team)}</span>
+                    </span>
+                  </span>
+                </span>
+              </td>
+              {statCols.map((c) => (
+                <td
+                  key={c.key}
+                  className={`px-2 py-2.5 text-center tabular-nums ${
+                    c.key === metric
+                      ? 'font-bold text-gray-900 dark:text-white'
+                      : 'text-gray-500 dark:text-gray-400'
+                  }`}
+                >
+                  {r[c.key]}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function PlayerAvatar({ player }: { player?: { fullName?: string; photo?: string | null } }) {
+  const photo = typeof player?.photo === 'string' && player.photo.startsWith('http') ? player.photo : null;
+  return photo ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={photo}
+      alt=""
+      className="h-8 w-8 shrink-0 rounded-full object-cover bg-gray-100 dark:bg-gray-700"
+    />
+  ) : (
+    <span className="h-8 w-8 shrink-0 rounded-full bg-[#003153] text-white text-[10px] font-bold flex items-center justify-center">
+      {initials({ name: player?.fullName })}
+    </span>
   );
 }
 

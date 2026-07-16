@@ -6,6 +6,7 @@ import {
   createCompetition,
   createSeason,
   createTeamsBulk,
+  updateTeam,
   deleteTeam,
   createVenuesBulk,
   addSeasonEntries,
@@ -23,7 +24,7 @@ import {
   type VenueInput,
 } from '@org/api';
 import { toast } from 'sonner';
-import { Loader2, Plus, Trash2, Upload, MapPin, X } from 'lucide-react';
+import { Loader2, Plus, Trash2, Upload, MapPin, X, Power, PowerOff } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -125,7 +126,7 @@ export function SetupTab({
   });
 
   /* -------------------------------- Teams -------------------------------- */
-  const teamsQuery = useQuery({ queryKey: ['football', 'teams'], queryFn: getTeams });
+  const teamsQuery = useQuery({ queryKey: ['football', 'teams'], queryFn: () => getTeams() });
   const existingTeamNames = useMemo(
     () => new Set((teamsQuery.data ?? []).map((t) => t.name.trim().toLowerCase())),
     [teamsQuery.data]
@@ -260,6 +261,27 @@ export function SetupTab({
     },
     onError: (e) => toast.error(errMessage(e, 'Failed to delete team')),
   });
+
+  // Active/Inactive visibility: default to the usable (active) teams.
+  const [teamFilter, setTeamFilter] = useState<'active' | 'inactive' | 'all'>('active');
+  const toggleTeamMut = useMutation({
+    mutationFn: ({ teamId, isActive }: { teamId: string; isActive: boolean }) =>
+      updateTeam(teamId, { isActive }),
+    onSuccess: (_data, vars) => {
+      toast.success(vars.isActive ? 'Team activated' : 'Team deactivated');
+      qc.invalidateQueries({ queryKey: ['football', 'teams'] });
+    },
+    onError: (e) => toast.error(errMessage(e, 'Failed to update team')),
+  });
+
+  // A team counts as active unless explicitly flagged false.
+  const isTeamActive = (t: Team) => t.isActive !== false;
+  const allTeams = teamsQuery.data ?? [];
+  const activeCount = allTeams.filter(isTeamActive).length;
+  const inactiveCount = allTeams.length - activeCount;
+  const visibleTeams = allTeams.filter((t) =>
+    teamFilter === 'all' ? true : teamFilter === 'active' ? isTeamActive(t) : !isTeamActive(t)
+  );
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -488,42 +510,116 @@ export function SetupTab({
 
         {/* Existing teams as crest cards */}
         <div className="mt-5 border-t border-gray-100 dark:border-gray-700 pt-4">
+          {/* Active / Inactive / All segmented filter */}
+          {allTeams.length > 0 && (
+            <div className="mb-3 inline-flex rounded-lg border border-gray-200 dark:border-gray-700 p-0.5 text-xs">
+              {(
+                [
+                  ['active', 'Active', activeCount],
+                  ['inactive', 'Inactive', inactiveCount],
+                  ['all', 'All', allTeams.length],
+                ] as const
+              ).map(([key, label, count]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setTeamFilter(key)}
+                  className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
+                    teamFilter === key
+                      ? 'bg-[#003153] text-white'
+                      : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  {label}
+                  <span
+                    className={`ml-1.5 ${teamFilter === key ? 'text-white/70' : 'text-gray-400'}`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
           {teamsQuery.isLoading ? (
             <div className="flex items-center gap-2 text-sm text-gray-400">
               <Loader2 className="h-4 w-4 animate-spin" /> Loading…
             </div>
-          ) : (teamsQuery.data ?? []).length === 0 ? (
+          ) : allTeams.length === 0 ? (
             <p className="text-sm text-gray-400">No teams yet</p>
+          ) : visibleTeams.length === 0 ? (
+            <p className="text-sm text-gray-400">
+              {teamFilter === 'inactive' ? 'No inactive teams.' : 'No active teams.'}
+            </p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 max-h-60 overflow-y-auto">
-              {(teamsQuery.data ?? []).map((t: Team) => {
+              {visibleTeams.map((t: Team) => {
                 const logoUrl = resolveLogoUrl(t);
+                const active = isTeamActive(t);
                 return (
                 <div
                   key={t.id}
-                  className="group flex items-center gap-2.5 rounded-lg border border-gray-200 dark:border-gray-700 p-2"
+                  className={`group flex items-center gap-2.5 rounded-lg border p-2 transition-colors ${
+                    active
+                      ? 'border-gray-200 dark:border-gray-700'
+                      : 'border-dashed border-gray-300 dark:border-gray-600 bg-gray-50/60 dark:bg-gray-800/40'
+                  }`}
                 >
                   {logoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={logoUrl}
                       alt=""
-                      className="h-8 w-8 shrink-0 rounded-full object-cover bg-white"
+                      className={`h-8 w-8 shrink-0 rounded-full object-cover bg-white ${
+                        active ? '' : 'grayscale opacity-60'
+                      }`}
                     />
                   ) : (
-                    <span className="h-8 w-8 shrink-0 rounded-full bg-[#003153] text-white text-[11px] font-bold flex items-center justify-center">
+                    <span
+                      className={`h-8 w-8 shrink-0 rounded-full text-white text-[11px] font-bold flex items-center justify-center ${
+                        active ? 'bg-[#003153]' : 'bg-gray-400 dark:bg-gray-600'
+                      }`}
+                    >
                       {teamInitials(t)}
                     </span>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                    <p
+                      className={`truncate text-sm font-medium ${
+                        active
+                          ? 'text-gray-900 dark:text-white'
+                          : 'text-gray-500 dark:text-gray-400'
+                      }`}
+                    >
                       {t.name}
                     </p>
                     <p className="truncate text-xs text-gray-400">
-                      {t.shortName || deriveShort(t.name)}
-                      {t.city ? ` · ${t.city}` : ''}
+                      {active ? (
+                        <>
+                          {t.shortName || deriveShort(t.name)}
+                          {t.city ? ` · ${t.city}` : ''}
+                        </>
+                      ) : (
+                        'Inactive'
+                      )}
                     </p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => toggleTeamMut.mutate({ teamId: t.id, isActive: !active })}
+                    disabled={toggleTeamMut.isPending}
+                    title={active ? 'Deactivate team' : 'Activate team'}
+                    className={`shrink-0 p-1.5 rounded-md transition-colors disabled:opacity-50 ${
+                      active
+                        ? 'text-gray-300 dark:text-gray-600 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 opacity-0 group-hover:opacity-100 focus:opacity-100'
+                        : 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
+                    }`}
+                  >
+                    {active ? (
+                      <PowerOff className="h-3.5 w-3.5" />
+                    ) : (
+                      <Power className="h-3.5 w-3.5" />
+                    )}
+                  </button>
                   <button
                     type="button"
                     onClick={() => setDeleteTeamTarget({ teamId: t.id, name: t.name })}
@@ -758,7 +854,8 @@ export function SetupTab({
 
             {/* Add teams not yet enrolled */}
             {(() => {
-              const available = (teamsQuery.data ?? []).filter((t) => !enrolledIds.has(t.id));
+              // Only active teams can be enrolled into a season.
+              const available = allTeams.filter((t) => !enrolledIds.has(t.id) && isTeamActive(t));
               return (
                 <div className="border-t border-gray-100 dark:border-gray-700 pt-4">
                   <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wide mb-2">
@@ -766,7 +863,9 @@ export function SetupTab({
                   </p>
                   {available.length === 0 ? (
                     <p className="text-sm text-gray-400">
-                      All {(teamsQuery.data ?? []).length} teams are enrolled.
+                      {activeCount === 0
+                        ? 'No active teams available. Activate a team below to enroll it.'
+                        : `All ${activeCount} active teams are enrolled.`}
                     </p>
                   ) : (
                     <>

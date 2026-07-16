@@ -59,6 +59,7 @@ export interface Team {
   name: string;
   shortName?: string;
   city?: string;
+  isActive?: boolean;
   logoUrl?: string | null;
   // GET may return the resolved logo as a url string or a media object.
   logo?: string | { url?: string } | null;
@@ -108,6 +109,51 @@ export interface Match {
   updatedAt?: string;
 }
 
+// Match event types — exactly the backend's accepted enum.
+export type MatchEventType =
+  | 'Goal'
+  | 'Penalty'
+  | 'OwnGoal'
+  | 'MissedPenalty'
+  | 'YellowCard'
+  | 'SecondYellow'
+  | 'RedCard'
+  | 'Substitution';
+
+export const MATCH_EVENT_TYPES: MatchEventType[] = [
+  'Goal',
+  'Penalty',
+  'OwnGoal',
+  'MissedPenalty',
+  'YellowCard',
+  'SecondYellow',
+  'RedCard',
+  'Substitution',
+];
+
+export interface MatchEventPlayerRef {
+  id: string;
+  fullName: string;
+  slug?: string;
+}
+
+export interface MatchEvent {
+  id: string;
+  matchId: string;
+  teamId: string;
+  type: MatchEventType;
+  minute: number;
+  extraMinute?: number | null;
+  playerId?: string | null;
+  relatedPlayerId?: string | null;
+  note?: string | null;
+  team?: { id: string; name: string; shortName?: string; logo?: string | { url?: string } | null };
+  player?: MatchEventPlayerRef | null;
+  relatedPlayer?: MatchEventPlayerRef | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Writes (backend-confirmed)                                                 */
 /* -------------------------------------------------------------------------- */
@@ -136,6 +182,21 @@ export interface TeamInput {
 export async function createTeamsBulk(payload: { teams: TeamInput[] }): Promise<Team[]> {
   const { data } = await api.post('/api/menyesha/teams/bulk', payload);
   return unwrap<Team[]>(data);
+}
+
+// PATCH /api/menyesha/teams/:id -> update a team (e.g. toggle isActive).
+export async function updateTeam(
+  teamId: string,
+  payload: {
+    name?: string;
+    shortName?: string;
+    city?: string;
+    logo?: string;
+    isActive?: boolean;
+  }
+): Promise<Team> {
+  const { data } = await api.patch(`/api/menyesha/teams/${teamId}`, payload);
+  return unwrap<Team>(data);
 }
 
 // DELETE /api/menyesha/teams/:id -> delete a team.
@@ -234,6 +295,38 @@ export async function deleteMatch(matchId: string): Promise<any> {
   return unwrap<any>(data);
 }
 
+export interface MatchEventInput {
+  teamId: string;
+  type: MatchEventType;
+  minute: number;
+  extraMinute?: number;
+  playerId?: string;
+  relatedPlayerId?: string;
+  note?: string;
+}
+
+// POST /api/menyesha/matches/:matchId/events -> add a goal/card/sub to a match.
+export async function createMatchEvent(
+  matchId: string,
+  payload: MatchEventInput
+): Promise<MatchEvent> {
+  const { data } = await api.post(`/api/menyesha/matches/${matchId}/events`, payload);
+  return unwrap<MatchEvent>(data);
+}
+
+// PATCH /api/menyesha/matches/:matchId/events/:eventId -> edit an event.
+export async function updateMatchEvent(
+  matchId: string,
+  eventId: string,
+  payload: Partial<MatchEventInput>
+): Promise<MatchEvent> {
+  const { data } = await api.patch(
+    `/api/menyesha/matches/${matchId}/events/${eventId}`,
+    payload
+  );
+  return unwrap<MatchEvent>(data);
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Reads (backend-confirmed paths)                                            */
 /* -------------------------------------------------------------------------- */
@@ -309,8 +402,12 @@ export async function getCompetitionStandings(
   return extractStandings(unwrap<any>(data));
 }
 
-export async function getTeams(): Promise<Team[]> {
-  const { data } = await api.get('/api/menyesha/teams');
+// GET /api/menyesha/teams?isActive= -> teams, optionally filtered by active flag.
+// Public/consumer callers should pass { isActive: true } to get only usable teams.
+export async function getTeams(params?: { isActive?: boolean }): Promise<Team[]> {
+  const { data } = await api.get('/api/menyesha/teams', {
+    params: params && Object.keys(params).length ? params : undefined,
+  });
   return unwrap<Team[]>(data);
 }
 
@@ -387,4 +484,32 @@ export async function getMatches(params?: {
 export async function getMatch(slug: string): Promise<Match> {
   const { data } = await api.get(`/api/menyesha/matches/slug/${slug}`);
   return unwrap<Match>(data);
+}
+
+// GET /api/menyesha/matches/:matchId/events -> timeline of goals, cards, subs.
+export async function getMatchEvents(matchId: string): Promise<MatchEvent[]> {
+  const { data } = await api.get(`/api/menyesha/matches/${matchId}/events`);
+  return unwrap<MatchEvent[]>(data) ?? [];
+}
+
+export interface StatLeaderRow {
+  rank: number;
+  player: { id: string; fullName: string; slug?: string; photo?: string | null };
+  team: { id: string; name: string; shortName?: string; logo?: string | { url?: string } | null };
+  goals: number;
+  assists: number;
+}
+
+// GET /api/menyesha/seasons/:id/top-scorers -> { season, scorers: [...] }
+export async function getTopScorers(seasonId: string): Promise<StatLeaderRow[]> {
+  const { data } = await api.get(`/api/menyesha/seasons/${seasonId}/top-scorers`);
+  const payload = unwrap<any>(data);
+  return (payload?.scorers ?? payload ?? []) as StatLeaderRow[];
+}
+
+// GET /api/menyesha/seasons/:id/top-assists -> { season, assisters: [...] }
+export async function getTopAssists(seasonId: string): Promise<StatLeaderRow[]> {
+  const { data } = await api.get(`/api/menyesha/seasons/${seasonId}/top-assists`);
+  const payload = unwrap<any>(data);
+  return (payload?.assisters ?? payload ?? []) as StatLeaderRow[];
 }

@@ -1,10 +1,10 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { getMatch, type Match } from '@org/api';
+import { getMatch, getMatchEvents, type Match, type MatchEvent } from '@org/api';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { Loader2, ArrowLeft, MapPin } from 'lucide-react';
+import { Loader2, ArrowLeft, MapPin, ArrowRightLeft } from 'lucide-react';
 
 const LIVE_STATUSES = ['Live', 'HalfTime'];
 
@@ -130,6 +130,14 @@ function MatchCardDetail({
         </div>
       </div>
 
+      {/* Events timeline */}
+      <MatchEvents
+        matchId={m.id}
+        homeTeamId={m.homeTeamId ?? home?.id}
+        live={isLive}
+        t={t}
+      />
+
       {/* Venue */}
       {venue?.name && (
         <div className="px-4 sm:px-6 py-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-center gap-1.5 text-xs text-gray-400">
@@ -137,6 +145,138 @@ function MatchCardDetail({
           {[venue.name, venue.city].filter(Boolean).join(', ')}
         </div>
       )}
+    </div>
+  );
+}
+
+/* --------------------------- Match events timeline --------------------------- */
+
+function eventClock(e: MatchEvent): string {
+  return `${e.minute}${e.extraMinute ? `+${e.extraMinute}` : ''}'`;
+}
+
+// A small visual + short qualifier for each event type. Icons/colors carry the
+// meaning so the timeline reads at a glance regardless of language.
+function EventIcon({ type }: { type: MatchEvent['type'] }) {
+  switch (type) {
+    case 'Goal':
+    case 'Penalty':
+    case 'OwnGoal':
+      return <span className="text-sm leading-none">⚽</span>;
+    case 'MissedPenalty':
+      return <span className="text-sm leading-none opacity-60 grayscale">⚽</span>;
+    case 'YellowCard':
+      return <span className="inline-block h-3.5 w-2.5 rounded-[2px] bg-yellow-400" />;
+    case 'RedCard':
+      return <span className="inline-block h-3.5 w-2.5 rounded-[2px] bg-red-600" />;
+    case 'SecondYellow':
+      return (
+        <span className="relative inline-block h-3.5 w-2.5">
+          <span className="absolute inset-0 rounded-[2px] bg-yellow-400" />
+          <span className="absolute inset-0 translate-x-[3px] translate-y-[3px] rounded-[2px] bg-red-600" />
+        </span>
+      );
+    case 'Substitution':
+      return <ArrowRightLeft className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />;
+    default:
+      return null;
+  }
+}
+
+// The qualifier shown after a goal scorer's name, e.g. "(pen)" or "(OG)".
+function goalQualifier(type: MatchEvent['type']): string | null {
+  if (type === 'Penalty') return 'pen';
+  if (type === 'OwnGoal') return 'OG';
+  return null;
+}
+
+function EventDetail({ e, alignRight }: { e: MatchEvent; alignRight: boolean }) {
+  const main = e.player?.fullName;
+  const qualifier = goalQualifier(e.type);
+  const isGoal = e.type === 'Goal' || e.type === 'Penalty' || e.type === 'OwnGoal';
+
+  return (
+    <div className={`min-w-0 ${alignRight ? 'text-right' : 'text-left'}`}>
+      <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
+        {main ?? '—'}
+        {qualifier && <span className="ml-1 text-xs font-normal text-gray-400">({qualifier})</span>}
+      </p>
+      {/* Second line: assist for a goal, or the paired player for a substitution. */}
+      {isGoal && e.relatedPlayer?.fullName && (
+        <p className="truncate text-xs text-gray-400">assist: {e.relatedPlayer.fullName}</p>
+      )}
+      {e.type === 'Substitution' && e.relatedPlayer?.fullName && (
+        <p className="truncate text-xs text-gray-400">for {e.relatedPlayer.fullName}</p>
+      )}
+      {e.type === 'MissedPenalty' && (
+        <p className="truncate text-xs text-gray-400">missed penalty</p>
+      )}
+    </div>
+  );
+}
+
+function MatchEvents({
+  matchId,
+  homeTeamId,
+  live,
+  t,
+}: {
+  matchId: string;
+  homeTeamId?: string;
+  live: boolean;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  const { data: events = [] } = useQuery({
+    queryKey: ['match-events', matchId],
+    queryFn: () => getMatchEvents(matchId),
+    refetchInterval: live ? 30000 : false,
+  });
+
+  if (events.length === 0) return null;
+
+  const sorted = [...events].sort(
+    (a, b) => a.minute - b.minute || (a.extraMinute ?? 0) - (b.extraMinute ?? 0)
+  );
+
+  return (
+    <div className="px-4 sm:px-6 py-5 border-t border-gray-100 dark:border-gray-700">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-4 text-center">
+        {t('timeline')}
+      </p>
+      <ul className="space-y-3">
+        {sorted.map((e) => {
+          const isHome = homeTeamId != null && e.teamId === homeTeamId;
+          return (
+            <li
+              key={e.id}
+              className="grid grid-cols-[minmax(0,1fr)_2.5rem_minmax(0,1fr)] items-center gap-2 sm:gap-3"
+            >
+              {/* Home side */}
+              <div className="flex justify-end min-w-0">
+                {isHome && (
+                  <div className="flex items-center gap-2 min-w-0">
+                    <EventDetail e={e} alignRight />
+                    <EventIcon type={e.type} />
+                  </div>
+                )}
+              </div>
+              {/* Minute — fixed centre column keeps every row aligned */}
+              <span className="text-center text-xs font-semibold tabular-nums text-gray-500 dark:text-gray-400">
+                {eventClock(e)}
+              </span>
+              {/* Away side */}
+              <div className="flex justify-start min-w-0">
+                {!isHome && (
+                  <div className="flex items-center gap-2 min-w-0">
+                    <EventIcon type={e.type} />
+                    <EventDetail e={e} alignRight={false} />
+                  </div>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }
