@@ -24,7 +24,8 @@ import {
   type VenueInput,
 } from '@org/api';
 import { toast } from 'sonner';
-import { Loader2, Plus, Trash2, Upload, MapPin, X, Power, PowerOff } from 'lucide-react';
+import { Loader2, Plus, Trash2, Upload, MapPin, X, Power, PowerOff, Pencil } from 'lucide-react';
+import { EditTeamModal } from './EditTeamModal';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -247,6 +248,7 @@ export function SetupTab({
     onError: (e) => toast.error(errMessage(e, 'Failed to unroll team')),
   });
 
+  const [editTeam, setEditTeam] = useState<Team | null>(null);
   const [deleteTeamTarget, setDeleteTeamTarget] = useState<{
     teamId: string;
     name: string;
@@ -622,6 +624,14 @@ export function SetupTab({
                   </button>
                   <button
                     type="button"
+                    onClick={() => setEditTeam(t)}
+                    title="Edit team"
+                    className="shrink-0 p-1.5 rounded-md text-gray-300 dark:text-gray-600 hover:text-[#003153] dark:hover:text-[#F59E0B] hover:bg-gray-100 dark:hover:bg-gray-700 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setDeleteTeamTarget({ teamId: t.id, name: t.name })}
                     title="Delete team"
                     className="shrink-0 p-1.5 rounded-md text-gray-300 dark:text-gray-600 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
@@ -945,6 +955,8 @@ export function SetupTab({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {editTeam && <EditTeamModal team={editTeam} onClose={() => setEditTeam(null)} />}
 
       <AlertDialog
         open={!!deleteTeamTarget}

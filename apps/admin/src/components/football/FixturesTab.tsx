@@ -18,9 +18,10 @@ import {
   type Season,
 } from '@org/api';
 import { toast } from 'sonner';
-import { Loader2, Plus, Trash2, CalendarDays, Save, ListPlus } from 'lucide-react';
+import { Loader2, Plus, Trash2, CalendarDays, Save, ListPlus, Users, MapPin } from 'lucide-react';
 import { cardClass, inputClass, labelClass, primaryBtn, ghostBtn } from './styles';
 import { MatchEventsPanel } from './MatchEventsPanel';
+import { MatchLineupsPanel } from './MatchLineupsPanel';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,8 +38,14 @@ function errMessage(error: any, fallback: string) {
   return Array.isArray(m) ? m.join(', ') : m;
 }
 
-type FixtureRow = { homeTeamId: string; awayTeamId: string; kickoff: string; venueId: string };
-const emptyRow: FixtureRow = { homeTeamId: '', awayTeamId: '', kickoff: '', venueId: '' };
+type FixtureRow = {
+  homeTeamId: string;
+  awayTeamId: string;
+  kickoff: string;
+  venueId: string;
+  referee: string;
+};
+const emptyRow: FixtureRow = { homeTeamId: '', awayTeamId: '', kickoff: '', venueId: '', referee: '' };
 
 export function FixturesTab({ seasonId, season }: { seasonId: string; season: Season | null }) {
   const qc = useQueryClient();
@@ -78,6 +85,7 @@ export function FixturesTab({ seasonId, season }: { seasonId: string; season: Se
         awayTeamId: r.awayTeamId,
         kickoffAt: new Date(r.kickoff).toISOString(),
         ...(r.venueId ? { venueId: r.venueId } : {}),
+        ...(r.referee.trim() ? { referee: r.referee.trim() } : {}),
       }));
       return createMatchesBulk({ seasonId, round: round.trim(), matches });
     },
@@ -179,6 +187,14 @@ export function FixturesTab({ seasonId, season }: { seasonId: string; season: Se
                       </option>
                     ))}
                   </select>
+                  <input
+                    value={row.referee}
+                    onChange={(e) =>
+                      setRows((rs) => rs.map((r, j) => (j === i ? { ...r, referee: e.target.value } : r)))
+                    }
+                    placeholder="Referee (opt)"
+                    className={`${inputClass} w-36`}
+                  />
                   <button
                     type="button"
                     onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))}
@@ -235,6 +251,7 @@ export function FixturesTab({ seasonId, season }: { seasonId: string; season: Se
                 match={m}
                 homeName={teamName(m.homeTeamId, m.homeTeam)}
                 awayName={teamName(m.awayTeamId, m.awayTeam)}
+                venues={venues}
                 onSaved={() => qc.invalidateQueries({ queryKey: ['football', 'matches', seasonId] })}
               />
             ))}
@@ -249,19 +266,26 @@ function MatchRow({
   match,
   homeName,
   awayName,
+  venues,
   onSaved,
 }: {
   match: Match;
   homeName: string;
   awayName: string;
+  venues: Venue[];
   onSaved: () => void;
 }) {
   const [status, setStatus] = useState<MatchStatus>(match.status ?? 'Scheduled');
   const [home, setHome] = useState<string>(match.homeScore != null ? String(match.homeScore) : '');
   const [away, setAway] = useState<string>(match.awayScore != null ? String(match.awayScore) : '');
   const [minute, setMinute] = useState<string>(match.minute != null ? String(match.minute) : '');
+  const [venueId, setVenueId] = useState<string>(
+    match.venueId ?? (match.venue as any)?.id ?? ''
+  );
+  const [referee, setReferee] = useState<string>(match.referee ?? '');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showEvents, setShowEvents] = useState(false);
+  const [showLineups, setShowLineups] = useState(false);
 
   const saveMut = useMutation({
     mutationFn: () =>
@@ -270,6 +294,8 @@ function MatchRow({
         ...(home.trim() ? { homeScore: Number(home) } : {}),
         ...(away.trim() ? { awayScore: Number(away) } : {}),
         ...(minute.trim() ? { minute: Number(minute) } : {}),
+        ...(venueId ? { venueId } : {}),
+        ...(referee.trim() ? { referee: referee.trim() } : {}),
       }),
     onSuccess: () => {
       toast.success('Match updated');
@@ -373,6 +399,20 @@ function MatchRow({
       </button>
       <button
         type="button"
+        onClick={() => setShowLineups((v) => !v)}
+        title="Starting XI & bench"
+        aria-expanded={showLineups}
+        className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+          showLineups
+            ? 'bg-[#003153]/10 dark:bg-[#F59E0B]/10 text-[#003153] dark:text-[#F59E0B]'
+            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+        }`}
+      >
+        <Users className="h-3.5 w-3.5" />
+        Lineups
+      </button>
+      <button
+        type="button"
         onClick={() => setConfirmDelete(true)}
         disabled={deleteMut.isPending}
         title="Delete match"
@@ -407,9 +447,39 @@ function MatchRow({
       </AlertDialog>
     </div>
 
+      {/* Venue */}
+      <div className="flex items-center gap-2 px-3 pb-2.5 -mt-1">
+        <MapPin className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+        <select
+          value={venueId}
+          onChange={(e) => setVenueId(e.target.value)}
+          className="max-w-[16rem] px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-[#003153] outline-none"
+        >
+          <option value="">No venue</option>
+          {venues.map((v: Venue) => (
+            <option key={v.id} value={v.id}>
+              {v.name}
+              {v.city ? ` · ${v.city}` : ''}
+            </option>
+          ))}
+        </select>
+        <input
+          value={referee}
+          onChange={(e) => setReferee(e.target.value)}
+          placeholder="Referee"
+          className="max-w-[12rem] px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-[#003153] outline-none"
+        />
+        <span className="text-[11px] text-gray-400">Save to apply</span>
+      </div>
+
       {showEvents && (
         <div className="px-3 pb-3">
           <MatchEventsPanel match={match} homeName={homeName} awayName={awayName} />
+        </div>
+      )}
+      {showLineups && (
+        <div className="px-3 pb-3">
+          <MatchLineupsPanel match={match} homeName={homeName} awayName={awayName} />
         </div>
       )}
     </div>

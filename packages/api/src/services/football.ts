@@ -36,6 +36,27 @@ export type PlayerPosition = 'GK' | 'DEF' | 'MID' | 'FWD';
 
 export const PLAYER_POSITIONS: PlayerPosition[] = ['GK', 'DEF', 'MID', 'FWD'];
 
+// Full-name labels (positions are stored as full names, e.g. "Goalkeeper").
+export const PLAYER_POSITION_LABELS: Record<PlayerPosition, string> = {
+  GK: 'Goalkeeper',
+  DEF: 'Defender',
+  MID: 'Midfielder',
+  FWD: 'Forward',
+};
+
+// Normalize a position string (code or full name) to its GK/DEF/MID/FWD code,
+// used for pitch grouping/ordering. Returns undefined when unrecognized.
+export function normalizePosition(pos?: string | null): PlayerPosition | undefined {
+  if (!pos) return undefined;
+  const p = pos.trim().toUpperCase();
+  if (p === 'GK' || p.startsWith('GOAL')) return 'GK';
+  if (p === 'DEF' || p.startsWith('DEF') || p.startsWith('BACK')) return 'DEF';
+  if (p === 'MID' || p.startsWith('MID')) return 'MID';
+  if (p === 'FWD' || p === 'FW' || p.startsWith('FOR') || p.startsWith('ATT') || p.startsWith('STR'))
+    return 'FWD';
+  return undefined;
+}
+
 export interface Competition {
   id: string;
   name: string;
@@ -98,6 +119,7 @@ export interface Match {
   awayTeamId: string;
   kickoffAt: string;
   status: MatchStatus;
+  referee?: string | null;
   homeScore?: number | null;
   awayScore?: number | null;
   minute?: number | null;
@@ -237,6 +259,7 @@ export interface MatchInput {
   awayTeamId: string;
   kickoffAt: string;
   venueId?: string;
+  referee?: string;
 }
 
 export async function createMatchesBulk(payload: {
@@ -283,6 +306,7 @@ export async function updateMatch(
     minute?: number;
     venueId?: string;
     kickoffAt?: string;
+    referee?: string;
   }
 ): Promise<Match> {
   const { data } = await api.patch(`/api/menyesha/matches/${matchId}`, payload);
@@ -487,9 +511,98 @@ export async function getMatch(slug: string): Promise<Match> {
 }
 
 // GET /api/menyesha/matches/:matchId/events -> timeline of goals, cards, subs.
-export async function getMatchEvents(matchId: string): Promise<MatchEvent[]> {
-  const { data } = await api.get(`/api/menyesha/matches/${matchId}/events`);
+// Optionally filter by event type and/or team.
+export async function getMatchEvents(
+  matchId: string,
+  params?: { type?: MatchEventType; teamId?: string }
+): Promise<MatchEvent[]> {
+  const { data } = await api.get(`/api/menyesha/matches/${matchId}/events`, {
+    params: params && Object.keys(params).length ? params : undefined,
+  });
   return unwrap<MatchEvent[]>(data) ?? [];
+}
+
+export interface LineupPlayerInput {
+  playerId: string;
+  isStarting: boolean;
+  position?: string;
+  x?: number; // 0 (left touchline) .. 100 (right touchline)
+  y?: number; // 0 (own goal) .. 100 (attacking end)
+}
+
+export interface LineupInput {
+  formation: string;
+  coach?: string;
+  players: LineupPlayerInput[];
+}
+
+// POST /api/menyesha/matches/:matchId/lineups/:teamId -> set a team's lineup.
+export async function setMatchLineup(
+  matchId: string,
+  teamId: string,
+  payload: LineupInput
+): Promise<any> {
+  const { data } = await api.put(
+    `/api/menyesha/matches/${matchId}/lineups/${teamId}`,
+    payload
+  );
+  return unwrap<any>(data);
+}
+
+export interface LineupSlot {
+  playerId: string;
+  isStarting: boolean;
+  shirtNumber?: number | null;
+  position?: string | null;
+  x?: number | null; // 0 (left) .. 100 (right)
+  y?: number | null; // 0 (own goal) .. 100 (attacking end)
+  player?: { id: string; fullName: string; slug?: string; position?: string | null };
+}
+
+export interface MatchLineup {
+  id?: string;
+  teamId: string;
+  formation?: string;
+  coach?: string | null;
+  team?: { id: string; name: string; shortName?: string; logo?: string | { url?: string } | null };
+  slots: LineupSlot[];
+}
+
+// GET /api/menyesha/matches/:matchId/lineups/:teamId -> a team's lineup (if set).
+// Normalized to a MatchLineup with a `slots` array; tolerant of a `players` key.
+export async function getMatchLineup(
+  matchId: string,
+  teamId: string
+): Promise<MatchLineup | null> {
+  const { data } = await api.get(`/api/menyesha/matches/${matchId}/lineups/${teamId}`);
+  const p = unwrap<any>(data);
+  if (!p) return null;
+  const slots: LineupSlot[] = (p.slots ?? p.players ?? [])
+    .map((r: any) => ({
+      playerId: r?.playerId ?? r?.player?.id,
+      isStarting: !!r?.isStarting,
+      shirtNumber: r?.shirtNumber ?? r?.player?.shirtNumber ?? null,
+      position: r?.position ?? r?.player?.position ?? null,
+      x: r?.x ?? null,
+      y: r?.y ?? null,
+      player: r?.player
+        ? {
+            id: r.player.id,
+            fullName: r.player.fullName,
+            slug: r.player.slug,
+            position: r.player.position ?? null,
+          }
+        : undefined,
+    }))
+    .filter((r: LineupSlot) => r.playerId);
+  return {
+    id: p.id,
+    teamId: p.teamId ?? teamId,
+    formation: p.formation,
+    coach: p.coach ?? null,
+    team: p.team,
+    slots,
+  };
 }
 
 export interface StatLeaderRow {

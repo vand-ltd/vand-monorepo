@@ -9,6 +9,7 @@ import {
   removeSquadPlayer,
   uploadMedia,
   PLAYER_POSITIONS,
+  PLAYER_POSITION_LABELS,
   type Team,
   type Player,
   type PlayerInput,
@@ -16,6 +17,8 @@ import {
 } from '@org/api';
 import { toast } from 'sonner';
 import { Loader2, Plus, Trash2, Shirt, Upload } from 'lucide-react';
+import { flagForName } from '@/lib/countries';
+import { CountrySelect } from './CountrySelect';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -100,7 +103,7 @@ export function SquadsTab({ seasonId, season }: { seasonId: string; season: Seas
         name: r.name.trim(),
         ...(r.shirtNumber.trim() ? { shirtNumber: Number(r.shirtNumber) } : {}),
         ...(r.position ? { position: r.position } : {}),
-        ...(r.nationality.trim() ? { nationality: r.nationality.trim().toUpperCase() } : {}),
+        ...(r.nationality.trim() ? { nationality: r.nationality.trim() } : {}),
         ...(r.photo ? { photo: r.photo } : {}),
       }));
       return addSquadPlayers(teamId, seasonId, { players });
@@ -181,12 +184,12 @@ export function SquadsTab({ seasonId, season }: { seasonId: string; season: Seas
             </p>
 
             {/* Column labels */}
-            <div className="hidden sm:grid grid-cols-[2.75rem_1fr_4rem_6rem_5rem_2.5rem] gap-2 px-1 mb-1.5 text-[11px] font-medium text-gray-400 uppercase tracking-wide">
+            <div className="hidden sm:grid grid-cols-[2.75rem_1fr_4rem_6rem_9rem_2.5rem] gap-2 px-1 mb-1.5 text-[11px] font-medium text-gray-400 uppercase tracking-wide">
               <span>Photo</span>
               <span>Player name</span>
               <span>Shirt</span>
               <span>Position</span>
-              <span>Nat.</span>
+              <span>Nationality</span>
               <span />
             </div>
 
@@ -194,7 +197,7 @@ export function SquadsTab({ seasonId, season }: { seasonId: string; season: Seas
               {rows.map((row, i) => (
                 <div
                   key={i}
-                  className="grid grid-cols-[2.75rem_1fr_4rem_6rem_5rem_2.5rem] gap-2 items-center"
+                  className="grid grid-cols-[2.75rem_1fr_4rem_6rem_9rem_2.5rem] gap-2 items-center"
                 >
                   {/* Photo upload */}
                   <label
@@ -250,23 +253,20 @@ export function SquadsTab({ seasonId, season }: { seasonId: string; season: Seas
                     }
                     className={inputClass}
                   >
-                    <option value="">Pos</option>
+                    <option value="">Position</option>
                     {PLAYER_POSITIONS.map((p) => (
-                      <option key={p} value={p}>
-                        {p}
+                      <option key={p} value={PLAYER_POSITION_LABELS[p]}>
+                        {PLAYER_POSITION_LABELS[p]}
                       </option>
                     ))}
                   </select>
-                  <input
+                  <CountrySelect
                     value={row.nationality}
-                    onChange={(e) =>
+                    onChange={(name) =>
                       setRows((rs) =>
-                        rs.map((r, j) => (j === i ? { ...r, nationality: e.target.value } : r))
+                        rs.map((r, j) => (j === i ? { ...r, nationality: name } : r))
                       )
                     }
-                    placeholder="RW"
-                    maxLength={3}
-                    className={`${inputClass} uppercase`}
                   />
                   <button
                     type="button"
@@ -340,7 +340,14 @@ export function SquadsTab({ seasonId, season }: { seasonId: string; season: Seas
                           {p.name}
                         </p>
                         <p className="truncate text-xs text-gray-400">
-                          {[p.position, p.nationality].filter(Boolean).join(' · ') || '—'}
+                          {[
+                            p.position,
+                            p.nationality
+                              ? `${flagForName(p.nationality)} ${p.nationality}`.trim()
+                              : '',
+                          ]
+                            .filter(Boolean)
+                            .join(' · ') || '—'}
                         </p>
                       </div>
                       <span className="font-mono text-sm text-gray-400 shrink-0">

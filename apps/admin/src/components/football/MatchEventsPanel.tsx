@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   getMatchEvents,
   getSquad,
+  getMatchLineup,
   createMatchEvent,
   updateMatchEvent,
   MATCH_EVENT_TYPES,
@@ -95,6 +96,28 @@ export function MatchEventsPanel({
     enabled: !!playerTeamId && !!seasonId,
   });
   const squad = squadQuery.data ?? [];
+
+  // Lineup for the selected team → who started vs who's on the bench.
+  const lineupQuery = useQuery({
+    queryKey: ['football', 'lineup', match.id, teamId],
+    queryFn: () => getMatchLineup(match.id, teamId),
+    enabled: !!teamId,
+    retry: false,
+  });
+  const starterIds = new Set(
+    (lineupQuery.data?.slots ?? []).filter((s) => s.isStarting).map((s) => s.playerId)
+  );
+  const benchIds = new Set(
+    (lineupQuery.data?.slots ?? []).filter((s) => !s.isStarting).map((s) => s.playerId)
+  );
+
+  // For a substitution, the player coming on is picked from the bench and the
+  // player coming off from the starting XI. Fall back to the full squad when
+  // no lineup is set.
+  const isSub = type === 'Substitution';
+  const mainOptions = isSub && benchIds.size ? squad.filter((p) => benchIds.has(p.id)) : squad;
+  const relatedOptions =
+    isSub && starterIds.size ? squad.filter((p) => starterIds.has(p.id)) : squad;
 
   const teamName = (id: string) =>
     id === match.homeTeamId ? homeName : id === match.awayTeamId ? awayName : id;
@@ -305,7 +328,7 @@ export function MatchEventsPanel({
               <option value="">
                 {squadQuery.isLoading ? 'Loading squad…' : 'Select player…'}
               </option>
-              {squad.map((p: Player) => (
+              {mainOptions.map((p: Player) => (
                 <option key={p.id} value={p.id}>
                   {p.shirtNumber ? `${p.shirtNumber}. ` : ''}
                   {p.name}
@@ -329,7 +352,7 @@ export function MatchEventsPanel({
                 disabled={squadQuery.isLoading}
               >
                 <option value="">Select player…</option>
-                {squad
+                {relatedOptions
                   .filter((p: Player) => p.id !== playerId)
                   .map((p: Player) => (
                     <option key={p.id} value={p.id}>

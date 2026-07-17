@@ -176,7 +176,7 @@ export default async function Page({ params }: Props) {
       )}
       <section className="py-8">
         <div className="max-w-3xl mx-auto px-4">
-          <MatchDetail slug={match} />
+          <MatchDetail slug={match} competition={competition} tab="info" />
         </div>
       </section>
     </div>
