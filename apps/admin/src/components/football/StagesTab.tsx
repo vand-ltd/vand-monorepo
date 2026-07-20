@@ -7,6 +7,7 @@ import {
   getSeasonEntries,
   createStagesBulk,
   createGroupsBulk,
+  updateStage,
   deleteStage,
   STAGE_TYPES,
   type Season,
@@ -18,7 +19,16 @@ import {
   type Team,
 } from '@org/api';
 import { toast } from 'sonner';
-import { Loader2, Plus, Trash2, Layers, Wand2 } from 'lucide-react';
+import {
+  Loader2,
+  Plus,
+  Trash2,
+  Layers,
+  Wand2,
+  Pencil,
+  ChevronUp,
+  ChevronDown,
+} from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,15 +46,15 @@ function errMessage(error: any, fallback: string) {
   return Array.isArray(m) ? m.join(', ') : m;
 }
 
-type StageRow = { name: string; type: StageType };
-const emptyStage: StageRow = { name: '', type: 'Knockout' };
+type StageRow = { name: string; type: StageType; order: string };
+const emptyStage: StageRow = { name: '', type: 'Knockout', order: '' };
 
 // A typical cup structure — one click instead of typing four rows.
 const CUP_PRESET: StageRow[] = [
-  { name: 'Group Stage', type: 'Group' },
-  { name: 'Quarter-final', type: 'Knockout' },
-  { name: 'Semi-final', type: 'Knockout' },
-  { name: 'Final', type: 'Knockout' },
+  { name: 'Group Stage', type: 'Group', order: '' },
+  { name: 'Quarter-final', type: 'Knockout', order: '' },
+  { name: 'Semi-final', type: 'Knockout', order: '' },
+  { name: 'Final', type: 'Knockout', order: '' },
 ];
 
 type GroupRow = { name: string; teamIds: string[] };
@@ -75,10 +85,10 @@ export function StagesTab({ seasonId, season }: { seasonId: string; season: Seas
   const createStagesMut = useMutation({
     mutationFn: () => {
       // order defaults to array position on the backend, but we send it explicitly.
-      const payload: StageInput[] = validStages.map((r, i) => ({
+      const payload: StageInput[] = validStages.map((r) => ({
         name: r.name.trim(),
         type: r.type,
-        order: i + 1,
+        ...(r.order.trim() ? { order: Number(r.order) } : {}),
       }));
       return createStagesBulk(seasonId, { stages: payload });
     },
@@ -88,6 +98,44 @@ export function StagesTab({ seasonId, season }: { seasonId: string; season: Seas
       qc.invalidateQueries({ queryKey: ['football', 'stages', seasonId] });
     },
     onError: (e) => toast.error(errMessage(e, 'Failed to create stages')),
+  });
+
+  // Stages in display order — `order` may be unset on older rows, so fall back
+  // to the array position rather than lumping them all together.
+  const orderedStages = [...stages].sort(
+    (a, b) => (a.order ?? Number.MAX_SAFE_INTEGER) - (b.order ?? Number.MAX_SAFE_INTEGER)
+  );
+  const orderOf = (s: Stage, i: number) => s.order ?? i + 1;
+
+  /* ------------------------------ Edit a stage ---------------------------- */
+  const [editId, setEditId] = useState('');
+  const [editRow, setEditRow] = useState<StageRow>({ ...emptyStage });
+
+  const updateStageMut = useMutation({
+    mutationFn: (vars: { id: string; payload: { name?: string; type?: StageType; order?: number } }) =>
+      updateStage(vars.id, vars.payload),
+    onSuccess: () => {
+      toast.success('Stage updated');
+      setEditId('');
+      qc.invalidateQueries({ queryKey: ['football', 'stages', seasonId] });
+    },
+    onError: (e) => toast.error(errMessage(e, 'Failed to update stage')),
+  });
+
+  // Swap this stage's order with its neighbour — beats typing order numbers.
+  const moveStageMut = useMutation({
+    mutationFn: async (vars: { index: number; dir: -1 | 1 }) => {
+      const { index, dir } = vars;
+      const a = orderedStages[index];
+      const b = orderedStages[index + dir];
+      if (!a || !b) return;
+      const aOrder = orderOf(a, index);
+      const bOrder = orderOf(b, index + dir);
+      await updateStage(a.id, { order: bOrder });
+      await updateStage(b.id, { order: aOrder });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['football', 'stages', seasonId] }),
+    onError: (e) => toast.error(errMessage(e, 'Failed to reorder stages')),
   });
 
   /* ------------------------------- Groups -------------------------------- */
@@ -168,36 +216,130 @@ export function StagesTab({ seasonId, season }: { seasonId: string; season: Seas
           </div>
         ) : stages.length > 0 ? (
           <ol className="mb-4 rounded-lg border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700">
-            {stages.map((s: Stage) => (
-              <li key={s.id} className="flex items-center gap-2 px-3 py-2 text-sm">
-                <span className="w-6 shrink-0 text-xs tabular-nums text-gray-400">
-                  {s.order ?? ''}
-                </span>
-                <span className="flex-1 truncate text-gray-900 dark:text-white">{s.name}</span>
-                <span
-                  className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold ${
-                    s.type === 'Group'
-                      ? 'bg-[#003153]/10 text-[#003153] dark:bg-[#F59E0B]/10 dark:text-[#F59E0B]'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300'
-                  }`}
-                >
-                  {s.type}
-                </span>
-                {s.type === 'Group' && (
-                  <span className="shrink-0 text-[11px] text-gray-400">
-                    {(s.groups ?? []).length} groups
+            {orderedStages.map((s: Stage, i: number) =>
+              editId === s.id ? (
+                <li key={s.id} className="flex flex-wrap items-center gap-2 px-3 py-2 text-sm">
+                  <input
+                    value={editRow.name}
+                    onChange={(e) => setEditRow((r) => ({ ...r, name: e.target.value }))}
+                    className={`${inputClass} flex-1 min-w-[140px] py-1`}
+                  />
+                  <select
+                    value={editRow.type}
+                    onChange={(e) =>
+                      setEditRow((r) => ({ ...r, type: e.target.value as StageType }))
+                    }
+                    className={`${inputClass} w-32 py-1`}
+                  >
+                    {STAGE_TYPES.map((tp) => (
+                      <option key={tp} value={tp}>
+                        {tp}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    min="1"
+                    value={editRow.order}
+                    onChange={(e) => setEditRow((r) => ({ ...r, order: e.target.value }))}
+                    placeholder="Order"
+                    title="Order (leave blank to keep)"
+                    className={`${inputClass} w-20 py-1 text-center`}
+                  />
+                  <button
+                    type="button"
+                    disabled={!editRow.name.trim() || updateStageMut.isPending}
+                    onClick={() =>
+                      updateStageMut.mutate({
+                        id: s.id,
+                        payload: {
+                          name: editRow.name.trim(),
+                          type: editRow.type,
+                          ...(editRow.order.trim() ? { order: Number(editRow.order) } : {}),
+                        },
+                      })
+                    }
+                    className="px-2 py-1 rounded-md bg-[#003153] hover:bg-[#005F73] text-white text-xs font-medium disabled:opacity-50"
+                  >
+                    {updateStageMut.isPending ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      'Save'
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditId('')}
+                    className="px-2 py-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                  >
+                    Cancel
+                  </button>
+                </li>
+              ) : (
+                <li key={s.id} className="flex items-center gap-2 px-3 py-2 text-sm">
+                  <span className="w-6 shrink-0 text-xs tabular-nums text-gray-400">
+                    {orderOf(s, i)}
                   </span>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setDeleteTarget(s)}
-                  title="Delete stage"
-                  className="shrink-0 p-1 rounded-md text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </li>
-            ))}
+                  <span className="flex-1 truncate text-gray-900 dark:text-white">{s.name}</span>
+                  <span
+                    className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                      s.type === 'Group'
+                        ? 'bg-[#003153]/10 text-[#003153] dark:bg-[#F59E0B]/10 dark:text-[#F59E0B]'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300'
+                    }`}
+                  >
+                    {s.type}
+                  </span>
+                  {s.type === 'Group' && (
+                    <span className="shrink-0 text-[11px] text-gray-400">
+                      {(s.groups ?? []).length} groups
+                    </span>
+                  )}
+                  {/* Reorder without thinking about numbers */}
+                  <button
+                    type="button"
+                    disabled={i === 0 || moveStageMut.isPending}
+                    onClick={() => moveStageMut.mutate({ index: i, dir: -1 })}
+                    title="Move up"
+                    className="shrink-0 p-1 rounded-md text-gray-400 hover:text-[#003153] dark:hover:text-[#F59E0B] hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30 disabled:hover:bg-transparent"
+                  >
+                    <ChevronUp className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    disabled={i === orderedStages.length - 1 || moveStageMut.isPending}
+                    onClick={() => moveStageMut.mutate({ index: i, dir: 1 })}
+                    title="Move down"
+                    className="shrink-0 p-1 rounded-md text-gray-400 hover:text-[#003153] dark:hover:text-[#F59E0B] hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30 disabled:hover:bg-transparent"
+                  >
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditId(s.id);
+                      setEditRow({
+                        name: s.name,
+                        type: s.type,
+                        order: s.order != null ? String(s.order) : '',
+                      });
+                    }}
+                    title="Edit stage"
+                    className="shrink-0 p-1 rounded-md text-gray-400 hover:text-[#003153] dark:hover:text-[#F59E0B] hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteTarget(s)}
+                    title="Delete stage"
+                    className="shrink-0 p-1 rounded-md text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </li>
+              )
+            )}
           </ol>
         ) : (
           <p className="mb-4 text-sm text-gray-400">No stages yet.</p>
@@ -233,6 +375,17 @@ export function StagesTab({ seasonId, season }: { seasonId: string; season: Seas
                   </option>
                 ))}
               </select>
+              <input
+                type="number"
+                min="1"
+                value={row.order}
+                onChange={(e) =>
+                  setStageRows((rs) => rs.map((r, j) => (j === i ? { ...r, order: e.target.value } : r)))
+                }
+                placeholder="Auto"
+                title="Order — leave blank to append after existing stages"
+                className={`${inputClass} w-20 text-center`}
+              />
               <button
                 type="button"
                 onClick={() => setStageRows((rs) => (rs.length === 1 ? rs : rs.filter((_, j) => j !== i)))}

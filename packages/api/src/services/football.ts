@@ -385,6 +385,15 @@ export async function createGroupsBulk(
   return (unwrap<any[]>(data) ?? []).map(normalizeGroup);
 }
 
+// PATCH /api/menyesha/stages/:stageId -> rename / retype / reorder a stage.
+export async function updateStage(
+  stageId: string,
+  payload: { name?: string; type?: StageType; order?: number }
+): Promise<Stage> {
+  const { data } = await api.patch(`/api/menyesha/stages/${stageId}`, payload);
+  return normalizeStage(unwrap<any>(data));
+}
+
 // DELETE /api/menyesha/stages/:stageId -> remove a stage (and its groups).
 export async function deleteStage(stageId: string): Promise<any> {
   const { data } = await api.delete(`/api/menyesha/stages/${stageId}`);
