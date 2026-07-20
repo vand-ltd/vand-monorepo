@@ -14,7 +14,8 @@ import {
 import { toPng } from 'html-to-image';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { Loader2, ArrowLeft, MapPin, ArrowUp, ArrowDown, Download } from 'lucide-react';
+import { Loader2, ArrowLeft, MapPin, ArrowUp, ArrowDown, Download, CheckCircle2 } from 'lucide-react';
+import { ShareButton } from '@/components/article/ShareButton';
 
 const LIVE_STATUSES = ['Live', 'HalfTime'];
 
@@ -42,6 +43,24 @@ function imgCorsFallback(e: React.SyntheticEvent<HTMLImageElement>) {
   const src = img.src;
   img.src = '';
   img.src = src;
+}
+
+// Wraps a player's name in a link to their profile when we have a slug.
+function PlayerLink({
+  slug,
+  className,
+  children,
+}: {
+  slug?: string | null;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  if (!slug) return <span className={className}>{children}</span>;
+  return (
+    <Link href={`/football/player/${slug}`} className={`${className ?? ''} hover:underline`}>
+      {children}
+    </Link>
+  );
 }
 
 // A referee's whistle (lucide has no whistle icon).
@@ -78,15 +97,24 @@ export function MatchDetail({
     refetchInterval: 30000,
   });
 
+  const home = (m as any)?.homeTeam;
+  const away = (m as any)?.awayTeam;
+  const shareTitle = m
+    ? `${teamName(home)} vs ${teamName(away)} — ${(m as any).season?.competition?.name ?? 'Rwanda Football'}`
+    : '';
+
   return (
     <div>
-      <Link
-        href="/football"
-        className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors mb-5"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t('backToFootball')}
-      </Link>
+      <div className="flex items-center justify-between gap-3 mb-5">
+        <Link
+          href="/football"
+          className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {t('backToFootball')}
+        </Link>
+        {m && <ShareButton title={shareTitle} path={`/football/${competition}/${slug}`} />}
+      </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-24">
@@ -389,15 +417,19 @@ function EventDetail({ e, alignRight }: { e: MatchEvent; alignRight: boolean }) 
   return (
     <div className={`min-w-0 ${alignRight ? 'text-right' : 'text-left'}`}>
       <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
-        {main ?? '—'}
+        <PlayerLink slug={e.player?.slug}>{main ?? '—'}</PlayerLink>
         {qualifier && <span className="ml-1 text-xs font-normal text-gray-400">({qualifier})</span>}
       </p>
       {/* Second line: assist for a goal, or the paired player for a substitution. */}
       {isGoal && e.relatedPlayer?.fullName && (
-        <p className="truncate text-xs text-gray-400">assist: {e.relatedPlayer.fullName}</p>
+        <p className="truncate text-xs text-gray-400">
+          assist: <PlayerLink slug={e.relatedPlayer.slug}>{e.relatedPlayer.fullName}</PlayerLink>
+        </p>
       )}
       {e.type === 'Substitution' && e.relatedPlayer?.fullName && (
-        <p className="truncate text-xs text-gray-400">for {e.relatedPlayer.fullName}</p>
+        <p className="truncate text-xs text-gray-400">
+          for <PlayerLink slug={e.relatedPlayer.slug}>{e.relatedPlayer.fullName}</PlayerLink>
+        </p>
       )}
       {e.type === 'MissedPenalty' && (
         <p className="truncate text-xs text-gray-400">missed penalty</p>
@@ -590,42 +622,103 @@ function MatchLineups({
   // Each block below the pitch gets its own separator line.
   const sectionClass = 'mt-4 border-t border-gray-100 dark:border-gray-700 pt-4';
 
-  return (
-    <div className="max-w-md mx-auto">
-      {/* Combined pitch: home on top (attacking down), away on bottom (attacking up) */}
-      <div
-        ref={captureRef}
-        className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
-      >
-        <TeamBar team={homeTeam} formation={home?.formation} accent="home" />
-        <CombinedPitch
-          homeStarters={homeStart}
-          homeFormation={home?.formation}
-          awayStarters={awayStart}
-          awayFormation={away?.formation}
-          homeCrest={crestUrl(homeTeam)}
-          awayCrest={crestUrl(awayTeam)}
-          badges={badges}
-        />
-        <TeamBar team={awayTeam} formation={away?.formation} accent="away" />
-      </div>
+  // Both teams same status → single status above; mixed → per-team badges.
+  const homeConf = !!home?.isConfirmed;
+  const awayConf = !!away?.isConfirmed;
+  const mixed = homeConf !== awayConf;
 
-      {/* Download the pitch as an image */}
-      <div className="mt-3 flex justify-center">
-        <button
-          type="button"
-          onClick={handleDownload}
-          disabled={downloading}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
-        >
-          {downloading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+  // The pitch needs a formation for both sides; otherwise fall back to a list.
+  const hasPitch = !!home?.formation && !!away?.formation;
+
+  return (
+    // The pitch is a fixed-ratio card; the list should use the full width available.
+    <div className={hasPitch ? 'max-w-md mx-auto' : 'w-full'}>
+      {/* Combined status (only when both teams agree) */}
+      {!mixed && (
+        <div className="mb-3 flex justify-center">
+          {homeConf ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+              <CheckCircle2 className="h-4 w-4" />
+              {t('confirmedLineups')}
+            </span>
           ) : (
-            <Download className="h-4 w-4" />
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-900/30 px-3 py-1 text-xs font-semibold text-amber-700 dark:text-amber-400">
+              {t('probableLineups')}
+            </span>
           )}
-          {t('downloadImage')}
-        </button>
-      </div>
+        </div>
+      )}
+
+      {hasPitch ? (
+        <>
+          {/* Combined pitch: home on top (attacking down), away on bottom (attacking up) */}
+          <div
+            ref={captureRef}
+            className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+          >
+            <TeamBar
+              team={homeTeam}
+              formation={home?.formation}
+              statusBadge={mixed ? (homeConf ? 'confirmed' : 'predicted') : null}
+              accent="home"
+              t={t}
+            />
+            <CombinedPitch
+              homeStarters={homeStart}
+              homeFormation={home?.formation}
+              awayStarters={awayStart}
+              awayFormation={away?.formation}
+              homeCrest={crestUrl(homeTeam)}
+              awayCrest={crestUrl(awayTeam)}
+              badges={badges}
+            />
+            <TeamBar
+              team={awayTeam}
+              formation={away?.formation}
+              statusBadge={mixed ? (awayConf ? 'confirmed' : 'predicted') : null}
+              accent="away"
+              t={t}
+            />
+          </div>
+
+          {/* Download the pitch as an image */}
+          <div className="mt-3 flex justify-center">
+            <button
+              type="button"
+              onClick={handleDownload}
+              disabled={downloading}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+            >
+              {downloading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+              {t('downloadImage')}
+            </button>
+          </div>
+        </>
+      ) : (
+        /* No formation for one/both teams — show a plain starting XI list */
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+          <div className="grid grid-cols-2 gap-4 sm:gap-6">
+            <StarterColumn
+              team={homeTeam}
+              formation={home?.formation}
+              starters={homeStart}
+              statusBadge={mixed ? (homeConf ? 'confirmed' : 'predicted') : null}
+              t={t}
+            />
+            <StarterColumn
+              team={awayTeam}
+              formation={away?.formation}
+              starters={awayStart}
+              statusBadge={mixed ? (awayConf ? 'confirmed' : 'predicted') : null}
+              t={t}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Substitutions made */}
       {(homeSubMoves.length > 0 || awaySubMoves.length > 0) && (
@@ -716,14 +809,24 @@ function SubMoveRow({ e, numberOf }: { e: MatchEvent; numberOf: Record<string, n
             <div className="flex items-center gap-1">
               <ArrowUp className="h-3 w-3 shrink-0 text-emerald-600 dark:text-emerald-400" />
               {num(inNum)}
-              <span className="truncate text-gray-900 dark:text-white">{inName}</span>
+              <PlayerLink
+                slug={e.player?.slug}
+                className="truncate text-gray-900 dark:text-white"
+              >
+                {inName}
+              </PlayerLink>
             </div>
           )}
           {outName && (
             <div className="flex items-center gap-1">
               <ArrowDown className="h-3 w-3 shrink-0 text-red-500" />
               {num(outNum)}
-              <span className="truncate text-gray-500 dark:text-gray-400">{outName}</span>
+              <PlayerLink
+                slug={e.relatedPlayer?.slug}
+                className="truncate text-gray-500 dark:text-gray-400"
+              >
+                {outName}
+              </PlayerLink>
             </div>
           )}
         </div>
@@ -735,11 +838,15 @@ function SubMoveRow({ e, numberOf }: { e: MatchEvent; numberOf: Record<string, n
 function TeamBar({
   team,
   formation,
+  statusBadge,
   accent,
+  t,
 }: {
   team: any;
   formation?: string;
+  statusBadge?: 'confirmed' | 'predicted' | null;
   accent: 'home' | 'away';
+  t: ReturnType<typeof useTranslations>;
 }) {
   const url = crestUrl(team);
   const dot = accent === 'home' ? 'bg-white ring-1 ring-black/10' : 'bg-[#003153]';
@@ -758,7 +865,99 @@ function TeamBar({
       ) : null}
       <span className="font-semibold text-sm truncate">{teamName(team)}</span>
       {formation && <span className="text-[11px] text-white/70 shrink-0">{formation}</span>}
+      {statusBadge && (
+        <span
+          className={`shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${
+            statusBadge === 'confirmed'
+              ? 'bg-emerald-400/25 text-emerald-100'
+              : 'bg-white/15 text-white/70'
+          }`}
+        >
+          {t(statusBadge)}
+        </span>
+      )}
     </div>
+  );
+}
+
+// Starting XI as a plain list (used when a formation is missing, so no pitch).
+function StarterColumn({
+  team,
+  formation,
+  starters,
+  statusBadge,
+  t,
+}: {
+  team: any;
+  formation?: string;
+  starters: LineupSlot[];
+  statusBadge?: 'confirmed' | 'predicted' | null;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  const url = crestUrl(team);
+  return (
+    <div className="min-w-0">
+      <div className="flex items-center gap-2 mb-3 min-w-0">
+        {url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={url}
+            alt=""
+            className="h-6 w-6 rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0"
+          />
+        ) : (
+          <span className="h-6 w-6 rounded-full bg-[#003153] text-white text-[9px] font-bold flex items-center justify-center shrink-0">
+            {initials(team)}
+          </span>
+        )}
+        <span className="font-semibold text-sm text-gray-900 dark:text-white truncate">
+          {teamName(team)}
+        </span>
+        {formation && (
+          <span className="text-[11px] text-gray-400 shrink-0">{formation}</span>
+        )}
+        {statusBadge && (
+          <span
+            className={`shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${
+              statusBadge === 'confirmed'
+                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400'
+                : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'
+            }`}
+          >
+            {t(statusBadge)}
+          </span>
+        )}
+      </div>
+      {starters.length === 0 ? (
+        <p className="text-xs text-gray-400">{t('lineupUnavailable')}</p>
+      ) : (
+        <ul className="divide-y divide-gray-100 dark:divide-gray-700">
+          {starters.map((s) => (
+            <StarterRow key={s.playerId} slot={s} />
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function StarterRow({ slot }: { slot: LineupSlot }) {
+  const pos = slotPosition(slot);
+  return (
+    <li className="flex items-center gap-2 text-sm min-w-0 py-1.5">
+      <span className="shrink-0 w-5 text-center text-xs tabular-nums text-gray-400">
+        {slot.shirtNumber ?? ''}
+      </span>
+      <span className="flex-1 min-w-0">
+        <PlayerLink
+          slug={slot.player?.slug}
+          className="block truncate text-gray-900 dark:text-white"
+        >
+          {slot.player?.fullName ?? '—'}
+        </PlayerLink>
+        {pos && <span className="block truncate text-[10px] text-gray-400">{pos}</span>}
+      </span>
+    </li>
   );
 }
 
@@ -774,13 +973,14 @@ function BenchRow({ slot, inMinute }: { slot: LineupSlot; inMinute?: string }) {
         {slot.shirtNumber ?? ''}
       </span>
       <span className="flex-1 min-w-0">
-        <span
+        <PlayerLink
+          slug={slot.player?.slug}
           className={`block truncate ${
             cameOn ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'
           }`}
         >
           {slot.player?.fullName ?? '—'}
-        </span>
+        </PlayerLink>
         {(pos || cameOn) && (
           <span className="flex items-center gap-1 text-[10px] text-gray-400">
             {pos && <span>{pos}</span>}
@@ -1054,21 +1254,23 @@ function Jersey({
       ? 'bg-white text-[#003153] ring-black/10'
       : 'bg-[#003153] text-white ring-white/20';
   return (
-    <div
-      className="absolute flex flex-col items-center gap-0.5 -translate-x-1/2 -translate-y-1/2"
-      style={style}
-    >
-      <span className="relative">
-        <span
-          className={`h-5 w-5 sm:h-7 sm:w-7 rounded-full text-[9px] sm:text-[11px] font-bold flex items-center justify-center shadow-md ring-1 ${kit}`}
-        >
-          {label}
+    <div className="absolute -translate-x-1/2 -translate-y-1/2" style={style}>
+      <PlayerLink
+        slug={slot.player?.slug}
+        className="flex flex-col items-center gap-0.5 no-underline"
+      >
+        <span className="relative">
+          <span
+            className={`h-5 w-5 sm:h-7 sm:w-7 rounded-full text-[9px] sm:text-[11px] font-bold flex items-center justify-center shadow-md ring-1 ${kit}`}
+          >
+            {label}
+          </span>
+          {badge && <PlayerBadges badge={badge} />}
         </span>
-        {badge && <PlayerBadges badge={badge} />}
-      </span>
-      <span className="whitespace-nowrap text-[8px] sm:text-[10px] font-bold leading-none text-white">
-        {shortPlayerName(slot.player?.fullName) || '—'}
-      </span>
+        <span className="whitespace-nowrap text-[8px] sm:text-[10px] font-bold leading-none text-white">
+          {shortPlayerName(slot.player?.fullName) || '—'}
+        </span>
+      </PlayerLink>
     </div>
   );
 }

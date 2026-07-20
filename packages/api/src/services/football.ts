@@ -120,6 +120,10 @@ export interface Match {
   kickoffAt: string;
   status: MatchStatus;
   referee?: string | null;
+  stageId?: string | null;
+  groupId?: string | null;
+  stage?: { id: string; name: string; type?: StageType } | null;
+  group?: { id: string; name: string } | null;
   homeScore?: number | null;
   awayScore?: number | null;
   minute?: number | null;
@@ -194,6 +198,15 @@ export async function createSeason(payload: {
   return unwrap<Season>(data);
 }
 
+// PATCH /api/menyesha/seasons/:id -> rename a season or mark it as current.
+export async function updateSeason(
+  seasonId: string,
+  payload: { name?: string; isCurrent?: boolean }
+): Promise<Season> {
+  const { data } = await api.patch(`/api/menyesha/seasons/${seasonId}`, payload);
+  return unwrap<Season>(data);
+}
+
 export interface TeamInput {
   name: string;
   shortName?: string;
@@ -235,10 +248,20 @@ export interface PlayerInput {
   photo?: string; // image URL from uploadMedia().url (plain URL, not a media id)
 }
 
+// Reuse an existing player for a new season (no new Players row — just a
+// SquadMembership). Mixed freely with PlayerInput entries in one call.
+export interface ExistingSquadPlayerInput {
+  playerId: string;
+  shirtNumber?: number;
+  position?: string;
+}
+
+export type SquadPlayerInput = PlayerInput | ExistingSquadPlayerInput;
+
 export async function addSquadPlayers(
   teamId: string,
   seasonId: string,
-  payload: { players: PlayerInput[] }
+  payload: { players: SquadPlayerInput[] }
 ): Promise<Player[]> {
   const { data } = await api.post(
     `/api/menyesha/teams/${teamId}/squad/players`,
@@ -260,11 +283,19 @@ export interface MatchInput {
   kickoffAt: string;
   venueId?: string;
   referee?: string;
+  // Per-fixture overrides of the top-level stage/group/round.
+  stageId?: string;
+  groupId?: string;
+  round?: string;
 }
 
+// stageId/groupId/round at the top apply to every fixture; each fixture may
+// override them, so one call can cover several groups. Knockout = stageId only.
 export async function createMatchesBulk(payload: {
   seasonId: string;
-  round: string;
+  round?: string;
+  stageId?: string;
+  groupId?: string;
   matches: MatchInput[];
 }): Promise<Match[]> {
   const { data } = await api.post('/api/menyesha/matches/bulk', payload);
@@ -283,6 +314,87 @@ export async function addSeasonEntries(
 export async function removeSeasonEntry(seasonId: string, teamId: string): Promise<any> {
   const { data } = await api.delete(`/api/menyesha/seasons/${seasonId}/entries/${teamId}`);
   return unwrap<any>(data);
+}
+
+/* ------------------------------ Stages & groups ---------------------------- */
+
+export type StageType = 'Group' | 'Knockout';
+export const STAGE_TYPES: StageType[] = ['Group', 'Knockout'];
+
+export interface StageGroup {
+  id: string;
+  stageId?: string;
+  name: string;
+  order?: number;
+  teams?: Team[];
+}
+
+export interface Stage {
+  id: string;
+  seasonId?: string;
+  name: string;
+  type: StageType;
+  order?: number;
+  groups?: StageGroup[];
+}
+
+export interface StageInput {
+  name: string;
+  type: StageType;
+  order?: number;
+}
+
+export interface GroupInput {
+  name: string;
+  order?: number;
+  teamIds?: string[];
+}
+
+// Group rows may wrap the team ({ team: {...} }) like season entries do.
+function normalizeGroup(g: any): StageGroup {
+  const teams = (g?.teams ?? []).map((r: any) => (r && r.team ? r.team : r)).filter((t: any) => t?.id);
+  return { id: g?.id, stageId: g?.stageId, name: g?.name, order: g?.order, teams };
+}
+
+function normalizeStage(s: any): Stage {
+  return {
+    id: s?.id,
+    seasonId: s?.seasonId,
+    name: s?.name,
+    type: s?.type,
+    order: s?.order,
+    groups: (s?.groups ?? []).map(normalizeGroup),
+  };
+}
+
+// POST /api/menyesha/seasons/:seasonId/stages/bulk -> whole cup structure at once.
+export async function createStagesBulk(
+  seasonId: string,
+  payload: { stages: StageInput[] }
+): Promise<Stage[]> {
+  const { data } = await api.post(`/api/menyesha/seasons/${seasonId}/stages/bulk`, payload);
+  return (unwrap<any[]>(data) ?? []).map(normalizeStage);
+}
+
+// POST /api/menyesha/stages/:stageId/groups/bulk -> groups + their teams at once.
+export async function createGroupsBulk(
+  stageId: string,
+  payload: { groups: GroupInput[] }
+): Promise<StageGroup[]> {
+  const { data } = await api.post(`/api/menyesha/stages/${stageId}/groups/bulk`, payload);
+  return (unwrap<any[]>(data) ?? []).map(normalizeGroup);
+}
+
+// GET /api/menyesha/seasons/:seasonId/stages -> stages (with groups when returned).
+export async function getSeasonStages(seasonId: string): Promise<Stage[]> {
+  const { data } = await api.get(`/api/menyesha/seasons/${seasonId}/stages`);
+  return (unwrap<any[]>(data) ?? []).map(normalizeStage);
+}
+
+// GET /api/menyesha/stages/:stageId/groups -> groups in a stage, with teams.
+export async function getStageGroups(stageId: string): Promise<StageGroup[]> {
+  const { data } = await api.get(`/api/menyesha/stages/${stageId}/groups`);
+  return (unwrap<any[]>(data) ?? []).map(normalizeGroup);
 }
 
 export interface VenueInput {
@@ -403,23 +515,44 @@ export interface StandingRow {
   form?: string[]; // recent results, e.g. ['W','D','L']
 }
 
-function extractStandings(payload: any): StandingRow[] {
-  if (Array.isArray(payload)) return payload as StandingRow[];
-  return (payload?.standings ?? []) as StandingRow[];
+export interface StandingsGroup {
+  group: {
+    id: string;
+    name: string;
+    order?: number;
+    stage?: { id: string; name: string; order?: number };
+  };
+  standings: StandingRow[];
 }
 
-// GET /api/menyesha/seasons/:id/standings -> { season, standings: [...] }
-export async function getStandings(seasonId: string): Promise<StandingRow[]> {
+// A season is either a league (standings filled) or a group stage (groups filled)
+// — exactly one is populated. Rendering rule: groups.length ? groups : standings.
+export interface StandingsResult {
+  standings: StandingRow[];
+  groups: StandingsGroup[];
+}
+
+function extractStandings(payload: any): StandingsResult {
+  // Tolerate a bare array (older shape) as a plain league table.
+  if (Array.isArray(payload)) return { standings: payload as StandingRow[], groups: [] };
+  return {
+    standings: (payload?.standings ?? []) as StandingRow[],
+    groups: (payload?.groups ?? []) as StandingsGroup[],
+  };
+}
+
+// GET /api/menyesha/seasons/:id/standings -> { season, standings, groups }
+export async function getStandings(seasonId: string): Promise<StandingsResult> {
   const { data } = await api.get(`/api/menyesha/seasons/${seasonId}/standings`);
   return extractStandings(unwrap<any>(data));
 }
 
-// GET /api/menyesha/competitions/:id/standings?seasonId= -> one league's table
-// for a given season (server resolves current season if seasonId omitted).
+// GET /api/menyesha/competitions/:id/standings?seasonId= -> the table for a
+// season (server resolves the current season if seasonId is omitted).
 export async function getCompetitionStandings(
   competitionId: string,
   seasonId?: string
-): Promise<StandingRow[]> {
+): Promise<StandingsResult> {
   const { data } = await api.get(`/api/menyesha/competitions/${competitionId}/standings`, {
     params: seasonId ? { seasonId } : undefined,
   });
@@ -470,6 +603,156 @@ export async function getSquad(teamId: string, seasonId?: string): Promise<Playe
     .filter((p: Player) => p && (p.id || p.name));
 }
 
+/* ----------------------------- Player profile ----------------------------- */
+
+export interface PlayerTeamRef {
+  id: string;
+  name: string;
+  shortName?: string;
+  slug?: string;
+  logo?: string | null;
+}
+
+export interface PlayerSeasonRef {
+  id: string;
+  name: string;
+  startDate?: string | null;
+  competition?: { id: string; name: string; slug?: string };
+}
+
+export interface PlayerStatLine {
+  goals: number;
+  assists: number;
+  appearances: number;
+  yellowCards: number;
+  redCards: number;
+}
+
+export interface PlayerClubRef {
+  source?: string;
+  team?: PlayerTeamRef | null;
+  clubName?: string;
+  country?: string | null;
+  season?: { id: string; name: string };
+}
+
+export interface PlayerTransfer {
+  date?: string | null;
+  year?: number | null;
+  isLoan?: boolean;
+  from?: PlayerClubRef | null;
+  to?: PlayerClubRef | null;
+}
+
+export interface PlayerCareerEntry extends PlayerStatLine {
+  source?: string;
+  team?: PlayerTeamRef | null;
+  clubName?: string;
+  country?: string | null;
+  joinedAt?: string | null;
+  leftAt?: string | null;
+  startYear?: number | null;
+  endYear?: number | null;
+  isLoan?: boolean;
+  seasons?: { id: string; name: string }[];
+  note?: string | null;
+}
+
+export interface PlayerProfile {
+  player: {
+    id: string;
+    fullName: string;
+    slug: string;
+    position?: string | null;
+    dateOfBirth?: string | null;
+    placeOfBirth?: string | null;
+    nationality?: string | null;
+    photo?: string | null;
+    height?: number | null;
+    bio?: string | null;
+    isActive?: boolean;
+  };
+  currentTeam?: {
+    shirtNumber?: number | null;
+    position?: string | null;
+    joinedAt?: string | null;
+    leftAt?: string | null;
+    team?: PlayerTeamRef;
+    season?: PlayerSeasonRef;
+  } | null;
+  transfers: PlayerTransfer[];
+  career: PlayerCareerEntry[];
+  stats: {
+    totals: PlayerStatLine;
+    byTeam: (PlayerStatLine & { team?: PlayerTeamRef; seasons?: number })[];
+    bySeason: (PlayerStatLine & { season?: PlayerSeasonRef; team?: PlayerTeamRef })[];
+  };
+}
+
+// GET /api/menyesha/players/slug/:slug -> full player profile.
+export async function getPlayerProfile(slug: string): Promise<PlayerProfile> {
+  const { data } = await api.get(`/api/menyesha/players/slug/${slug}`);
+  const p = unwrap<any>(data);
+  return {
+    player: p?.player ?? {},
+    currentTeam: p?.currentTeam ?? null,
+    transfers: p?.transfers ?? [],
+    career: p?.career ?? [],
+    stats: {
+      totals: p?.stats?.totals ?? {
+        goals: 0,
+        assists: 0,
+        appearances: 0,
+        yellowCards: 0,
+        redCards: 0,
+      },
+      byTeam: p?.stats?.byTeam ?? [],
+      bySeason: p?.stats?.bySeason ?? [],
+    },
+  };
+}
+
+export interface SeasonPlayerRow {
+  membershipId?: string;
+  playerId: string;
+  name: string;
+  slug?: string;
+  photo?: string | null;
+  nationality?: string | null;
+  shirtNumber?: number | null;
+  position?: string | null;
+  team?: { id: string; name: string; shortName?: string; logo?: string | null };
+}
+
+// GET /api/menyesha/seasons/:id/players?search= -> every player registered in a
+// season (across all teams), from the squad-membership rows.
+export async function getSeasonPlayers(
+  seasonId: string,
+  params?: { search?: string }
+): Promise<SeasonPlayerRow[]> {
+  const { data } = await api.get(`/api/menyesha/seasons/${seasonId}/players`, {
+    params: params && Object.keys(params).length ? params : undefined,
+  });
+  const rows = unwrap<any[]>(data) ?? [];
+  return rows
+    .map((r: any) => {
+      const pl = r?.player ?? {};
+      return {
+        membershipId: r?.id,
+        playerId: pl.id ?? r?.playerId,
+        name: pl.fullName ?? pl.name ?? '',
+        slug: pl.slug,
+        photo: pl.photo ?? null,
+        nationality: pl.nationality ?? null,
+        // Row-level shirt/position are season-specific; fall back to the player's.
+        shirtNumber: r?.shirtNumber ?? null,
+        position: r?.position ?? pl.position ?? null,
+        team: r?.team,
+      } as SeasonPlayerRow;
+    })
+    .filter((r: SeasonPlayerRow) => !!r.playerId);
+}
+
 export interface PlayersQuery {
   search?: string;
   position?: PlayerPosition | string;
@@ -496,6 +779,8 @@ export async function getMatches(params?: {
   seasonId?: string;
   competitionId?: string;
   teamId?: string;
+  stageId?: string;
+  groupId?: string;
   order?: 'asc' | 'desc';
 }): Promise<Match[]> {
   const { data } = await api.get('/api/menyesha/matches', {
@@ -531,8 +816,9 @@ export interface LineupPlayerInput {
 }
 
 export interface LineupInput {
-  formation: string;
+  formation?: string;
   coach?: string;
+  isConfirmed?: boolean;
   players: LineupPlayerInput[];
 }
 
@@ -564,6 +850,7 @@ export interface MatchLineup {
   teamId: string;
   formation?: string;
   coach?: string | null;
+  isConfirmed?: boolean;
   team?: { id: string; name: string; shortName?: string; logo?: string | { url?: string } | null };
   slots: LineupSlot[];
 }
@@ -600,6 +887,7 @@ export async function getMatchLineup(
     teamId: p.teamId ?? teamId,
     formation: p.formation,
     coach: p.coach ?? null,
+    isConfirmed: !!p.isConfirmed,
     team: p.team,
     slots,
   };

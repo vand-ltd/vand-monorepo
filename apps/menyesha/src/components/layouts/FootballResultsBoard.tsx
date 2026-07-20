@@ -9,9 +9,12 @@ import {
   getCompetitionStandings,
   getTopScorers,
   getTopAssists,
+  getSeasonStages,
   type Match,
   type StandingRow,
+  type StandingsResult,
   type StatLeaderRow,
+  type Stage,
 } from '@org/api';
 import { useLocale, useTranslations } from 'next-intl';
 import { Loader2, ChevronRight, ChevronLeft, ArrowLeft, Calendar } from 'lucide-react';
@@ -137,6 +140,7 @@ const COMPETITION_TABS = [
   'fixtures',
   'results',
   'standings',
+  'stages',
   'scorers',
   'assists',
 ] as const;
@@ -216,16 +220,6 @@ export function FootballResultsBoard({
     };
   }, [recentQuery.data]);
 
-  // Competition list from the day's matches.
-  const competitions = useMemo(() => {
-    const map = new Map<string, { id: string; name: string; slug?: string }>();
-    for (const m of dayMatches) {
-      const c = (m as any).season?.competition;
-      if (c?.id && !map.has(c.id)) map.set(c.id, { id: c.id, name: c.name, slug: c.slug });
-    }
-    return Array.from(map.values());
-  }, [dayMatches]);
-
   // All seasons (each with competition slug/id) — a date-less resolver for
   // /football/<competition>/<season> URLs, and the source for the season nav.
   const allSeasonsQuery = useQuery({
@@ -234,6 +228,22 @@ export function FootballResultsBoard({
   });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const allSeasons = (allSeasonsQuery.data ?? []) as any[];
+
+  // Every competition that has a season — so cups with no fixtures yet (e.g. a
+  // group stage that hasn't been scheduled) are still reachable. Falls back to
+  // whatever the day's matches expose.
+  const competitions = useMemo(() => {
+    const map = new Map<string, { id: string; name: string; slug?: string }>();
+    for (const s of allSeasons) {
+      const c = s.competition;
+      if (c?.id && !map.has(c.id)) map.set(c.id, { id: c.id, name: c.name, slug: c.slug });
+    }
+    for (const m of dayMatches) {
+      const c = (m as any).season?.competition;
+      if (c?.id && !map.has(c.id)) map.set(c.id, { id: c.id, name: c.name, slug: c.slug });
+    }
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [allSeasons, dayMatches]);
   const seasons = useMemo(
     () => allSeasons.filter((s) => (s.competitionId ?? s.competition?.id) === competitionId),
     [allSeasons, competitionId]
@@ -334,6 +344,17 @@ export function FootballResultsBoard({
     queryFn: () => getTopAssists(selectedSeasonId),
     enabled: !!selectedSeasonId && view === 'assists',
   });
+
+  // Cup structure (stages + groups). Leagues have none, so the tab is hidden then.
+  const stagesQuery = useQuery({
+    queryKey: ['season-stages', selectedSeasonId],
+    queryFn: () => getSeasonStages(selectedSeasonId),
+    enabled: !!selectedSeasonId,
+    retry: false,
+  });
+  const stageList = stagesQuery.data ?? [];
+  const hasStages = stageList.length > 0;
+  const visibleTabs = COMPETITION_TABS.filter((v) => v !== 'stages' || hasStages);
 
   // Desktop scroll arrows for the competition tab bar (mobile scrolls by touch).
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -514,7 +535,7 @@ export function FootballResultsBoard({
               onScroll={updateTabArrows}
               className="flex flex-nowrap overflow-x-auto no-scrollbar gap-1 rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5"
             >
-              {COMPETITION_TABS.map((v) => (
+              {visibleTabs.map((v) => (
                 <button
                   key={v}
                   type="button"
@@ -593,6 +614,8 @@ export function FootballResultsBoard({
         <StatLeaders query={scorersQuery} metric="goals" t={t} />
       ) : competitionId && view === 'assists' ? (
         <StatLeaders query={assistsQuery} metric="assists" t={t} />
+      ) : competitionId && view === 'stages' ? (
+        <StagesView stages={stageList} loading={stagesQuery.isLoading} t={t} />
       ) : listLoading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-7 w-7 animate-spin text-[#003153] dark:text-[#F59E0B]" />
@@ -726,14 +749,18 @@ function FallbackSection({
   );
 }
 
+// A season is either a league (standings) or a group stage (groups) — exactly
+// one is populated, so: groups.length ? one table per group : a single table.
 function StandingsTable({
   query,
   t,
 }: {
-  query: { data?: StandingRow[]; isLoading: boolean };
+  query: { data?: StandingsResult; isLoading: boolean };
   t: ReturnType<typeof useTranslations>;
 }) {
-  const rows = query.data ?? [];
+  const rows = query.data?.standings ?? [];
+  const groups = query.data?.groups ?? [];
+
   if (query.isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -741,13 +768,47 @@ function StandingsTable({
       </div>
     );
   }
-  if (rows.length === 0) {
+  if (groups.length === 0 && rows.length === 0) {
     return (
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 py-16 text-center">
         <p className="text-sm text-gray-500 dark:text-gray-400">{t('noStandings')}</p>
       </div>
     );
   }
+
+  if (groups.length > 0) {
+    const ordered = [...groups].sort(
+      (a, b) => (a.group?.order ?? 99) - (b.group?.order ?? 99)
+    );
+    return (
+      <div className="space-y-6">
+        {ordered.map((g) => (
+          <section key={g.group?.id ?? g.group?.name}>
+            <div className="flex items-center gap-2 mb-2">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                {g.group?.name}
+              </h3>
+              {g.group?.stage?.name && (
+                <span className="text-[11px] text-gray-400">{g.group.stage.name}</span>
+              )}
+            </div>
+            <StandingsGrid rows={g.standings ?? []} t={t} />
+          </section>
+        ))}
+      </div>
+    );
+  }
+
+  return <StandingsGrid rows={rows} t={t} />;
+}
+
+function StandingsGrid({
+  rows,
+  t,
+}: {
+  rows: StandingRow[];
+  t: ReturnType<typeof useTranslations>;
+}) {
   const th = 'px-2 py-2 text-center font-medium';
   const td = 'px-2 py-2.5 text-center tabular-nums text-gray-600 dark:text-gray-300';
   // Pinned (sticky) first columns keep team visible while the stats scroll.
@@ -801,6 +862,90 @@ function StandingsTable({
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+// Cup structure: each stage in order, with its groups and their teams.
+function StagesView({
+  stages,
+  loading,
+  t,
+}: {
+  stages: Stage[];
+  loading: boolean;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-7 w-7 animate-spin text-[#003153] dark:text-[#F59E0B]" />
+      </div>
+    );
+  }
+  if (stages.length === 0) {
+    return (
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 py-16 text-center">
+        <p className="text-sm text-gray-500 dark:text-gray-400">{t('noStages')}</p>
+      </div>
+    );
+  }
+
+  const ordered = [...stages].sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
+
+  return (
+    <div className="space-y-6">
+      {ordered.map((s) => (
+        <section key={s.id}>
+          <div className="flex items-center gap-2 mb-2">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{s.name}</h3>
+            <span
+              className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                s.type === 'Group'
+                  ? 'bg-[#003153]/10 text-[#003153] dark:bg-[#F59E0B]/10 dark:text-[#F59E0B]'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300'
+              }`}
+            >
+              {s.type}
+            </span>
+          </div>
+
+          {(s.groups ?? []).length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[...(s.groups ?? [])]
+                .sort((a, b) => (a.order ?? 99) - (b.order ?? 99))
+                .map((g) => (
+                  <div
+                    key={g.id}
+                    className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden"
+                  >
+                    <div className="border-b border-gray-100 dark:border-gray-700 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                      {g.name}
+                    </div>
+                    {(g.teams ?? []).length === 0 ? (
+                      <p className="px-3 py-3 text-xs text-gray-400">{t('noTeams')}</p>
+                    ) : (
+                      <ul className="divide-y divide-gray-100 dark:divide-gray-700">
+                        {(g.teams ?? []).map((team) => (
+                          <li key={team.id} className="flex items-center gap-2 px-3 py-2 text-sm">
+                            <Crest team={team} />
+                            <span className="truncate text-gray-900 dark:text-white">
+                              {teamName(team)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+            </div>
+          ) : (
+            <p className="rounded-xl border border-gray-200 dark:border-gray-700 px-3 py-4 text-xs text-gray-400">
+              {t('noGroups')}
+            </p>
+          )}
+        </section>
+      ))}
     </div>
   );
 }
@@ -868,9 +1013,18 @@ function StatLeaders({
                 <span className="flex items-center gap-2.5 min-w-0">
                   <PlayerAvatar player={r.player} />
                   <span className="min-w-0">
-                    <span className="block truncate font-medium text-gray-900 dark:text-white">
-                      {r.player?.fullName}
-                    </span>
+                    {r.player?.slug ? (
+                      <Link
+                        href={`/football/player/${r.player.slug}`}
+                        className="block truncate font-medium text-gray-900 dark:text-white hover:underline"
+                      >
+                        {r.player.fullName}
+                      </Link>
+                    ) : (
+                      <span className="block truncate font-medium text-gray-900 dark:text-white">
+                        {r.player?.fullName}
+                      </span>
+                    )}
                     <span className="flex items-center gap-1 text-xs text-gray-400 min-w-0">
                       <Crest team={r.team} />
                       <span className="truncate">{teamName(r.team)}</span>

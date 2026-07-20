@@ -6,6 +6,7 @@ import {
   getSeasonEntries,
   getVenues,
   getMatches,
+  getSeasonStages,
   createMatchesBulk,
   updateMatch,
   deleteMatch,
@@ -44,8 +45,16 @@ type FixtureRow = {
   kickoff: string;
   venueId: string;
   referee: string;
+  groupId: string; // per-fixture override; '' = use the top-level group
 };
-const emptyRow: FixtureRow = { homeTeamId: '', awayTeamId: '', kickoff: '', venueId: '', referee: '' };
+const emptyRow: FixtureRow = {
+  homeTeamId: '',
+  awayTeamId: '',
+  kickoff: '',
+  venueId: '',
+  referee: '',
+  groupId: '',
+};
 
 export function FixturesTab({ seasonId, season }: { seasonId: string; season: Season | null }) {
   const qc = useQueryClient();
@@ -71,9 +80,31 @@ export function FixturesTab({ seasonId, season }: { seasonId: string; season: Se
     enabled: !!seasonId,
   });
 
+  // Cup structure — lets fixtures be tagged with a stage and (for group stages) a group.
+  const stagesQuery = useQuery({
+    queryKey: ['football', 'stages', seasonId],
+    queryFn: () => getSeasonStages(seasonId),
+    enabled: !!seasonId,
+    retry: false,
+  });
+  const stages = stagesQuery.data ?? [];
+
   /* ----------------------------- Bulk fixtures --------------------------- */
   const [round, setRound] = useState('Matchday 1');
+  const [stageId, setStageId] = useState('');
+  const [groupId, setGroupId] = useState('');
   const [rows, setRows] = useState<FixtureRow[]>([{ ...emptyRow }]);
+
+  const activeStage = stages.find((s) => s.id === stageId) ?? null;
+  const stageGroups = activeStage?.groups ?? [];
+
+  // Only teams in the effective group can play a group fixture.
+  const teamsForRow = (row: FixtureRow): Team[] => {
+    const gid = row.groupId || groupId;
+    if (!gid) return teams;
+    const g = stageGroups.find((x) => x.id === gid);
+    return g?.teams?.length ? (g.teams as Team[]) : teams;
+  };
   const validRows = rows.filter(
     (r) => r.homeTeamId && r.awayTeamId && r.homeTeamId !== r.awayTeamId && r.kickoff
   );
@@ -86,8 +117,17 @@ export function FixturesTab({ seasonId, season }: { seasonId: string; season: Se
         kickoffAt: new Date(r.kickoff).toISOString(),
         ...(r.venueId ? { venueId: r.venueId } : {}),
         ...(r.referee.trim() ? { referee: r.referee.trim() } : {}),
+        // Per-fixture group override, so one call can cover several groups.
+        ...(r.groupId && r.groupId !== groupId ? { groupId: r.groupId } : {}),
       }));
-      return createMatchesBulk({ seasonId, round: round.trim(), matches });
+      return createMatchesBulk({
+        seasonId,
+        round: round.trim(),
+        // Knockout fixtures pass a stage only; group fixtures add the group.
+        ...(stageId ? { stageId } : {}),
+        ...(groupId ? { groupId } : {}),
+        matches,
+      });
     },
     onSuccess: () => {
       toast.success('Fixtures created');
@@ -124,18 +164,87 @@ export function FixturesTab({ seasonId, season }: { seasonId: string; season: Se
           </p>
         ) : (
           <>
-            <div className="mb-3 max-w-xs">
-              <label className={labelClass}>Round</label>
-              <input
-                value={round}
-                onChange={(e) => setRound(e.target.value)}
-                placeholder="e.g. Matchday 1"
-                className={inputClass}
-              />
+            <div className="mb-3 flex flex-wrap gap-3">
+              <div className="max-w-xs flex-1 min-w-[10rem]">
+                <label className={labelClass}>Round</label>
+                <input
+                  value={round}
+                  onChange={(e) => setRound(e.target.value)}
+                  placeholder="e.g. Matchday 1"
+                  className={inputClass}
+                />
+              </div>
+              {stages.length > 0 && (
+                <>
+                  <div className="max-w-xs flex-1 min-w-[10rem]">
+                    <label className={labelClass}>Stage</label>
+                    <select
+                      value={stageId}
+                      onChange={(e) => {
+                        setStageId(e.target.value);
+                        setGroupId('');
+                        setRows((rs) => rs.map((r) => ({ ...r, groupId: '' })));
+                      }}
+                      className={inputClass}
+                    >
+                      <option value="">No stage (league)</option>
+                      {stages.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name} · {s.type}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {stageGroups.length > 0 && (
+                    <div className="max-w-xs flex-1 min-w-[10rem]">
+                      <label className={labelClass}>Group</label>
+                      <select
+                        value={groupId}
+                        onChange={(e) => {
+                          setGroupId(e.target.value);
+                          setRows((rs) => rs.map((r) => ({ ...r, groupId: '' })));
+                        }}
+                        className={inputClass}
+                      >
+                        <option value="">Per-fixture (set below)</option>
+                        {stageGroups.map((g) => (
+                          <option key={g.id} value={g.id}>
+                            {g.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
             <div className="space-y-2">
               {rows.map((row, i) => (
                 <div key={i} className="flex flex-wrap items-center gap-2">
+                  {/* Per-fixture group — only when a group stage is selected and
+                      no single group was chosen above. */}
+                  {stageGroups.length > 0 && !groupId && (
+                    <select
+                      value={row.groupId}
+                      onChange={(e) =>
+                        setRows((rs) =>
+                          rs.map((r, j) =>
+                            j === i
+                              ? { ...r, groupId: e.target.value, homeTeamId: '', awayTeamId: '' }
+                              : r
+                          )
+                        )
+                      }
+                      className={`${inputClass} w-32`}
+                    >
+                      <option value="">Group…</option>
+                      {stageGroups.map((g) => (
+                        <option key={g.id} value={g.id}>
+                          {g.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                   <select
                     value={row.homeTeamId}
                     onChange={(e) =>
@@ -144,7 +253,7 @@ export function FixturesTab({ seasonId, season }: { seasonId: string; season: Se
                     className={`${inputClass} flex-1 min-w-[140px]`}
                   >
                     <option value="">Home team…</option>
-                    {teams.map((t: Team) => (
+                    {teamsForRow(row).map((t: Team) => (
                       <option key={t.id} value={t.id} disabled={t.id === row.awayTeamId}>
                         {t.name}
                       </option>
@@ -159,7 +268,7 @@ export function FixturesTab({ seasonId, season }: { seasonId: string; season: Se
                     className={`${inputClass} flex-1 min-w-[140px]`}
                   >
                     <option value="">Away team…</option>
-                    {teams.map((t: Team) => (
+                    {teamsForRow(row).map((t: Team) => (
                       <option key={t.id} value={t.id} disabled={t.id === row.homeTeamId}>
                         {t.name}
                       </option>
@@ -330,6 +439,11 @@ function MatchRow({
     <div className="rounded-lg border border-gray-200 dark:border-gray-700">
     <div className="flex flex-wrap items-center gap-2 px-3 py-2.5">
       <span className="text-xs text-gray-400 w-24 shrink-0">{kickoff}</span>
+      {(match.stage?.name || match.group?.name) && (
+        <span className="shrink-0 rounded bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 dark:text-gray-300">
+          {[match.stage?.name, match.group?.name].filter(Boolean).join(' · ')}
+        </span>
+      )}
       <span className="flex-1 min-w-[120px] text-right text-sm font-medium text-gray-900 dark:text-white truncate">
         {homeName}
       </span>

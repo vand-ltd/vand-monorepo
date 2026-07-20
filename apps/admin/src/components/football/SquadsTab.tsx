@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   getSeasonEntries,
+  getSeasons,
+  getSeasonPlayers,
   getSquad,
   addSquadPlayers,
   removeSquadPlayer,
@@ -13,6 +15,7 @@ import {
   type Team,
   type Player,
   type PlayerInput,
+  type SquadPlayerInput,
   type Season,
 } from '@org/api';
 import { toast } from 'sonner';
@@ -75,6 +78,67 @@ export function SquadsTab({ seasonId, season }: { seasonId: string; season: Seas
     queryKey: ['football', 'squad', teamId, seasonId],
     queryFn: () => getSquad(teamId, seasonId),
     enabled: !!teamId && !!seasonId,
+  });
+
+  /* ------------- Bring returning players from another season ------------- */
+  // Every season, not just this competition's — a team can play a league and a
+  // cup in the same period, so players often come from another competition.
+  const seasonsQuery = useQuery({
+    queryKey: ['football', 'all-seasons'],
+    queryFn: () => getSeasons(),
+  });
+  const otherSeasons = (seasonsQuery.data ?? [])
+    .filter((s) => s.id !== seasonId)
+    .sort((a, b) => {
+      const ca = a.competition?.name ?? '';
+      const cb = b.competition?.name ?? '';
+      return ca.localeCompare(cb) || b.name.localeCompare(a.name);
+    });
+
+  const [importSeasonId, setImportSeasonId] = useState('');
+  const [importSearch, setImportSearch] = useState('');
+  const [selectedImport, setSelectedImport] = useState<string[]>([]);
+  // Shirt number for the NEW season, keyed by playerId (may differ from the old one).
+  const [importNumbers, setImportNumbers] = useState<Record<string, string>>({});
+
+  // Every player in that season (across all teams), searchable by name.
+  const seasonPlayersQuery = useQuery({
+    queryKey: ['football', 'season-players', importSeasonId, importSearch.trim()],
+    queryFn: () =>
+      getSeasonPlayers(
+        importSeasonId,
+        importSearch.trim() ? { search: importSearch.trim() } : undefined
+      ),
+    enabled: !!importSeasonId,
+  });
+
+  // Skip anyone already in this season's squad.
+  const currentIds = new Set((squadQuery.data ?? []).map((p) => p.id));
+  const importable = (seasonPlayersQuery.data ?? []).filter((p) => !currentIds.has(p.playerId));
+
+  const importMut = useMutation({
+    mutationFn: () => {
+      // playerId reuses the existing player — only a new squad entry is created.
+      // The shirt number is whatever the admin set for this season.
+      const players: SquadPlayerInput[] = importable
+        .filter((p) => selectedImport.includes(p.playerId))
+        .map((p) => {
+          const raw = importNumbers[p.playerId];
+          const n = raw != null && raw.trim() !== '' ? Number(raw) : p.shirtNumber;
+          return {
+            playerId: p.playerId,
+            ...(n != null && !Number.isNaN(n) ? { shirtNumber: n } : {}),
+          };
+        });
+      return addSquadPlayers(teamId, seasonId, { players });
+    },
+    onSuccess: () => {
+      toast.success('Returning players added to squad');
+      setSelectedImport([]);
+      setImportNumbers({});
+      qc.invalidateQueries({ queryKey: ['football', 'squad', teamId, seasonId] });
+    },
+    onError: (e) => toast.error(errMessage(e, 'Failed to add players')),
   });
 
   const [rows, setRows] = useState<PlayerRow[]>([{ ...emptyRow }]);
@@ -171,6 +235,155 @@ export function SquadsTab({ seasonId, season }: { seasonId: string; season: Seas
 
       {teamId && (
         <>
+          {/* Bring returning players from another season */}
+          <div className={`${cardClass} p-5`}>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-1">
+              Bring players from another season
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              Re-uses the existing player records — no duplicates are created, only a squad entry
+              for {season?.name ?? 'this season'}.
+            </p>
+
+            {otherSeasons.length === 0 ? (
+              <p className="text-sm text-gray-400">No other seasons yet.</p>
+            ) : (
+              <>
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    value={importSeasonId}
+                    onChange={(e) => {
+                      setImportSeasonId(e.target.value);
+                      setSelectedImport([]);
+                      setImportNumbers({});
+                    }}
+                    className={`${inputClass} max-w-xs`}
+                  >
+                    <option value="">Select a season…</option>
+                    {otherSeasons.map((s: Season) => (
+                      <option key={s.id} value={s.id}>
+                        {s.competition?.name ? `${s.competition.name} · ` : ''}
+                        {s.name}
+                        {s.isCurrent ? ' · current' : ''}
+                      </option>
+                    ))}
+                  </select>
+                  {importSeasonId && (
+                    <input
+                      value={importSearch}
+                      onChange={(e) => setImportSearch(e.target.value)}
+                      placeholder="Search player by name…"
+                      className={`${inputClass} flex-1 min-w-[12rem]`}
+                    />
+                  )}
+                </div>
+
+                {importSeasonId &&
+                  (seasonPlayersQuery.isLoading ? (
+                    <div className="mt-3 flex items-center gap-2 text-sm text-gray-400">
+                      <Loader2 className="h-4 w-4 animate-spin" /> Loading players…
+                    </div>
+                  ) : importable.length === 0 ? (
+                    <p className="mt-3 text-sm text-gray-400">
+                      {importSearch.trim()
+                        ? `No players match “${importSearch.trim()}”.`
+                        : 'Nothing to bring over — everyone is already in this squad.'}
+                    </p>
+                  ) : (
+                    <>
+                      <div className="mt-3 flex items-center gap-4">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedImport(importable.map((p) => p.playerId))}
+                          className={ghostBtn}
+                        >
+                          Select all ({importable.length})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedImport([])}
+                          className={ghostBtn}
+                        >
+                          Clear
+                        </button>
+                      </div>
+
+                      <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-64 overflow-y-auto">
+                        {importable.map((p) => {
+                          const checked = selectedImport.includes(p.playerId);
+                          const num =
+                            importNumbers[p.playerId] ??
+                            (p.shirtNumber != null ? String(p.shirtNumber) : '');
+                          return (
+                            <div
+                              key={p.playerId}
+                              className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                                checked
+                                  ? 'border-[#003153] bg-[#003153]/5 text-gray-900 dark:text-white'
+                                  : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300'
+                              }`}
+                            >
+                              <label className="flex flex-1 min-w-0 items-center gap-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={(e) =>
+                                    setSelectedImport((ids) =>
+                                      e.target.checked
+                                        ? [...ids, p.playerId]
+                                        : ids.filter((id) => id !== p.playerId)
+                                    )
+                                  }
+                                  className="h-4 w-4 shrink-0 accent-[#003153]"
+                                />
+                                <span className="min-w-0 flex-1">
+                                  <span className="block truncate">{p.name}</span>
+                                  <span className="block truncate text-[11px] text-gray-400">
+                                    {[p.team?.shortName ?? p.team?.name, p.position]
+                                      .filter(Boolean)
+                                      .join(' · ')}
+                                  </span>
+                                </span>
+                              </label>
+                              {/* Shirt number for the new season — may differ from the old one */}
+                              <input
+                                type="number"
+                                min="0"
+                                max="99"
+                                value={num}
+                                onChange={(e) =>
+                                  setImportNumbers((n) => ({ ...n, [p.playerId]: e.target.value }))
+                                }
+                                placeholder="#"
+                                title="Shirt number for this season"
+                                className="w-14 shrink-0 px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-center text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-[#003153] outline-none"
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="mt-3 flex justify-end">
+                        <button
+                          type="button"
+                          disabled={selectedImport.length === 0 || importMut.isPending}
+                          onClick={() => importMut.mutate()}
+                          className={primaryBtn}
+                        >
+                          {importMut.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Plus className="h-4 w-4" />
+                          )}
+                          Add {selectedImport.length || ''} players
+                        </button>
+                      </div>
+                    </>
+                  ))}
+              </>
+            )}
+          </div>
+
           {/* Add players */}
           <div className={`${cardClass} p-5`}>
             <div className="flex items-center justify-between mb-1">

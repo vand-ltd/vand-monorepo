@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getMatches, type Match } from '@org/api';
+import { getMatches, getSeasons, type Match } from '@org/api';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Card, CardContent } from '@/components/ui/card';
@@ -64,10 +64,20 @@ export function FootballWidget() {
     return [...live, ...finished, ...upcoming].slice(0, 6);
   }, [matches]);
 
-  // Every competition in the feed, linked to its page. matches are newest-first,
-  // so the first date seen per competition is a real matchday (resolves cleanly).
+  // Every competition that has a season — so cups without fixtures yet still
+  // appear. Matches only add competitions the seasons list somehow missed.
+  const { data: allSeasons = [] } = useQuery({
+    queryKey: ['all-seasons'],
+    queryFn: () => getSeasons(),
+  });
+
   const competitions = useMemo(() => {
     const map = new Map<string, { id: string; name: string; slug?: string; date: string }>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const s of allSeasons as any[]) {
+      const c = s.competition;
+      if (c?.id && !map.has(c.id)) map.set(c.id, { id: c.id, name: c.name, slug: c.slug, date: '' });
+    }
     for (const m of matches) {
       const c = (m as any).season?.competition;
       if (!c?.id) continue;
@@ -75,8 +85,8 @@ export function FootballWidget() {
         map.set(c.id, { id: c.id, name: c.name, slug: c.slug, date: dateKey(m.kickoffAt) });
       }
     }
-    return Array.from(map.values());
-  }, [matches]);
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [allSeasons, matches]);
 
   if (!isLoading && matches.length === 0) return null;
 

@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createCompetition,
   createSeason,
+  updateSeason,
   createTeamsBulk,
   updateTeam,
   deleteTeam,
@@ -370,13 +371,25 @@ export function SetupTab({
                 Add
               </button>
             </div>
-            <ListBox
-              loading={seasonFormQuery.isLoading}
-              empty="No seasons yet"
-              items={(seasonFormQuery.data ?? []).map(
-                (s: Season) => `${s.name}${s.isCurrent ? ' · current' : ''}`
-              )}
-            />
+            {seasonFormQuery.isLoading ? (
+              <div className="mt-3 flex items-center gap-2 text-sm text-gray-400">
+                <Loader2 className="h-4 w-4 animate-spin" /> Loading…
+              </div>
+            ) : (seasonFormQuery.data ?? []).length === 0 ? (
+              <p className="mt-3 text-sm text-gray-400">No seasons yet</p>
+            ) : (
+              <ul className="mt-3 rounded-lg border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700">
+                {(seasonFormQuery.data ?? []).map((s: Season) => (
+                  <SeasonRow
+                    key={s.id}
+                    season={s}
+                    onChanged={() =>
+                      qc.invalidateQueries({ queryKey: ['football', 'seasons'] })
+                    }
+                  />
+                ))}
+              </ul>
+            )}
           </>
         )}
       </section>
@@ -982,6 +995,82 @@ export function SetupTab({
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+// One season row: rename inline, or mark it as the current season.
+function SeasonRow({ season, onChanged }: { season: Season; onChanged: () => void }) {
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(season.name);
+
+  const mut = useMutation({
+    mutationFn: (payload: { name?: string; isCurrent?: boolean }) =>
+      updateSeason(season.id, payload),
+    onSuccess: () => {
+      toast.success('Season updated');
+      setEditing(false);
+      onChanged();
+    },
+    onError: (e) => toast.error(errMessage(e, 'Failed to update season')),
+  });
+
+  return (
+    <li className="flex items-center gap-2 px-3 py-2 text-sm">
+      {editing ? (
+        <>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. 2026-2027"
+            className={`${inputClass} flex-1 py-1`}
+          />
+          <button
+            type="button"
+            disabled={!name.trim() || mut.isPending}
+            onClick={() => mut.mutate({ name: name.trim() })}
+            className="px-2 py-1 rounded-md bg-[#003153] hover:bg-[#005F73] text-white text-xs font-medium disabled:opacity-50"
+          >
+            {mut.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Save'}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setEditing(false);
+              setName(season.name);
+            }}
+            className="px-2 py-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+          >
+            Cancel
+          </button>
+        </>
+      ) : (
+        <>
+          <span className="flex-1 truncate text-gray-900 dark:text-white">{season.name}</span>
+          {season.isCurrent ? (
+            <span className="shrink-0 rounded bg-emerald-100 dark:bg-emerald-900/40 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
+              Current
+            </span>
+          ) : (
+            <button
+              type="button"
+              disabled={mut.isPending}
+              onClick={() => mut.mutate({ isCurrent: true })}
+              className="shrink-0 text-xs font-medium text-[#003153] dark:text-[#F59E0B] hover:underline disabled:opacity-50"
+            >
+              Make current
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            title="Rename season"
+            className="shrink-0 p-1 rounded-md text-gray-400 hover:text-[#003153] dark:hover:text-[#F59E0B] hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+        </>
+      )}
+    </li>
   );
 }
 

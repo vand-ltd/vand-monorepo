@@ -148,6 +148,7 @@ function TeamLineupEditor({
 
   const [formation, setFormation] = useState('4-3-3');
   const [coach, setCoach] = useState('');
+  const [isConfirmed, setIsConfirmed] = useState(false);
   const [slots, setSlots] = useState<Record<string, Slot>>({});
   // Explicit drag placements; players without an entry use the formation default.
   const [coords, setCoords] = useState<Record<string, Coord>>({});
@@ -158,6 +159,7 @@ function TeamLineupEditor({
     if (!data) return;
     if (data.formation) setFormation(data.formation);
     if (data.coach) setCoach(data.coach);
+    setIsConfirmed(!!data.isConfirmed);
     const nextSlots: Record<string, Slot> = {};
     const nextCoords: Record<string, Coord> = {};
     for (const p of data.slots) {
@@ -188,8 +190,9 @@ function TeamLineupEditor({
   const saveMut = useMutation({
     mutationFn: () =>
       setMatchLineup(matchId, teamId, {
-        formation: formation.trim(),
+        ...(formation.trim() ? { formation: formation.trim() } : {}),
         ...(coach.trim() ? { coach: coach.trim() } : {}),
+        isConfirmed,
         players: Object.entries(slots).map(([playerId, slot]) => {
           if (slot !== 'start') return { playerId, isStarting: false };
           const { x, y } = posOfPlayer(playerId);
@@ -203,7 +206,7 @@ function TeamLineupEditor({
     onError: (e) => toast.error(errMessage(e, 'Failed to save lineup')),
   });
 
-  const canSave = !!formation.trim() && startingCount > 0 && !saveMut.isPending;
+  const canSave = startingCount > 0 && !saveMut.isPending;
 
   return (
     <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-800/40 p-3">
@@ -241,6 +244,18 @@ function TeamLineupEditor({
           />
         </div>
       </div>
+
+      {/* Confirmed toggle */}
+      <label className="mb-3 inline-flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
+        <input
+          type="checkbox"
+          checked={isConfirmed}
+          onChange={(e) => setIsConfirmed(e.target.checked)}
+          className="h-4 w-4 accent-emerald-600"
+        />
+        Confirmed lineup
+        <span className="text-[11px] text-gray-400">(off = predicted / provisional)</span>
+      </label>
 
       {/* Squad picker */}
       {squadQuery.isLoading || lineupQuery.isLoading ? (
