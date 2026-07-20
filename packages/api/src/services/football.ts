@@ -385,6 +385,12 @@ export async function createGroupsBulk(
   return (unwrap<any[]>(data) ?? []).map(normalizeGroup);
 }
 
+// DELETE /api/menyesha/stages/:stageId -> remove a stage (and its groups).
+export async function deleteStage(stageId: string): Promise<any> {
+  const { data } = await api.delete(`/api/menyesha/stages/${stageId}`);
+  return unwrap<any>(data);
+}
+
 // GET /api/menyesha/seasons/:seasonId/stages -> stages (with groups when returned).
 export async function getSeasonStages(seasonId: string): Promise<Stage[]> {
   const { data } = await api.get(`/api/menyesha/seasons/${seasonId}/stages`);

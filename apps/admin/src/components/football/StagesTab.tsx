@@ -7,6 +7,7 @@ import {
   getSeasonEntries,
   createStagesBulk,
   createGroupsBulk,
+  deleteStage,
   STAGE_TYPES,
   type Season,
   type Stage,
@@ -18,6 +19,16 @@ import {
 } from '@org/api';
 import { toast } from 'sonner';
 import { Loader2, Plus, Trash2, Layers, Wand2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { cardClass, inputClass, labelClass, primaryBtn, ghostBtn } from './styles';
 
 function errMessage(error: any, fallback: string) {
@@ -84,6 +95,23 @@ export function StagesTab({ seasonId, season }: { seasonId: string; season: Seas
   const [stageId, setStageId] = useState('');
   const activeStage = stages.find((s) => s.id === stageId) ?? null;
   const [groupRows, setGroupRows] = useState<GroupRow[]>([{ ...emptyGroup }]);
+
+  const [deleteTarget, setDeleteTarget] = useState<Stage | null>(null);
+  const deleteStageMut = useMutation({
+    mutationFn: (id: string) => deleteStage(id),
+    onSuccess: () => {
+      toast.success('Stage deleted');
+      // The removed stage may be the one selected below — reset the group form.
+      if (deleteTarget?.id === stageId) {
+        setStageId('');
+        setGroupRows([{ ...emptyGroup }]);
+      }
+      setDeleteTarget(null);
+      qc.invalidateQueries({ queryKey: ['football', 'stages', seasonId] });
+      qc.invalidateQueries({ queryKey: ['football', 'matches', seasonId] });
+    },
+    onError: (e) => toast.error(errMessage(e, 'Failed to delete stage')),
+  });
   const validGroups = groupRows.filter((r) => r.name.trim());
 
   // Teams already in a group of this stage can't be reused (409 otherwise).
@@ -160,6 +188,14 @@ export function StagesTab({ seasonId, season }: { seasonId: string; season: Seas
                     {(s.groups ?? []).length} groups
                   </span>
                 )}
+                <button
+                  type="button"
+                  onClick={() => setDeleteTarget(s)}
+                  title="Delete stage"
+                  className="shrink-0 p-1 rounded-md text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
               </li>
             ))}
           </ol>
@@ -414,6 +450,33 @@ export function StagesTab({ seasonId, season }: { seasonId: string; season: Seas
           </>
         )}
       </section>
+
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete stage?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Permanently delete <span className="font-medium">{deleteTarget?.name}</span>
+              {(deleteTarget?.groups ?? []).length > 0 && (
+                <> and its {(deleteTarget?.groups ?? []).length} group(s)</>
+              )}
+              . Any fixtures scheduled in this stage may be affected. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteTarget && deleteStageMut.mutate(deleteTarget.id)}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
