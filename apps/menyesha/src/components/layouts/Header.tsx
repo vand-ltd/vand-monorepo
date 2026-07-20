@@ -10,6 +10,7 @@ import LanguageSwitcher from "./LanguageSwitcher"
 import { Button } from "@/components/ui/button"
 import { Menu, User, ChevronDown, ChevronRight, ChevronLeft } from "lucide-react"
 import { BreakingNewsTicker } from "./BreakingNewsTicker"
+import { FuelPriceStrip } from "./FuelPriceStrip"
 import { useTranslations, useLocale } from "next-intl"
 import { usePathname } from "next/navigation"
 import { useClientDateTime } from "@/hooks/useClientDateTime"
@@ -70,7 +71,12 @@ export const Header = () => {
 
   // Build nav links dynamically from API categories
   const navLinks: NavLink[] = useMemo(() => {
-    const links: NavLink[] = [{ href: '/', label: t('home') }];
+    // Scores is a product section (like /data), not a CMS article category, so
+    // it's hardcoded. Sits right after Home — it's the lead product.
+    const links: NavLink[] = [
+      { href: '/', label: t('home') },
+      { href: '/football', label: t('scores') },
+    ];
 
     if (categories) {
       // Sort by createdAt ascending (first created comes first)
@@ -149,6 +155,9 @@ export const Header = () => {
     <>
       {/* Breaking News Ticker */}
       <BreakingNewsTicker />
+
+      {/* Current fuel prices strip */}
+      <FuelPriceStrip />
 
       <header className="w-full bg-background border-b shadow-sm sticky top-0 z-50">
         <div className="max-w-screen-xl mx-auto px-4 py-4">

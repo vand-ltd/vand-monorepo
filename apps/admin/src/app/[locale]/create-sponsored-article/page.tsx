@@ -16,6 +16,7 @@ import {
   Plus,
 } from 'lucide-react';
 import { RichTextEditor } from '@/components/RichTextEditor';
+import { CategorySelect } from '@/components/CategorySelect';
 import { AuthGuard } from '@/components/AuthGuard';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { getCategories, createArticle, uploadMedia, getTags, assignTagIds, assignArticleTags } from '@org/api';
@@ -379,32 +380,13 @@ export default function CreateSponsoredArticlePage() {
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                           {t('categoryLabel')}
                         </label>
-                        <div className="relative">
-                          <select
-                            value={category}
-                            onChange={(e) => setCategory(e.target.value)}
-                            className="w-full h-10 px-3 pr-8 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003153] appearance-none"
-                          >
-                            <option value="">{t('selectCategory')}</option>
-                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                            {categories.map((cat: any) => (
-                              cat.children?.length > 0 ? (
-                                <optgroup key={cat.id} label={cat.name}>
-                                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                  {cat.children.map((sub: any) => (
-                                    <option key={sub.id} value={sub.id}>{sub.name}</option>
-                                  ))}
-                                </optgroup>
-                              ) : (
-                                <option key={cat.id} value={cat.id}>{cat.name}</option>
-                              )
-                            ))}
-                          </select>
-                          {categoriesLoading && (
-                            <Loader2 className="absolute right-8 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 animate-spin" />
-                          )}
-                          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                        </div>
+                        <CategorySelect
+  categories={categories}
+  value={category}
+  onChange={setCategory}
+  loading={categoriesLoading}
+  placeholder={t('selectCategory')}
+/>
                       </div>
 
                       {/* Language */}

@@ -7,18 +7,21 @@ import { Share2, Link2, Check, X } from 'lucide-react';
 type ShareButtonProps = {
   title: string;
   excerpt?: string;
-  slug: string;
+  slug?: string;
+  // Optional explicit path (e.g. "/football/<comp>/<match>"). Falls back to the
+  // article path built from `slug`.
+  path?: string;
 };
 
 const SHARE_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://menyesha.vand.rw';
 
-export function ShareButton({ title, excerpt, slug }: ShareButtonProps) {
+export function ShareButton({ title, excerpt, slug, path }: ShareButtonProps) {
   const t = useTranslations('share');
   const [showDropdown, setShowDropdown] = useState(false);
   const [copied, setCopied] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const url = `${SHARE_BASE_URL}/article/${slug}`;
+  const url = `${SHARE_BASE_URL}${path ?? `/article/${slug}`}`;
 
   useEffect(() => {
     if (!showDropdown) return;

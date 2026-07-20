@@ -11,3 +11,4 @@ export * from './services/comments';
 export * from './services/terms';
 export * from './services/ads';
 export * from './services/fuel-prices';
+export * from './services/football';

@@ -133,11 +133,13 @@ export default function AuthorPage() {
                 </div>
               )}
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 mt-4 text-sm text-gray-200">
-                {author.internalProfile?.role?.createdAt && (
+                {/* Author's own account date — NOT role.createdAt, which is
+                    shared by every author with the same role. */}
+                {author.createdAt && (
                   <div className="flex items-center space-x-1.5">
                     <Calendar className="h-4 w-4" />
                     <span>
-                      {t('joined')} {formatDate(author.internalProfile.role.createdAt)}
+                      {t('joined')} {formatDate(author.createdAt)}
                     </span>
                   </div>
                 )}

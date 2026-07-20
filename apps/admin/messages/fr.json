@@ -53,7 +53,8 @@
     "editProfile": "Modifier le profil",
     "createSponsoredArticle": "Article Sponsorisé",
     "createFuelPrices": "Ajouter des prix",
-    "fuelPrices": "Prix du carburant"
+    "fuelPrices": "Prix du carburant",
+    "football": "Football"
   },
   "user": {
     "profileTitle": "Utilisateur Admin",

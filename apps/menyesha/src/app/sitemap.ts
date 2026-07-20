@@ -153,5 +153,50 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // ignore — year pages just won't be listed this build
   }
 
+  // Football: dated result pages + per-match pages (locale-independent slugs)
+  try {
+    const res = await fetch(`${API_URL}/api/menyesha/matches?order=desc`, {
+      headers: { 'Content-Type': 'application/json', Origin: SITE_URL },
+      next: { revalidate: 3600 },
+    });
+    if (res.ok) {
+      const json = await res.json();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const matches: any[] = json.data || [];
+      const dates = new Set<string>();
+      for (const m of matches) {
+        const compSlug = m.season?.competition?.slug;
+        const matchSlug = m.slug;
+        const dateStr =
+          typeof m.kickoffAt === 'string' && /^\d{4}-\d{2}-\d{2}/.test(m.kickoffAt)
+            ? m.kickoffAt.slice(0, 10)
+            : null;
+        if (dateStr) dates.add(dateStr);
+        if (compSlug && matchSlug) {
+          for (const locale of locales) {
+            entries.push({
+              url: `${SITE_URL}/${locale}/football/${compSlug}/${matchSlug}`,
+              lastModified: new Date(m.updatedAt || m.kickoffAt || now),
+              changeFrequency: 'daily',
+              priority: 0.6,
+            });
+          }
+        }
+      }
+      for (const date of dates) {
+        for (const locale of locales) {
+          entries.push({
+            url: `${SITE_URL}/${locale}/football/${date}`,
+            lastModified: now,
+            changeFrequency: 'weekly',
+            priority: 0.5,
+          });
+        }
+      }
+    }
+  } catch {
+    // ignore — football pages just won't be listed this build
+  }
+
   return entries;
 }

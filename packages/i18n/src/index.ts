@@ -8,12 +8,20 @@ export const defaultLocale: Locale = 'rw';
 
 /**
  * Create the i18n routing configuration with shared locales and defaultLocale.
+ *
+ * `localePrefix` defaults to next-intl's 'always' (every URL carries a locale,
+ * so `/` redirects to `/<defaultLocale>`). Pass 'as-needed' to serve the default
+ * locale at the root with a 200 — avoids the "Page with redirect" status in
+ * Google Search Console for the homepage.
  */
-export function createRouting() {
+export function createRouting(options?: {
+  localePrefix?: 'always' | 'as-needed' | 'never';
+}) {
   return defineRouting({
     locales: [...locales],
     defaultLocale,
     localeDetection: false,
+    ...(options?.localePrefix ? { localePrefix: options.localePrefix } : {}),
   });
 }
 

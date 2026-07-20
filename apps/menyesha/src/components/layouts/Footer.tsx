@@ -88,6 +88,11 @@ const Footer = () => {
                   {tData('viewAll')}
                 </Link>
               </li>
+              <li>
+                <Link href={`/${locale}/football`} className="text-sm text-gray-400 hover:text-brand-accent transition-colors">
+                  {tNav('scores')}
+                </Link>
+              </li>
             </ul>
           </div>
 

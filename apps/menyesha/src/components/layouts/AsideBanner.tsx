@@ -10,6 +10,8 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { formatTimeAgo } from "@/lib/timeago";
+import { FootballWidget } from "./FootballWidget";
+import { FootballStrip } from "./FootballStrip";
 
 type AsideBannerProps = {
   children: ReactNode;
@@ -30,6 +32,28 @@ function AdPlaceholder({ size, label }: { size: string; label: string }) {
         </div>
         <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{label}</p>
         <p className="text-[10px] text-gray-400 dark:text-gray-500">{size}</p>
+      </div>
+    </Card>
+  );
+}
+
+// Section-specific ad slot for non-article sections (football / data hub).
+// The data-ad-slot differs per section so each can serve its own campaign.
+function SectionAdCard({ section, title }: { section: 'football' | 'data'; title: string }) {
+  return (
+    <Card className="overflow-hidden !p-0 !gap-0">
+      <div
+        data-ad-slot={`${section}-sidebar`}
+        className="relative h-[250px] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex flex-col items-center justify-center text-center p-6"
+      >
+        <span className="absolute top-3 left-3 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+          {section}
+        </span>
+        <div className="w-12 h-12 rounded-xl bg-brand-primary/10 dark:bg-brand-accent/10 flex items-center justify-center mb-3">
+          <Megaphone className="h-6 w-6 text-brand-primary dark:text-brand-accent" />
+        </div>
+        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{title}</p>
+        <p className="text-[10px] text-gray-400 dark:text-gray-500">300 × 250</p>
       </div>
     </Card>
   );
@@ -69,6 +93,10 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
   const isAuthorPage = pathWithoutLocale.startsWith('/author/');
   const isHomePage = pathWithoutLocale === '/' || pathWithoutLocale === '';
   const isCategoryPage = !isArticleView && !isAuthorPage && !isHomePage && pathWithoutLocale !== '/search' && !pathWithoutLocale.startsWith('/login');
+  // Non-article sections (football, data hub) have no "related/category" articles,
+  // so the sidebar shows a section ad slot there instead of an empty list.
+  const isFootballPage = pathWithoutLocale.startsWith('/football');
+  const isDataPage = pathWithoutLocale.startsWith('/data');
 
   const articleSlug = isArticleView ? pathWithoutLocale.replace('/article/', '').split('/')[0] : '';
   const categorySlug = isCategoryPage ? pathWithoutLocale.split('/').filter(Boolean)[0] : '';
@@ -136,6 +164,13 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
         <div className='max-w-screen-xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8'>
           {/* Main Content */}
           <div className='w-full max-w-full min-w-0'>
+            {/* Football teaser — homepage only (a compact inline scores strip on
+                mobile; the full card is in the desktop sidebar). */}
+            {isHomePage && (
+              <div className="lg:hidden mb-6">
+                <FootballStrip />
+              </div>
+            )}
             {children}
           </div>
 
@@ -219,6 +254,18 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
             {/* Default sidebar (home, category, etc.) */}
             {!isArticleView && (
               <>
+            {/* Football — desktop sidebar, homepage only (mobile shows a strip at the top) */}
+            {isHomePage && (
+              <div className="hidden lg:block">
+                <FootballWidget />
+              </div>
+            )}
+            {isFootballPage || isDataPage ? (
+              <SectionAdCard
+                section={isFootballPage ? 'football' : 'data'}
+                title={t('adSpaceAvailable')}
+              />
+            ) : (
             <Card className="overflow-hidden !py-0 !gap-0">
               <div
                 className="relative overflow-hidden text-white px-4 py-3"
@@ -327,6 +374,7 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
                 ))}
               </CardContent>
             </Card>
+            )}
 
             {/* Advertise With Us CTA */}
             <Card className="overflow-hidden !p-0 !gap-0">

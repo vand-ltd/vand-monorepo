@@ -53,7 +53,8 @@
     "editProfile": "Edit Profile",
     "createSponsoredArticle": "Sponsored Article",
     "createFuelPrices": "Add Fuel Prices",
-    "fuelPrices": "Fuel Prices"
+    "fuelPrices": "Fuel Prices",
+    "football": "Football"
   },
   "user": {
     "profileTitle": "Admin User",

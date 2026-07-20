@@ -1,7 +1,35 @@
+import type { Metadata } from 'next';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { notFound } from "next/navigation";
 import { routing } from '@/i18n/routing';
 import { ThemeProvider } from "@org/ui";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vand.rw';
+
+// With localePrefix 'as-needed', the default locale (rw) has no prefix.
+function pathFor(locale: string) {
+  return locale === routing.defaultLocale ? '/' : `/${locale}`;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    metadataBase: new URL(SITE_URL),
+    alternates: {
+      canonical: pathFor(locale),
+      languages: {
+        rw: '/',
+        en: '/en',
+        fr: '/fr',
+        'x-default': '/',
+      },
+    },
+  };
+}
 
 export default async function LocaleLayout({
   children, params
