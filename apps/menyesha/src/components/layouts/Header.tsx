@@ -71,7 +71,12 @@ export const Header = () => {
 
   // Build nav links dynamically from API categories
   const navLinks: NavLink[] = useMemo(() => {
-    const links: NavLink[] = [{ href: '/', label: t('home') }];
+    // Scores is a product section (like /data), not a CMS article category, so
+    // it's hardcoded. Sits right after Home — it's the lead product.
+    const links: NavLink[] = [
+      { href: '/', label: t('home') },
+      { href: '/football', label: t('scores') },
+    ];
 
     if (categories) {
       // Sort by createdAt ascending (first created comes first)
