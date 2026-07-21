@@ -10,7 +10,8 @@ import { Trophy, ChevronRight } from 'lucide-react';
 const LIVE_STATUSES = ['Live', 'HalfTime'];
 
 function teamName(t?: { name?: string; shortName?: string }): string {
-  return t?.shortName ?? t?.name ?? 'TBD';
+  // Prefer the full name; the row truncates it if it's too long.
+  return t?.name ?? t?.shortName ?? 'TBD';
 }
 function crestUrl(t: any): string | null {
   if (t?.logoUrl) return t.logoUrl;
