@@ -29,6 +29,19 @@ function crestUrl(t: any): string | null {
   if (typeof l === 'string') return l.startsWith('http') ? l : null; // ignore bare media ids
   return l?.url ?? null;
 }
+// Show the competition type only when the name doesn't already convey it —
+// "Kagame Cup · Cup" / "BK Pro League · League" would be redundant.
+const TYPE_SYNONYMS: Record<string, string[]> = {
+  cup: ['cup', 'trophy', 'kombe', 'coupe', 'knockout'],
+  league: ['league', 'liga', 'ligue', 'championship', 'division', 'premier'],
+};
+function showCompType(name?: string, type?: string | null): boolean {
+  if (!type) return false;
+  const n = (name ?? '').toLowerCase();
+  const words = TYPE_SYNONYMS[type.toLowerCase()] ?? [type.toLowerCase()];
+  return !words.some((w) => n.includes(w));
+}
+
 function initials(t?: { name?: string; shortName?: string }): string {
   return (t?.shortName || (t?.name ?? '').replace(/[^a-zA-Z]/g, '').slice(0, 3)).toUpperCase() || '?';
 }
@@ -392,8 +405,17 @@ export function FootballResultsBoard({
     : !selectedDate || matchesQuery.isLoading;
 
   // Uniform group shape: all-competitions view groups by competition (name +
-  // slug for the header link); a selected competition groups by date.
-  type Group = { key: string; name?: string; slug?: string; date?: string; list: Match[] };
+  // slug for the header link); a league season groups by date; a cup season
+  // groups by stage → group (with a stage subtitle).
+  type Group = {
+    key: string;
+    name?: string;
+    slug?: string;
+    type?: string;
+    date?: string;
+    stage?: string;
+    list: Match[];
+  };
   const groups = useMemo<Group[]>(() => {
     if (!competitionId) {
       const filtered = [...matches].sort(
@@ -403,7 +425,8 @@ export function FootballResultsBoard({
       for (const m of filtered) {
         const c = (m as any).season?.competition;
         const key = c?.id ?? 'other';
-        if (!byComp.has(key)) byComp.set(key, { key, name: c?.name ?? '', slug: c?.slug, list: [] });
+        if (!byComp.has(key))
+          byComp.set(key, { key, name: c?.name ?? '', slug: c?.slug, type: c?.type, list: [] });
         byComp.get(key)!.list.push(m);
       }
       return Array.from(byComp.values());
@@ -419,6 +442,34 @@ export function FootballResultsBoard({
       const tb = new Date(b.kickoffAt).getTime();
       return view === 'fixtures' ? ta - tb : tb - ta;
     });
+
+    // Cup season → group by stage/group (LiveScore-style section headers).
+    if (hasStages) {
+      const stageOrder = new Map(stageList.map((s, i) => [s.id, s.order ?? i]));
+      const bySection = new Map<string, Group>();
+      for (const m of filtered) {
+        const st = (m as any).stage;
+        const gp = (m as any).group;
+        const key = gp?.id ?? st?.id ?? 'unassigned';
+        if (!bySection.has(key)) {
+          bySection.set(key, {
+            key,
+            name: gp?.name ?? st?.name ?? t('other'),
+            // For a group, subtitle with its stage; for a bare knockout stage, none.
+            stage: gp?.name && st?.name ? st.name : undefined,
+            list: [],
+          });
+        }
+        bySection.get(key)!.list.push(m);
+      }
+      // Order: by stage order, then group name.
+      return Array.from(bySection.values()).sort((a, b) => {
+        const sa = stageOrder.get(a.list[0] && (a.list[0] as any).stage?.id) ?? 99;
+        const sb = stageOrder.get(b.list[0] && (b.list[0] as any).stage?.id) ?? 99;
+        return sa - sb || (a.name ?? '').localeCompare(b.name ?? '');
+      });
+    }
+
     const byDate = new Map<string, Group>();
     for (const m of filtered) {
       const key = dateKey(m.kickoffAt);
@@ -426,7 +477,7 @@ export function FootballResultsBoard({
       byDate.get(key)!.list.push(m);
     }
     return Array.from(byDate.values());
-  }, [matches, view, competitionId, selectedRound]);
+  }, [matches, view, competitionId, selectedRound, hasStages, stageList, t]);
 
   // Overview: one combined list — the 5 matches closest to today (recent
   // results + imminent fixtures), shown chronologically. "View more" when >5.
@@ -572,8 +623,8 @@ export function FootballResultsBoard({
               </button>
             )}
           </div>
-          {/* Matchday (round) filter — Results & Fixtures only */}
-          {(view === 'results' || view === 'fixtures') && rounds.length > 0 && (
+          {/* Matchday (round) filter — leagues only; cups group by stage instead */}
+          {!hasStages && (view === 'results' || view === 'fixtures') && rounds.length > 0 && (
             <div className="mt-3">
               <select
                 value={selectedRound}
@@ -629,7 +680,7 @@ export function FootballResultsBoard({
           <div className="space-y-3">
             <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700">
               {overview.top.map((m) => (
-                <MatchListRow key={m.id} m={m} dateLocale={dateLocale} t={t} />
+                <MatchListRow key={m.id} m={m} dateLocale={dateLocale} t={t} showStage={hasStages} />
               ))}
             </div>
             {overview.hasMore && (
@@ -679,7 +730,7 @@ export function FootballResultsBoard({
           {groups.map((group) => (
             <div key={group.key}>
               {group.date ? (
-                // Competition view: one section per matchday date
+                // League season: one section per matchday date
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">
                   {new Date(`${group.date}T00:00:00`).toLocaleDateString(dateLocale, {
                     weekday: 'long',
@@ -688,19 +739,42 @@ export function FootballResultsBoard({
                     year: 'numeric',
                   })}
                 </h3>
+              ) : competitionId ? (
+                // Cup season: one section per stage / group
+                <div className="mb-2 flex items-baseline gap-2">
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-900 dark:text-white">
+                    {group.name}
+                  </h3>
+                  {group.stage && (
+                    <span className="text-[11px] text-gray-400">{group.stage}</span>
+                  )}
+                </div>
               ) : (
-                // All-competitions view: league header links to the competition
+                // All-competitions view: header links to the competition, tagged with its type
                 <Link
                   href={`/football/${group.slug || group.key}`}
-                  className="inline-flex items-center gap-1 mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 hover:text-[#003153] dark:hover:text-[#F59E0B] transition-colors"
+                  className="inline-flex items-center gap-1.5 mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 hover:text-[#003153] dark:hover:text-[#F59E0B] transition-colors"
                 >
                   {group.name}
+                  {showCompType(group.name, group.type) && (
+                    <span className="rounded bg-[#003153]/10 dark:bg-[#F59E0B]/10 px-1.5 py-0.5 text-[9px] font-semibold text-[#003153] dark:text-[#F59E0B]">
+                      {group.type}
+                    </span>
+                  )}
                   <ChevronRight className="h-3 w-3" />
                 </Link>
               )}
               <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700">
                 {group.list.map((m) => (
-                  <MatchListRow key={m.id} m={m} dateLocale={dateLocale} t={t} />
+                  <MatchListRow
+                    key={m.id}
+                    m={m}
+                    dateLocale={dateLocale}
+                    t={t}
+                    // Cup sections have a stage/group header; the all-competitions
+                    // view groups by competition, so tag each row there instead.
+                    showStage={!competitionId}
+                  />
                 ))}
               </div>
             </div>
@@ -739,7 +813,7 @@ function FallbackSection({
             </h4>
             <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700">
               {list.map((m) => (
-                <MatchListRow key={m.id} m={m} dateLocale={dateLocale} t={t} />
+                <MatchListRow key={m.id} m={m} dateLocale={dateLocale} t={t} showStage />
               ))}
             </div>
           </div>
@@ -1096,11 +1170,19 @@ function MatchListRow({
   m,
   dateLocale,
   t,
+  showStage,
 }: {
   m: Match;
   dateLocale: string;
   t: ReturnType<typeof useTranslations>;
+  showStage?: boolean;
 }) {
+  // In mixed feeds (no per-stage section headers) tag the row with its
+  // group/stage so a cup fixture's context isn't lost.
+  const stageTag =
+    showStage && ((m as any).group?.name || (m as any).stage?.name)
+      ? [(m as any).group?.name, (m as any).stage?.name].filter(Boolean).join(' · ')
+      : null;
   const isLive = LIVE_STATUSES.includes(m.status);
   const isFinished = m.status === 'FullTime';
   const hasScore = m.homeScore != null && m.awayScore != null;
@@ -1136,6 +1218,11 @@ function MatchListRow({
       href={`/football/${(m as any).season?.competition?.slug ?? 'match'}/${(m as any).slug ?? m.id}`}
       className="block hover:bg-gray-50 dark:hover:bg-gray-900/40 transition-colors"
     >
+      {stageTag && (
+        <div className="px-3 sm:px-4 pt-1.5 -mb-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-400 truncate">
+          {stageTag}
+        </div>
+      )}
       {/* Mobile: teams stacked, one above the other */}
       <div className="sm:hidden flex items-center gap-3 px-3 py-2.5 text-sm">
         <span className="w-12 shrink-0 text-center text-[11px]">{status}</span>

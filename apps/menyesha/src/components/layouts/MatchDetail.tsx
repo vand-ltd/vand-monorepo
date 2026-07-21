@@ -32,6 +32,19 @@ function initials(t?: { name?: string; shortName?: string }): string {
   return (t?.shortName || (t?.name ?? '').replace(/[^a-zA-Z]/g, '').slice(0, 3)).toUpperCase() || '?';
 }
 
+// Show the competition type only when the name doesn't already convey it —
+// "Kagame Cup · Cup" and "BK Pro League · League" are redundant.
+const TYPE_SYNONYMS: Record<string, string[]> = {
+  cup: ['cup', 'trophy', 'kombe', 'coupe', 'knockout'],
+  league: ['league', 'liga', 'ligue', 'championship', 'division', 'premier'],
+};
+function showCompType(name?: string, type?: string | null): boolean {
+  if (!type) return false;
+  const n = (name ?? '').toLowerCase();
+  const words = TYPE_SYNONYMS[type.toLowerCase()] ?? [type.toLowerCase()];
+  return !words.some((w) => n.includes(w));
+}
+
 // crossOrigin lets a CORS-enabled host produce a clean canvas for image export.
 // If the host blocks CORS the load errors — fall back to a plain (no-CORS) load
 // so the crest still displays (export may then be blocked for that image).
@@ -155,8 +168,12 @@ function MatchCardDetail({
 }) {
   const home = (m as any).homeTeam;
   const away = (m as any).awayTeam;
-  const competitionName = (m as any).season?.competition?.name ?? '';
+  // The match feed nests the competition with type + logo, so read straight from it.
+  const comp = (m as any).season?.competition;
+  const competitionName = comp?.name ?? '';
   const venue = (m as any).venue;
+  const compLogo =
+    typeof comp?.logo === 'string' && comp.logo.startsWith('http') ? comp.logo : null;
   const isLive = LIVE_STATUSES.includes(m.status);
   const isFinished = m.status === 'FullTime';
   const hasScore = m.homeScore != null && m.awayScore != null;
@@ -188,8 +205,23 @@ function MatchCardDetail({
     <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden">
       {/* Meta */}
       <div className="px-4 sm:px-6 py-3 border-b border-gray-100 dark:border-gray-700 text-center">
-        <p className="text-sm font-medium text-gray-900 dark:text-white">{competitionName}</p>
-        <div className="flex items-center justify-center gap-2 mt-1">
+        <div className="flex items-center justify-center gap-2">
+          {compLogo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={compLogo}
+              alt=""
+              className="h-5 w-5 rounded-full object-cover bg-white shrink-0"
+            />
+          ) : null}
+          <p className="text-sm font-medium text-gray-900 dark:text-white">{competitionName}</p>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-2 mt-1">
+          {showCompType(competitionName, comp?.type) && (
+            <span className="text-[10px] font-medium text-[#003153] dark:text-[#F59E0B] bg-[#003153]/10 dark:bg-[#F59E0B]/10 px-1.5 py-0.5 rounded">
+              {comp.type}
+            </span>
+          )}
           {m.round && (
             <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">
               {m.round}
@@ -330,7 +362,11 @@ function MatchInfo({
     ? [v.name ?? v.stadium, v.city, v.country].filter(Boolean).join(', ') || null
     : ((m as any).venueName ?? null);
 
+  const stage = (m as any).stage;
+  const group = (m as any).group;
   const rows: { label: string; value?: string | null; icon?: React.ReactNode }[] = [
+    { label: t('stage'), value: stage?.name },
+    { label: t('group'), value: group?.name },
     { label: t('matchday'), value: m.round },
     { label: t('dateLabel'), value: dateStr },
     {

@@ -18,6 +18,7 @@ import {
   getSeasonEntries,
   getCompetitions,
   uploadMedia,
+  COMPETITION_TYPES,
   type Team,
   type Venue,
   type Season,
@@ -27,6 +28,7 @@ import {
 import { toast } from 'sonner';
 import { Loader2, Plus, Trash2, Upload, MapPin, X, Power, PowerOff, Pencil } from 'lucide-react';
 import { EditTeamModal } from './EditTeamModal';
+import { EditCompetitionModal } from './EditCompetitionModal';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -86,8 +88,14 @@ export function SetupTab({
     queryFn: getCompetitions,
   });
   const [competitionName, setCompetitionName] = useState('');
+  const [competitionType, setCompetitionType] = useState<string>('League');
+  const [editComp, setEditComp] = useState<Competition | null>(null);
   const createCompetitionMut = useMutation({
-    mutationFn: () => createCompetition({ name: competitionName.trim() }),
+    mutationFn: () =>
+      createCompetition({
+        name: competitionName.trim(),
+        ...(competitionType ? { type: competitionType } : {}),
+      }),
     onSuccess: () => {
       toast.success('Competition created');
       setCompetitionName('');
@@ -298,6 +306,17 @@ export function SetupTab({
             placeholder="e.g. BK Pro League"
             className={inputClass}
           />
+          <select
+            value={competitionType}
+            onChange={(e) => setCompetitionType(e.target.value)}
+            className={`${inputClass} w-28`}
+          >
+            {COMPETITION_TYPES.map((tp) => (
+              <option key={tp} value={tp}>
+                {tp}
+              </option>
+            ))}
+          </select>
           <button
             type="button"
             disabled={!competitionName.trim() || createCompetitionMut.isPending}
@@ -312,11 +331,51 @@ export function SetupTab({
             Add
           </button>
         </div>
-        <ListBox
-          loading={competitionsQuery.isLoading}
-          empty="No competitions yet"
-          items={(competitionsQuery.data ?? []).map((c: Competition) => c.name)}
-        />
+        <p className="mt-1.5 text-[11px] text-gray-400">
+          Add a logo, country or rename via the edit button. Cups can have stages &amp; groups.
+        </p>
+
+        {competitionsQuery.isLoading ? (
+          <div className="mt-3 flex items-center gap-2 text-sm text-gray-400">
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading…
+          </div>
+        ) : (competitionsQuery.data ?? []).length === 0 ? (
+          <p className="mt-3 text-sm text-gray-400">No competitions yet</p>
+        ) : (
+          <ul className="mt-3 rounded-lg border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700">
+            {(competitionsQuery.data ?? []).map((c: Competition) => {
+              const url = typeof c.logo === 'string' && c.logo.startsWith('http') ? c.logo : null;
+              return (
+                <li key={c.id} className="group flex items-center gap-2.5 px-3 py-2 text-sm">
+                  {url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={url} alt="" className="h-7 w-7 rounded-full object-cover bg-white shrink-0" />
+                  ) : (
+                    <span className="h-7 w-7 rounded-full bg-[#003153] text-white text-[9px] font-bold flex items-center justify-center shrink-0">
+                      {teamInitials({ name: c.name })}
+                    </span>
+                  )}
+                  <span className="flex-1 min-w-0">
+                    <span className="block truncate text-gray-900 dark:text-white">{c.name}</span>
+                    {(c.type || c.country) && (
+                      <span className="block truncate text-[11px] text-gray-400">
+                        {[c.type, c.country].filter(Boolean).join(' · ')}
+                      </span>
+                    )}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setEditComp(c)}
+                    title="Edit competition"
+                    className="shrink-0 p-1 rounded-md text-gray-400 hover:text-[#003153] dark:hover:text-[#F59E0B] hover:bg-gray-100 dark:hover:bg-gray-700 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
 
       {/* Seasons */}
@@ -970,6 +1029,9 @@ export function SetupTab({
       </AlertDialog>
 
       {editTeam && <EditTeamModal team={editTeam} onClose={() => setEditTeam(null)} />}
+      {editComp && (
+        <EditCompetitionModal competition={editComp} onClose={() => setEditComp(null)} />
+      )}
 
       <AlertDialog
         open={!!deleteTeamTarget}
@@ -1074,32 +1136,3 @@ function SeasonRow({ season, onChanged }: { season: Season; onChanged: () => voi
   );
 }
 
-function ListBox({
-  loading,
-  empty,
-  items,
-}: {
-  loading: boolean;
-  empty: string;
-  items: string[];
-}) {
-  return (
-    <div className="mt-4 border-t border-gray-100 dark:border-gray-700 pt-3">
-      {loading ? (
-        <div className="flex items-center gap-2 text-sm text-gray-400">
-          <Loader2 className="h-4 w-4 animate-spin" /> Loading…
-        </div>
-      ) : items.length === 0 ? (
-        <p className="text-sm text-gray-400">{empty}</p>
-      ) : (
-        <ul className="space-y-1 max-h-48 overflow-y-auto">
-          {items.map((label, i) => (
-            <li key={i} className="text-sm text-gray-700 dark:text-gray-300">
-              {label}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}

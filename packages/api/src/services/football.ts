@@ -57,10 +57,17 @@ export function normalizePosition(pos?: string | null): PlayerPosition | undefin
   return undefined;
 }
 
+export type CompetitionType = 'League' | 'Cup';
+export const COMPETITION_TYPES: CompetitionType[] = ['League', 'Cup'];
+
 export interface Competition {
   id: string;
   name: string;
   slug?: string;
+  type?: CompetitionType | string;
+  country?: string | null;
+  logo?: string | null; // plain URL from uploadMedia().url (not a media id)
+  isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -184,8 +191,32 @@ export interface MatchEvent {
 /*  Writes (backend-confirmed)                                                 */
 /* -------------------------------------------------------------------------- */
 
-export async function createCompetition(payload: { name: string }): Promise<Competition> {
+export interface CompetitionInput {
+  name: string;
+  type?: CompetitionType | string;
+  country?: string;
+  logo?: string; // upload first, then pass the returned url
+  isActive?: boolean;
+}
+
+export async function createCompetition(payload: CompetitionInput): Promise<Competition> {
   const { data } = await api.post('/api/menyesha/competitions', payload);
+  return unwrap<Competition>(data);
+}
+
+// PATCH /api/menyesha/competitions/:id -> partial update. Omitting a field keeps
+// it; send logo: null explicitly to clear it.
+export async function updateCompetition(
+  competitionId: string,
+  payload: {
+    name?: string;
+    type?: CompetitionType | string;
+    country?: string | null;
+    logo?: string | null;
+    isActive?: boolean;
+  }
+): Promise<Competition> {
+  const { data } = await api.patch(`/api/menyesha/competitions/${competitionId}`, payload);
   return unwrap<Competition>(data);
 }
 
