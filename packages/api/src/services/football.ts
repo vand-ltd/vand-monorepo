@@ -133,6 +133,13 @@ export interface Match {
   group?: { id: string; name: string } | null;
   homeScore?: number | null;
   awayScore?: number | null;
+  // Knockout tie-breaker — the final shootout tally (doesn't change the scoreline).
+  homePenalties?: number | null;
+  awayPenalties?: number | null;
+  afterExtraTime?: boolean | null;
+  // Derived on the server: who went through, and how the tie was decided.
+  winnerTeamId?: string | null;
+  decidedBy?: 'normal' | 'extra_time' | 'penalties' | null;
   minute?: number | null;
   venueId?: string | null;
   homeTeam?: Team;
@@ -461,6 +468,9 @@ export async function updateMatch(
     status?: MatchStatus;
     homeScore?: number;
     awayScore?: number;
+    homePenalties?: number | null;
+    awayPenalties?: number | null;
+    afterExtraTime?: boolean;
     minute?: number;
     venueId?: string;
     kickoffAt?: string;

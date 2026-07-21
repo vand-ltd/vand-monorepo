@@ -18,6 +18,7 @@ const STATIC_PATHS = [
   'data',
   'data/fuel-prices',
   'data/fuel-prices/statistics',
+  'football',
 ];
 
 type Cat = { slug: string; updatedAt?: string; children?: { slug: string; updatedAt?: string }[] };
@@ -153,36 +154,81 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // ignore — year pages just won't be listed this build
   }
 
-  // Football: dated result pages + per-match pages (locale-independent slugs)
+  // Football: season pages + per-match pages + dated result pages.
+  // We drive everything off the season list and fetch matches PER SEASON
+  // (rather than a single global /matches call), so the sitemap stays
+  // complete no matter how large the match archive grows — each season is
+  // naturally bounded, and no matches are ever silently dropped by a cap.
   try {
-    const res = await fetch(`${API_URL}/api/menyesha/matches?order=desc`, {
+    const res = await fetch(`${API_URL}/api/menyesha/seasons`, {
       headers: { 'Content-Type': 'application/json', Origin: SITE_URL },
       next: { revalidate: 3600 },
     });
     if (res.ok) {
       const json = await res.json();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const matches: any[] = json.data || [];
+      const seasons: any[] = json.data || [];
       const dates = new Set<string>();
-      for (const m of matches) {
-        const compSlug = m.season?.competition?.slug;
-        const matchSlug = m.slug;
-        const dateStr =
-          typeof m.kickoffAt === 'string' && /^\d{4}-\d{2}-\d{2}/.test(m.kickoffAt)
-            ? m.kickoffAt.slice(0, 10)
-            : null;
-        if (dateStr) dates.add(dateStr);
-        if (compSlug && matchSlug) {
+
+      // Fetch each season's matches concurrently.
+      const perSeason = await Promise.all(
+        seasons.map(async (s) => {
+          if (!s.id) return [];
+          try {
+            const mRes = await fetch(
+              `${API_URL}/api/menyesha/matches?seasonId=${s.id}&order=desc`,
+              {
+                headers: { 'Content-Type': 'application/json', Origin: SITE_URL },
+                next: { revalidate: 3600 },
+              },
+            );
+            if (!mRes.ok) return [];
+            const mJson = await mRes.json();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return (mJson.data || []) as any[];
+          } catch {
+            return [];
+          }
+        }),
+      );
+
+      for (const s of seasons) {
+        const compSlug = s.competition?.slug;
+        const seasonSlug = s.slug;
+        if (compSlug && seasonSlug) {
           for (const locale of locales) {
             entries.push({
-              url: `${SITE_URL}/${locale}/football/${compSlug}/${matchSlug}`,
-              lastModified: new Date(m.updatedAt || m.kickoffAt || now),
+              url: `${SITE_URL}/${locale}/football/${compSlug}/${seasonSlug}`,
+              lastModified: new Date(s.updatedAt || now),
               changeFrequency: 'daily',
-              priority: 0.6,
+              priority: 0.7,
             });
           }
         }
       }
+
+      for (const matches of perSeason) {
+        for (const m of matches) {
+          const compSlug = m.season?.competition?.slug;
+          const matchSlug = m.slug;
+          const dateStr =
+            typeof m.kickoffAt === 'string' && /^\d{4}-\d{2}-\d{2}/.test(m.kickoffAt)
+              ? m.kickoffAt.slice(0, 10)
+              : null;
+          if (dateStr) dates.add(dateStr);
+          if (compSlug && matchSlug) {
+            for (const locale of locales) {
+              entries.push({
+                url: `${SITE_URL}/${locale}/football/${compSlug}/${matchSlug}`,
+                lastModified: new Date(m.updatedAt || m.kickoffAt || now),
+                changeFrequency: 'daily',
+                priority: 0.6,
+              });
+            }
+          }
+        }
+      }
+
       for (const date of dates) {
         for (const locale of locales) {
           entries.push({
@@ -196,6 +242,44 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   } catch {
     // ignore — football pages just won't be listed this build
+  }
+
+  // Player profiles: /football/player/<slug> — paginate so every player is
+  // included even as the roster grows past a single page.
+  try {
+    const PAGE_SIZE = 200;
+    let page = 1;
+    let totalPages = 1;
+    do {
+      const res = await fetch(
+        `${API_URL}/api/menyesha/players?page=${page}&limit=${PAGE_SIZE}`,
+        {
+          headers: { 'Content-Type': 'application/json', Origin: SITE_URL },
+          next: { revalidate: 3600 },
+        },
+      );
+      if (!res.ok) break;
+      const json = await res.json();
+      // Players are paginated as { data: { data: [...], meta } }.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const players: any[] = json.data?.data ?? json.data ?? [];
+      const meta = json.data?.meta;
+      totalPages = typeof meta?.totalPages === 'number' ? meta.totalPages : page;
+      for (const p of players) {
+        if (!p.slug) continue;
+        for (const locale of locales) {
+          entries.push({
+            url: `${SITE_URL}/${locale}/football/player/${p.slug}`,
+            lastModified: new Date(p.updatedAt || now),
+            changeFrequency: 'weekly',
+            priority: 0.5,
+          });
+        }
+      }
+      page += 1;
+    } while (page <= totalPages && page <= 50); // hard stop: 50 pages = 10k players
+  } catch {
+    // ignore
   }
 
   return entries;

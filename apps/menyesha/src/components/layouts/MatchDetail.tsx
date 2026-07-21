@@ -14,7 +14,7 @@ import {
 import { toPng } from 'html-to-image';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { Loader2, ArrowLeft, MapPin, ArrowUp, ArrowDown, Download, CheckCircle2 } from 'lucide-react';
+import { Loader2, ArrowLeft, MapPin, ArrowUp, ArrowDown, ChevronUp, Download, CheckCircle2 } from 'lucide-react';
 import { ShareButton } from '@/components/article/ShareButton';
 
 const LIVE_STATUSES = ['Live', 'HalfTime'];
@@ -177,6 +177,12 @@ function MatchCardDetail({
   const isLive = LIVE_STATUSES.includes(m.status);
   const isFinished = m.status === 'FullTime';
   const hasScore = m.homeScore != null && m.awayScore != null;
+  const hasPens = m.homePenalties != null && m.awayPenalties != null;
+  // Server-derived winner of a knockout tie (score → penalties).
+  const isKnockout = (m as any).stage?.type === 'Knockout';
+  const winnerId = m.winnerTeamId ?? null;
+  const homeThrough = isKnockout && !!winnerId && winnerId === home?.id;
+  const awayThrough = isKnockout && !!winnerId && winnerId === away?.id;
 
   const kickoff = new Date(m.kickoffAt).toLocaleString(dateLocale, {
     weekday: 'short',
@@ -196,7 +202,9 @@ function MatchCardDetail({
       {m.minute != null ? `${m.minute}'` : t('live')}
     </span>
   ) : isFinished ? (
-    <span className="text-gray-500 dark:text-gray-400 font-medium">{t('ft')}</span>
+    <span className="text-gray-500 dark:text-gray-400 font-medium">
+      {m.afterExtraTime ? t('aetShort') : t('ft')}
+    </span>
   ) : (
     <span className="text-gray-500 dark:text-gray-400">{t('fixtures')}</span>
   );
@@ -234,7 +242,7 @@ function MatchCardDetail({
       {/* Scoreline */}
       <div className="px-4 sm:px-8 py-8">
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6">
-          <TeamBlock team={home} />
+          <TeamBlock team={home} through={homeThrough} advancedLabel={t('advanced')} />
           <div className="text-center">
             {hasScore ? (
               <div className="text-3xl sm:text-4xl font-bold tabular-nums text-gray-900 dark:text-white">
@@ -243,9 +251,14 @@ function MatchCardDetail({
             ) : (
               <div className="text-xl font-semibold text-gray-300 dark:text-gray-600">v</div>
             )}
+            {hasPens && (
+              <div className="mt-0.5 text-xs font-semibold text-gray-500 dark:text-gray-400 tabular-nums">
+                {m.homePenalties}-{m.awayPenalties} {t('penaltiesShort')}
+              </div>
+            )}
             <div className="mt-1.5 text-xs">{status}</div>
           </div>
-          <TeamBlock team={away} />
+          <TeamBlock team={away} through={awayThrough} advancedLabel={t('advanced')} />
         </div>
       </div>
 
@@ -1359,7 +1372,15 @@ function PlayerBadges({ badge }: { badge: PlayerBadgeInfo }) {
   );
 }
 
-function TeamBlock({ team }: { team: any }) {
+function TeamBlock({
+  team,
+  through,
+  advancedLabel,
+}: {
+  team: any;
+  through?: boolean;
+  advancedLabel?: string;
+}) {
   const url = crestUrl(team);
   return (
     <div className="flex flex-col items-center gap-2 text-center min-w-0">
@@ -1371,8 +1392,9 @@ function TeamBlock({ team }: { team: any }) {
           {initials(team)}
         </span>
       )}
-      <span className="text-sm font-semibold text-gray-900 dark:text-white truncate max-w-[9rem]">
-        {teamName(team)}
+      <span className="flex items-center gap-1 text-sm font-semibold text-gray-900 dark:text-white min-w-0">
+        {through && <ChevronUp className="h-4 w-4 shrink-0 text-emerald-500" aria-label={advancedLabel} />}
+        <span className="truncate max-w-[9rem]">{teamName(team)}</span>
       </span>
     </div>
   );

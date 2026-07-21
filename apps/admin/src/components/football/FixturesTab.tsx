@@ -392,9 +392,20 @@ function MatchRow({
     match.venueId ?? (match.venue as any)?.id ?? ''
   );
   const [referee, setReferee] = useState<string>(match.referee ?? '');
+  const [homePens, setHomePens] = useState<string>(
+    match.homePenalties != null ? String(match.homePenalties) : ''
+  );
+  const [awayPens, setAwayPens] = useState<string>(
+    match.awayPenalties != null ? String(match.awayPenalties) : ''
+  );
+  const [afterExtraTime, setAfterExtraTime] = useState<boolean>(!!match.afterExtraTime);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showEvents, setShowEvents] = useState(false);
   const [showLineups, setShowLineups] = useState(false);
+
+  // Shootout tally only applies to knockout ties. A blank field clears it (null).
+  const isKnockout = (match.stage as any)?.type === 'Knockout';
+  const pens = (v: string): number | null => (v.trim() === '' ? null : Number(v));
 
   const saveMut = useMutation({
     mutationFn: () =>
@@ -405,6 +416,13 @@ function MatchRow({
         ...(minute.trim() ? { minute: Number(minute) } : {}),
         ...(venueId ? { venueId } : {}),
         ...(referee.trim() ? { referee: referee.trim() } : {}),
+        ...(isKnockout
+          ? {
+              homePenalties: pens(homePens),
+              awayPenalties: pens(awayPens),
+              afterExtraTime,
+            }
+          : {}),
       }),
     onSuccess: () => {
       toast.success('Match updated');
@@ -583,6 +601,42 @@ function MatchRow({
           placeholder="Referee"
           className="max-w-[12rem] px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-[#003153] outline-none"
         />
+
+        {/* Penalty shootout — knockout ties only. Doesn't change the scoreline. */}
+        {isKnockout && (
+          <span className="inline-flex items-center gap-1.5">
+            <span className="text-[11px] text-gray-400">Pens</span>
+            <input
+              type="number"
+              min="0"
+              value={homePens}
+              onChange={(e) => setHomePens(e.target.value)}
+              placeholder="H"
+              title={`${homeName} shootout`}
+              className="w-11 px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-center text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-[#003153] outline-none"
+            />
+            <span className="text-gray-400">–</span>
+            <input
+              type="number"
+              min="0"
+              value={awayPens}
+              onChange={(e) => setAwayPens(e.target.value)}
+              placeholder="A"
+              title={`${awayName} shootout`}
+              className="w-11 px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-center text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-[#003153] outline-none"
+            />
+            <label className="inline-flex items-center gap-1 text-[11px] text-gray-500 dark:text-gray-400 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={afterExtraTime}
+                onChange={(e) => setAfterExtraTime(e.target.checked)}
+                className="h-3.5 w-3.5 accent-[#003153]"
+              />
+              AET
+            </label>
+          </span>
+        )}
+
         <span className="text-[11px] text-gray-400">Save to apply</span>
       </div>
 

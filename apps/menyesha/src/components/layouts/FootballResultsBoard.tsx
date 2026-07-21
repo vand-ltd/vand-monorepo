@@ -17,7 +17,7 @@ import {
   type Stage,
 } from '@org/api';
 import { useLocale, useTranslations } from 'next-intl';
-import { Loader2, ChevronRight, ChevronLeft, ArrowLeft, Calendar } from 'lucide-react';
+import { Loader2, ChevronRight, ChevronLeft, ChevronUp, ArrowLeft, Calendar } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 
 function teamName(t?: { name?: string; shortName?: string }): string {
@@ -1198,15 +1198,33 @@ function MatchListRow({
       {m.minute != null ? `${m.minute}'` : t('live')}
     </span>
   ) : isFinished ? (
-    <span className="text-gray-400">{t('ft')}</span>
+    // A tie decided in extra time shows AET instead of FT.
+    <span className="text-gray-400">{m.afterExtraTime ? t('aetShort') : t('ft')}</span>
   ) : (
     <span className="text-gray-400">
       {new Date(m.kickoffAt).toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' })}
     </span>
   );
 
-  const homeWin = hasScore && (m.homeScore as number) > (m.awayScore as number);
-  const awayWin = hasScore && (m.awayScore as number) > (m.homeScore as number);
+  const hasPens = m.homePenalties != null && m.awayPenalties != null;
+  // The server derives the winner (score → penalties). Fall back to the score
+  // only if winnerTeamId isn't present.
+  const winnerId = m.winnerTeamId ?? null;
+  const homeWin = winnerId
+    ? winnerId === (home as any)?.id
+    : hasScore && (m.homeScore as number) > (m.awayScore as number);
+  const awayWin = winnerId
+    ? winnerId === (away as any)?.id
+    : hasScore && (m.awayScore as number) > (m.homeScore as number);
+  // Progressed marker only makes sense in a knockout tie that has a winner.
+  const isKnockout = (m as any).stage?.type === 'Knockout';
+  const homeThrough = isKnockout && !!winnerId && winnerId === (home as any)?.id;
+  const awayThrough = isKnockout && !!winnerId && winnerId === (away as any)?.id;
+  // A green ▲ marks the team that went through the tie.
+  const throughMark = (on: boolean) =>
+    on ? (
+      <ChevronUp className="h-3.5 w-3.5 shrink-0 text-emerald-500" aria-label={t('advanced')} />
+    ) : null;
 
   const nameCls = (win: boolean) =>
     `flex-1 truncate ${win ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`;
@@ -1225,17 +1243,26 @@ function MatchListRow({
       )}
       {/* Mobile: teams stacked, one above the other */}
       <div className="sm:hidden flex items-center gap-3 px-3 py-2.5 text-sm">
-        <span className="w-12 shrink-0 text-center text-[11px]">{status}</span>
+        <span className="w-12 shrink-0 text-center text-[11px]">
+          {status}
+          {hasPens && (
+            <span className="block text-[9px] font-semibold tabular-nums text-gray-400">
+              {m.homePenalties}-{m.awayPenalties} {t('penaltiesShort')}
+            </span>
+          )}
+        </span>
         <div className="flex-1 min-w-0 space-y-1.5">
           <div className="flex items-center gap-2">
             <Crest team={home} />
             <span className={nameCls(homeWin)}>{teamName(home)}</span>
-            {hasScore && <span className={scoreCls(homeWin)}>{m.homeScore}</span>}
+            {throughMark(homeThrough)}
+            {hasScore && <span className={`${scoreCls(homeWin)} ml-auto`}>{m.homeScore}</span>}
           </div>
           <div className="flex items-center gap-2">
             <Crest team={away} />
             <span className={nameCls(awayWin)}>{teamName(away)}</span>
-            {hasScore && <span className={scoreCls(awayWin)}>{m.awayScore}</span>}
+            {throughMark(awayThrough)}
+            {hasScore && <span className={`${scoreCls(awayWin)} ml-auto`}>{m.awayScore}</span>}
           </div>
         </div>
       </div>
@@ -1244,6 +1271,7 @@ function MatchListRow({
       <div className="hidden sm:flex items-center gap-3 px-4 py-3 text-sm">
         <span className="w-24 shrink-0 text-xs">{status}</span>
         <div className="flex-1 flex items-center justify-end gap-2 min-w-0">
+          {throughMark(homeThrough)}
           <span
             className={`truncate text-right ${
               homeWin ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'
@@ -1253,8 +1281,15 @@ function MatchListRow({
           </span>
           <Crest team={home} />
         </div>
-        <span className="shrink-0 w-14 text-center font-bold tabular-nums text-gray-900 dark:text-white">
-          {hasScore ? `${m.homeScore} - ${m.awayScore}` : 'v'}
+        <span className="shrink-0 w-14 text-center">
+          <span className="block font-bold tabular-nums text-gray-900 dark:text-white">
+            {hasScore ? `${m.homeScore} - ${m.awayScore}` : 'v'}
+          </span>
+          {hasPens && (
+            <span className="block text-[9px] font-semibold tabular-nums text-gray-400">
+              {m.homePenalties}-{m.awayPenalties} {t('penaltiesShort')}
+            </span>
+          )}
         </span>
         <div className="flex-1 flex items-center gap-2 min-w-0">
           <Crest team={away} />
@@ -1265,6 +1300,7 @@ function MatchListRow({
           >
             {teamName(away)}
           </span>
+          {throughMark(awayThrough)}
         </div>
       </div>
     </Link>
