@@ -203,34 +203,43 @@ export function MatchEventsPanel({
           {sortedEvents.map((e) => (
             <li
               key={e.id}
-              className={`flex items-center gap-2 text-xs rounded px-1 py-0.5 ${
+              className={`flex items-start gap-2 text-xs rounded px-1 py-1 ${
                 editingId === e.id ? 'bg-[#003153]/10 dark:bg-[#F59E0B]/10' : ''
               }`}
             >
-              <span className="w-10 shrink-0 text-right font-semibold tabular-nums text-gray-500 dark:text-gray-400">
+              <span className="w-9 shrink-0 pt-0.5 text-right font-semibold tabular-nums text-gray-500 dark:text-gray-400">
                 {eventClock(e)}
               </span>
-              <span className="inline-flex items-center rounded bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 font-medium text-gray-700 dark:text-gray-200">
-                {TYPE_LABELS[e.type as MatchEventType] ?? e.type}
-              </span>
-              <span className="text-gray-900 dark:text-white truncate">
-                {e.player?.fullName ?? '—'}
-                {e.relatedPlayer?.fullName && (
-                  <span className="text-gray-400">
-                    {' '}
-                    {GOAL_TYPES.includes(e.type as MatchEventType) ? '(assist: ' : '(for '}
-                    {e.relatedPlayer.fullName})
+
+              {/* Stacks as type+team / player on mobile; `sm:contents` flattens
+                  it back into one row from sm up. */}
+              <div className="min-w-0 flex-1 flex flex-col sm:flex-row sm:items-center gap-x-2 gap-y-0.5">
+                <div className="flex items-center gap-2 min-w-0 sm:contents">
+                  <span className="inline-flex shrink-0 items-center rounded bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 font-medium text-gray-700 dark:text-gray-200">
+                    {TYPE_LABELS[e.type as MatchEventType] ?? e.type}
                   </span>
-                )}
-              </span>
-              <span className="ml-auto shrink-0 text-gray-400 truncate max-w-[8rem]">
-                {teamName(e.teamId)}
-              </span>
+                  <span className="ml-auto shrink-0 truncate max-w-[7rem] sm:max-w-[8rem] text-gray-400 sm:order-last">
+                    {teamName(e.teamId)}
+                  </span>
+                </div>
+                <span className="min-w-0 truncate text-gray-900 dark:text-white">
+                  {e.player?.fullName ?? '—'}
+                  {e.relatedPlayer?.fullName && (
+                    <span className="text-gray-400">
+                      {' '}
+                      {GOAL_TYPES.includes(e.type as MatchEventType) ? '(assist: ' : '(for '}
+                      {e.relatedPlayer.fullName})
+                    </span>
+                  )}
+                </span>
+              </div>
+
               <button
                 type="button"
                 onClick={() => startEdit(e)}
                 title="Edit event"
-                className="shrink-0 p-1 rounded text-gray-400 hover:text-[#003153] dark:hover:text-[#F59E0B] hover:bg-gray-200 dark:hover:bg-gray-700"
+                aria-label="Edit event"
+                className="shrink-0 p-1.5 -m-0.5 rounded text-gray-400 hover:text-[#003153] dark:hover:text-[#F59E0B] hover:bg-gray-200 dark:hover:bg-gray-700"
               >
                 <Pencil className="h-3.5 w-3.5" />
               </button>
@@ -255,8 +264,10 @@ export function MatchEventsPanel({
             </button>
           </div>
         )}
+        {/* Team/Type need the full width on a phone (club names are long);
+            the two short numeric fields share a row. */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <div>
+          <div className="col-span-2 sm:col-span-1">
             <label className={labelClass}>Team</label>
             <select
               value={teamId}
@@ -271,7 +282,7 @@ export function MatchEventsPanel({
               <option value={match.awayTeamId}>{awayName}</option>
             </select>
           </div>
-          <div>
+          <div className="col-span-2 sm:col-span-1">
             <label className={labelClass}>Type</label>
             <select
               value={type}
@@ -365,9 +376,13 @@ export function MatchEventsPanel({
           )}
         </div>
 
-        <div className="mt-3 flex justify-end gap-2">
+        <div className="mt-3 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
           {editingId && (
-            <button type="button" onClick={resetForm} className="px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+            <button
+              type="button"
+              onClick={resetForm}
+              className="px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+            >
               Cancel
             </button>
           )}
@@ -375,7 +390,7 @@ export function MatchEventsPanel({
             type="button"
             disabled={!canSubmit}
             onClick={() => saveMut.mutate()}
-            className={primaryBtn}
+            className={`${primaryBtn} w-full sm:w-auto`}
           >
             {saveMut.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" />

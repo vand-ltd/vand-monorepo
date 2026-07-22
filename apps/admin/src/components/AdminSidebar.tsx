@@ -3,24 +3,9 @@
 import { useTranslations, useLocale } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
-import {
-  LayoutDashboard,
-  LogIn,
-  LogOut,
-  FileText,
-  List,
-  UserPlus,
-  Users,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Zap,
-  FolderPlus,
-  ScrollText,
-  BadgeDollarSign,
-  Fuel,
-  Trophy,
-} from 'lucide-react';
+import { LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { visibleAdminNavLinks, isAdminNavLinkActive } from '@/lib/adminNav';
 
 export function AdminSidebar() {
   const t = useTranslations('nav');
@@ -39,29 +24,7 @@ export function AdminSidebar() {
   const isLoginPage = pathname.endsWith('/login');
   if (isLoginPage) return null;
 
-  const navLinks = [
-    { href: '/' as const, label: t('dashboard'), icon: LayoutDashboard, auth: true },
-    { href: '/login' as const, label: t('login'), icon: LogIn, auth: false, hideWhenAuth: true },
-    { href: '/articles' as const, label: t('articles'), icon: List, auth: true, adminOnly: true },
-    { href: '/create-article' as const, label: t('createArticle'), icon: FileText, auth: true },
-    { href: '/breaking-news' as const, label: t('breakingNews'), icon: Zap, auth: true },
-    { href: '/categories' as const, label: t('categories'), icon: FolderPlus, auth: true, adminOnly: true },
-    { href: '/users' as const, label: t('users'), icon: Users, auth: true, adminOnly: true },
-    { href: '/create-user' as const, label: t('createUser'), icon: UserPlus, auth: true, adminOnly: true },
-    { href: '/terms' as const, label: t('terms'), icon: ScrollText, auth: true, adminOnly: true },
-    { href: '/create-sponsored-article' as const, label: t('createSponsoredArticle'), icon: BadgeDollarSign, auth: true },
-    { href: '/fuel-prices' as const, label: t('fuelPrices'), icon: Fuel, auth: true, adminOnly: true },
-    { href: '/create-fuel-prices' as const, label: t('createFuelPrices'), icon: Fuel, auth: true, adminOnly: true },
-    { href: '/football' as const, label: t('football'), icon: Trophy, auth: true, adminOnly: true },
-  ].filter((link) => {
-    if (link.auth && !isLoggedIn) return false;
-    if (link.hideWhenAuth && isLoggedIn) return false;
-    if (link.adminOnly && userRole.toLowerCase() !== 'admin') return false;
-    return true;
-  });
-
-  const normalizePath = (path: string) =>
-    path.endsWith('/') && path !== '/' ? path.slice(0, -1) : path;
+  const navLinks = visibleAdminNavLinks({ isLoggedIn, userRole });
 
   return (
     <aside
@@ -86,16 +49,14 @@ export function AdminSidebar() {
       {/* Nav links */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navLinks.map((link) => {
-          const normalized = normalizePath(pathname);
-          const target = `/${locale}${link.href === '/' ? '' : link.href}`;
-          const isActive =
-            normalized === target || (link.href === '/' && normalized === `/${locale}`);
+          const label = t(link.labelKey);
+          const isActive = isAdminNavLinkActive(pathname, link.href, locale);
 
           return (
             <Link
               key={link.href}
               href={link.href}
-              title={collapsed ? link.label : undefined}
+              title={collapsed ? label : undefined}
               className={`flex items-center rounded-lg text-sm font-medium transition-colors ${
                 collapsed ? 'justify-center px-2 py-2.5' : 'space-x-3 px-3 py-2.5'
               } ${
@@ -105,7 +66,7 @@ export function AdminSidebar() {
               }`}
             >
               <link.icon className="h-5 w-5 shrink-0" />
-              {!collapsed && <span>{link.label}</span>}
+              {!collapsed && <span>{label}</span>}
             </Link>
           );
         })}

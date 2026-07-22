@@ -5,23 +5,10 @@ import { usePathname } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import { ToggleMode } from './ToggleMode';
 import { LanguageSwitcher } from './LanguageSwitcher';
-import {
-  LayoutDashboard,
-  LogIn,
-  LogOut,
-  FileText,
-  List,
-  Menu,
-  X,
-  UserPlus,
-  Users,
-  Zap,
-  FolderPlus,
-  User,
-  BadgeDollarSign,
-} from 'lucide-react';
+import { LogOut, Menu, X, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { visibleAdminNavLinks, isAdminNavLinkActive } from '@/lib/adminNav';
 
 export function AdminHeader() {
   const t = useTranslations('nav');
@@ -40,25 +27,7 @@ export function AdminHeader() {
 
   const isLoginPage = pathname.endsWith('/login');
 
-  const navLinks = [
-    { href: '/' as const, label: t('dashboard'), icon: LayoutDashboard, auth: true },
-    { href: '/login' as const, label: t('login'), icon: LogIn, auth: false, hideWhenAuth: true },
-    { href: '/articles' as const, label: t('articles'), icon: List, auth: true, adminOnly: true },
-    { href: '/create-article' as const, label: t('createArticle'), icon: FileText, auth: true },
-    { href: '/breaking-news' as const, label: t('breakingNews'), icon: Zap, auth: true },
-    { href: '/create-sponsored-article' as const, label: t('createSponsoredArticle'), icon: BadgeDollarSign, auth: true, adminOnly: true },
-    { href: '/categories' as const, label: t('categories'), icon: FolderPlus, auth: true, adminOnly: true },
-    { href: '/users' as const, label: t('users'), icon: Users, auth: true, adminOnly: true },
-    { href: '/create-user' as const, label: t('createUser'), icon: UserPlus, auth: true, adminOnly: true },
-  ].filter((link) => {
-    if (link.auth && !isLoggedIn) return false;
-    if (link.hideWhenAuth && isLoggedIn) return false;
-    if (link.adminOnly && userRole.toLowerCase() !== 'admin') return false;
-    return true;
-  });
-
-  const normalizePath = (path: string) =>
-    path.endsWith('/') && path !== '/' ? path.slice(0, -1) : path;
+  const navLinks = visibleAdminNavLinks({ isLoggedIn, userRole });
 
   return (
     <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
@@ -136,10 +105,7 @@ export function AdminHeader() {
           <div className="md:hidden fixed top-14 left-0 bottom-0 w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-50 overflow-y-auto">
             <nav className="px-3 py-4 space-y-1">
               {navLinks.map((link) => {
-                const normalized = normalizePath(pathname);
-                const target = `/${locale}${link.href === '/' ? '' : link.href}`;
-                const isActive =
-                  normalized === target || (link.href === '/' && normalized === `/${locale}`);
+                const isActive = isAdminNavLinkActive(pathname, link.href, locale);
 
                 return (
                   <Link
@@ -153,14 +119,28 @@ export function AdminHeader() {
                     }`}
                   >
                     <link.icon className="h-5 w-5" />
-                    <span>{link.label}</span>
+                    <span>{t(link.labelKey)}</span>
                   </Link>
                 );
               })}
             </nav>
 
             {isLoggedIn && (
-              <div className="px-3 py-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="px-3 py-4 border-t border-gray-200 dark:border-gray-700 space-y-1">
+                {/* Profile is only an avatar in the desktop header, so mobile
+                    needs its own entry to reach it at all. */}
+                <Link
+                  href="/profile"
+                  onClick={() => setMobileOpen(false)}
+                  className={`w-full flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
+                    isAdminNavLinkActive(pathname, '/profile', locale)
+                      ? 'bg-[#003153] text-white dark:bg-[#F59E0B] dark:text-gray-900'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  <User className="h-5 w-5" />
+                  <span>{t('profile')}</span>
+                </Link>
                 <button
                   onClick={() => {
                     localStorage.removeItem('token');
