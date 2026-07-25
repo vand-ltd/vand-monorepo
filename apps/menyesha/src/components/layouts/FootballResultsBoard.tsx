@@ -787,6 +787,9 @@ export function FootballResultsBoard({
                     // Cup sections have a stage/group header; the all-competitions
                     // view groups by competition, so tag each row there instead.
                     showStage={!competitionId}
+                    // Cup stage sections aren't grouped by date, so show each
+                    // match's date on the row (league sections have a date header).
+                    showDate={!!competitionId && !group.date}
                   />
                 ))}
               </div>
@@ -1184,11 +1187,15 @@ function MatchListRow({
   dateLocale,
   t,
   showStage,
+  showDate,
 }: {
   m: Match;
   dateLocale: string;
   t: ReturnType<typeof useTranslations>;
   showStage?: boolean;
+  // Show each match's date in the status column. Needed when the section isn't
+  // grouped by date (cup stages), so the date isn't lost.
+  showDate?: boolean;
 }) {
   // In mixed feeds (no per-stage section headers) tag the row with its
   // group/stage so a cup fixture's context isn't lost.
@@ -1218,6 +1225,19 @@ function MatchListRow({
     <span className="text-gray-400">
       {new Date(m.kickoffAt).toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' })}
     </span>
+  );
+
+  // In cup stage sections there's no date header, so prefix the row's status
+  // with its own date.
+  const statusCol = showDate ? (
+    <>
+      <span className="block text-[10px] font-medium text-gray-400">
+        {new Date(m.kickoffAt).toLocaleDateString(dateLocale, { day: 'numeric', month: 'short' })}
+      </span>
+      {status}
+    </>
+  ) : (
+    status
   );
 
   const hasPens = m.homePenalties != null && m.awayPenalties != null;
@@ -1258,7 +1278,7 @@ function MatchListRow({
       {/* Mobile: teams stacked, one above the other */}
       <div className="sm:hidden flex items-center gap-3 px-3 py-2.5 text-sm">
         <span className="w-12 shrink-0 text-center text-[11px]">
-          {status}
+          {statusCol}
           {hasPens && (
             <span className="block text-[9px] font-semibold tabular-nums text-gray-400">
               {m.homePenalties}-{m.awayPenalties} {t('penaltiesShort')}
@@ -1283,7 +1303,7 @@ function MatchListRow({
 
       {/* Desktop: flat home | score | away */}
       <div className="hidden sm:flex items-center gap-3 px-4 py-3 text-sm">
-        <span className="w-24 shrink-0 text-xs">{status}</span>
+        <span className="w-24 shrink-0 text-xs">{statusCol}</span>
         <div className="flex-1 flex items-center justify-end gap-2 min-w-0">
           {throughMark(homeThrough)}
           <span
