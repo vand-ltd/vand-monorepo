@@ -387,7 +387,6 @@ function MatchRow({
   const [status, setStatus] = useState<MatchStatus>(match.status ?? 'Scheduled');
   const [home, setHome] = useState<string>(match.homeScore != null ? String(match.homeScore) : '');
   const [away, setAway] = useState<string>(match.awayScore != null ? String(match.awayScore) : '');
-  const [minute, setMinute] = useState<string>(match.minute != null ? String(match.minute) : '');
   const [venueId, setVenueId] = useState<string>(
     match.venueId ?? (match.venue as any)?.id ?? ''
   );
@@ -413,7 +412,10 @@ function MatchRow({
         status,
         ...(home.trim() ? { homeScore: Number(home) } : {}),
         ...(away.trim() ? { awayScore: Number(away) } : {}),
-        ...(minute.trim() ? { minute: Number(minute) } : {}),
+        // Deliberately NOT sending `minute`: the backend sets the half base
+        // (0/45) on the into-Live transition and the public clock counts from
+        // liveStartedAt. Sending a stale minute here overrode the auto-45 and
+        // made the second half restart from 0.
         ...(venueId ? { venueId } : {}),
         ...(referee.trim() ? { referee: referee.trim() } : {}),
         ...(isKnockout
@@ -507,16 +509,6 @@ function MatchRow({
           </option>
         ))}
       </select>
-      <input
-        type="number"
-        min="0"
-        max="120"
-        value={minute}
-        onChange={(e) => setMinute(e.target.value)}
-        placeholder="min"
-        className={`${scoreInput} w-14 shrink-0`}
-        aria-label="Minute"
-      />
       </div>
 
       <div className="flex items-center gap-2 sm:contents">
