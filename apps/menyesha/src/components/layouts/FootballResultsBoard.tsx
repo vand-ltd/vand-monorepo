@@ -146,6 +146,15 @@ function DateNav({ date, onChange }: { date: string; onChange: (d: string) => vo
 
 import { LIVE_STATUSES, useNow, liveMinuteLabel } from '@/lib/matchClock';
 
+// The flagship league is pinned to the top of the all-competitions views.
+const PINNED_COMPETITION_SLUG = 'bk-pro-league';
+function isPinnedCompetition(g: { slug?: string; name?: string }): boolean {
+  return (
+    g.slug === PINNED_COMPETITION_SLUG ||
+    (g.name ?? '').toLowerCase().includes('bk pro league')
+  );
+}
+
 // Competition tabs, in display order. 'overview' is the default (bare URL);
 // the rest are reflected in the path as /…/<tab>. Add future tabs here.
 const COMPETITION_TABS = [
@@ -429,7 +438,11 @@ export function FootballResultsBoard({
           byComp.set(key, { key, name: c?.name ?? '', slug: c?.slug, type: c?.type, list: [] });
         byComp.get(key)!.list.push(m);
       }
-      return Array.from(byComp.values());
+      // Pin the flagship league to the top; the rest keep earliest-kickoff order
+      // (Array.sort is stable, so returning 0 preserves insertion order).
+      return Array.from(byComp.values()).sort(
+        (a, b) => (isPinnedCompetition(a) ? 0 : 1) - (isPinnedCompetition(b) ? 0 : 1)
+      );
     }
 
     const filtered = (
