@@ -8,7 +8,7 @@ import { Link } from '@/i18n/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Trophy, ChevronRight } from 'lucide-react';
 
-const LIVE_STATUSES = ['Live', 'HalfTime'];
+import { LIVE_STATUSES, useNow, liveMinuteLabel } from '@/lib/matchClock';
 
 function teamName(t?: { name?: string; shortName?: string }): string {
   // Prefer the full name; the row truncates it if it's too long.
@@ -64,6 +64,9 @@ export function FootballWidget() {
       .sort((a, b) => new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime());
     return [...live, ...finished, ...upcoming].slice(0, 6);
   }, [matches]);
+
+  // One timer for the whole widget: ticks the live clocks between refetches.
+  const now = useNow(rows.some((m) => m.status === 'Live'));
 
   // Every competition that has a season — so cups without fixtures yet still
   // appear. Matches only add competitions the seasons list somehow missed.
@@ -143,9 +146,7 @@ export function FootballWidget() {
               const isLive = LIVE_STATUSES.includes(m.status);
               const hasScore = m.homeScore != null && m.awayScore != null;
               const center = isLive
-                ? m.minute != null
-                  ? `${m.minute}'`
-                  : t('live')
+                ? liveMinuteLabel(m, now, { live: t('live'), halfTime: t('halfTime') })
                 : hasScore
                   ? `${m.homeScore}-${m.awayScore}`
                   : new Date(m.kickoffAt).toLocaleDateString(dateLocale, {

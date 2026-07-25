@@ -7,7 +7,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Trophy, ChevronRight } from 'lucide-react';
 
-const LIVE_STATUSES = ['Live', 'HalfTime'];
+import { LIVE_STATUSES, useNow, liveMinuteLabel } from '@/lib/matchClock';
 
 function teamName(t?: { name?: string; shortName?: string }): string {
   // Prefer the full name; the row truncates it if it's too long.
@@ -57,6 +57,9 @@ export function FootballStrip() {
     return [...live, ...finished, ...upcoming].slice(0, 10);
   }, [matches]);
 
+  // One timer for the whole strip: ticks the live clocks between refetches.
+  const now = useNow(rows.some((m) => m.status === 'Live'));
+
   if (!isLoading && matches.length === 0) return null;
 
   return (
@@ -81,9 +84,7 @@ export function FootballStrip() {
           const isLive = LIVE_STATUSES.includes(m.status);
           const hasScore = m.homeScore != null && m.awayScore != null;
           const status = isLive
-            ? m.minute != null
-              ? `${m.minute}'`
-              : t('live')
+            ? liveMinuteLabel(m, now, { live: t('live'), halfTime: t('halfTime') })
             : m.status === 'FullTime'
               ? t('ft')
               : new Date(m.kickoffAt).toLocaleDateString(dateLocale, { month: 'short', day: 'numeric' });

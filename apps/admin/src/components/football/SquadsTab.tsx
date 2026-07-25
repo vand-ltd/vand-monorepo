@@ -19,9 +19,10 @@ import {
   type Season,
 } from '@org/api';
 import { toast } from 'sonner';
-import { Loader2, Plus, Trash2, Shirt, Upload } from 'lucide-react';
+import { Loader2, Plus, Trash2, Shirt, Upload, Pencil } from 'lucide-react';
 import { flagForName } from '@/lib/countries';
 import { CountrySelect } from './CountrySelect';
+import { EditSquadPlayerModal } from './EditSquadPlayerModal';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -180,6 +181,7 @@ export function SquadsTab({ seasonId, season }: { seasonId: string; season: Seas
     onError: (e) => toast.error(errMessage(e, 'Failed to add players')),
   });
 
+  const [editTarget, setEditTarget] = useState<Player | null>(null);
   const [removeTarget, setRemoveTarget] = useState<{ membershipId: string; name: string } | null>(
     null
   );
@@ -567,16 +569,28 @@ export function SquadsTab({ seasonId, season }: { seasonId: string; season: Seas
                         {p.shirtNumber ?? '—'}
                       </span>
                       {p.membershipId && (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setRemoveTarget({ membershipId: p.membershipId!, name: p.name })
-                          }
-                          title="Remove from squad"
-                          className="p-1.5 shrink-0 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setEditTarget(p)}
+                            title="Edit player"
+                            aria-label="Edit player"
+                            className="p-1.5 shrink-0 rounded-lg text-gray-400 hover:text-[#003153] dark:hover:text-[#F59E0B] hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setRemoveTarget({ membershipId: p.membershipId!, name: p.name })
+                            }
+                            title="Remove from squad"
+                            aria-label="Remove from squad"
+                            className="p-1.5 shrink-0 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </>
                       )}
                     </div>
                   );
@@ -585,6 +599,15 @@ export function SquadsTab({ seasonId, season }: { seasonId: string; season: Seas
             )}
           </div>
         </>
+      )}
+
+      {editTarget && (
+        <EditSquadPlayerModal
+          teamId={teamId}
+          seasonId={seasonId}
+          player={editTarget}
+          onClose={() => setEditTarget(null)}
+        />
       )}
 
       <AlertDialog open={!!removeTarget} onOpenChange={(open) => !open && setRemoveTarget(null)}>

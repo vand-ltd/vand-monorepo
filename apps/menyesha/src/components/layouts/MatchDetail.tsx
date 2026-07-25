@@ -16,8 +16,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Loader2, ArrowLeft, MapPin, ArrowUp, ArrowDown, ChevronUp, Download, CheckCircle2 } from 'lucide-react';
 import { ShareButton } from '@/components/article/ShareButton';
-
-const LIVE_STATUSES = ['Live', 'HalfTime'];
+import { LIVE_STATUSES, useNow, liveMinuteLabel } from '@/lib/matchClock';
 
 function teamName(t?: { name?: string; shortName?: string }): string {
   return t?.name ?? t?.shortName ?? 'TBD';
@@ -176,6 +175,8 @@ function MatchCardDetail({
     typeof comp?.logo === 'string' && comp.logo.startsWith('http') ? comp.logo : null;
   const isLive = LIVE_STATUSES.includes(m.status);
   const isFinished = m.status === 'FullTime';
+  // Ticks the live clock forward between data refetches.
+  const now = useNow(m.status === 'Live');
   const hasScore = m.homeScore != null && m.awayScore != null;
   const hasPens = m.homePenalties != null && m.awayPenalties != null;
   // Server-derived winner of a knockout tie (score → penalties).
@@ -199,7 +200,7 @@ function MatchCardDetail({
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
         <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
       </span>
-      {m.minute != null ? `${m.minute}'` : t('live')}
+      {liveMinuteLabel(m, now, { live: t('live'), halfTime: t('halfTime') })}
     </span>
   ) : isFinished ? (
     <span className="text-gray-500 dark:text-gray-400 font-medium">
@@ -458,6 +459,50 @@ function goalQualifier(type: MatchEvent['type']): string | null {
   return null;
 }
 
+// A scored goal (missed penalties are not goals and stay as their own row).
+function isGoalType(type: MatchEvent['type']): boolean {
+  return type === 'Goal' || type === 'Penalty' || type === 'OwnGoal';
+}
+
+// One clock per goal with its qualifier, LiveScore-style: "23', 67' (pen)".
+function goalTimesLabel(goals: MatchEvent[]): string {
+  return goals
+    .map((g) => {
+      const q = goalQualifier(g.type);
+      return `${eventClock(g)}${q ? ` (${q})` : ''}`;
+    })
+    .join(', ');
+}
+
+// A goal scorer with all their goals, or any single non-goal event. Goals by
+// the same player (same team) collapse into one row anchored at the first goal.
+type TimelineItem =
+  | { kind: 'goals'; key: string; teamId: string; player: MatchEvent['player']; goals: MatchEvent[] }
+  | { kind: 'single'; event: MatchEvent };
+
+function buildTimeline(sorted: MatchEvent[]): TimelineItem[] {
+  const groups = new Map<string, Extract<TimelineItem, { kind: 'goals' }>>();
+  const items: TimelineItem[] = [];
+  for (const e of sorted) {
+    // Group by team + player so a normal goal and an own goal (credited to the
+    // other team) never merge.
+    if (isGoalType(e.type) && e.player?.id) {
+      const key = `${e.teamId}:${e.player.id}`;
+      const existing = groups.get(key);
+      if (existing) {
+        existing.goals.push(e);
+      } else {
+        const item = { kind: 'goals' as const, key, teamId: e.teamId, player: e.player, goals: [e] };
+        groups.set(key, item);
+        items.push(item);
+      }
+    } else {
+      items.push({ kind: 'single', event: e });
+    }
+  }
+  return items;
+}
+
 function EventDetail({ e, alignRight }: { e: MatchEvent; alignRight: boolean }) {
   const main = e.player?.fullName;
   const qualifier = goalQualifier(e.type);
@@ -510,35 +555,53 @@ function MatchEvents({
   const sorted = [...events].sort(
     (a, b) => a.minute - b.minute || (a.extraMinute ?? 0) - (b.extraMinute ?? 0)
   );
+  const items = buildTimeline(sorted);
 
   return (
     <ul className="divide-y divide-gray-100 dark:divide-gray-700">
-        {sorted.map((e) => {
-          const isHome = homeTeamId != null && e.teamId === homeTeamId;
+        {items.map((item) => {
+          const teamId = item.kind === 'goals' ? item.teamId : item.event.teamId;
+          const isHome = homeTeamId != null && teamId === homeTeamId;
+          const key = item.kind === 'goals' ? item.key : item.event.id;
+
+          // Goals collapse to one row per scorer; the ⚽ sits on the centre
+          // spine and every minute shows inline. Other events keep the minute
+          // in the centre column and the icon on the team's side.
+          const detail =
+            item.kind === 'goals' ? (
+              <GoalDetail item={item} alignRight={isHome} />
+            ) : (
+              <EventDetail e={item.event} alignRight={isHome} />
+            );
+          const sideIcon =
+            item.kind === 'goals' ? null : <EventIcon type={item.event.type} />;
+          const centre =
+            item.kind === 'goals' ? <EventIcon type="Goal" /> : eventClock(item.event);
+
           return (
             <li
-              key={e.id}
+              key={key}
               className="grid grid-cols-[minmax(0,1fr)_2.5rem_minmax(0,1fr)] items-center gap-2 sm:gap-3 py-2.5"
             >
               {/* Home side */}
               <div className="flex justify-end min-w-0">
                 {isHome && (
                   <div className="flex items-center gap-2 min-w-0">
-                    <EventDetail e={e} alignRight />
-                    <EventIcon type={e.type} />
+                    {detail}
+                    {sideIcon}
                   </div>
                 )}
               </div>
-              {/* Minute — fixed centre column keeps every row aligned */}
-              <span className="text-center text-xs font-semibold tabular-nums text-gray-500 dark:text-gray-400">
-                {eventClock(e)}
+              {/* Fixed centre column keeps every row aligned */}
+              <span className="flex items-center justify-center text-center text-xs font-semibold tabular-nums text-gray-500 dark:text-gray-400">
+                {centre}
               </span>
               {/* Away side */}
               <div className="flex justify-start min-w-0">
                 {!isHome && (
                   <div className="flex items-center gap-2 min-w-0">
-                    <EventIcon type={e.type} />
-                    <EventDetail e={e} alignRight={false} />
+                    {sideIcon}
+                    {detail}
                   </div>
                 )}
               </div>
@@ -546,6 +609,33 @@ function MatchEvents({
           );
         })}
       </ul>
+  );
+}
+
+// A grouped goal scorer: name once, all goal minutes inline. The assist line
+// only makes sense for a lone goal, so it's shown when the group has just one.
+function GoalDetail({
+  item,
+  alignRight,
+}: {
+  item: Extract<TimelineItem, { kind: 'goals' }>;
+  alignRight: boolean;
+}) {
+  const only = item.goals.length === 1 ? item.goals[0] : null;
+  return (
+    <div className={`min-w-0 ${alignRight ? 'text-right' : 'text-left'}`}>
+      <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
+        <PlayerLink slug={item.player?.slug}>{item.player?.fullName ?? '—'}</PlayerLink>
+        <span className="ml-1.5 text-xs font-normal tabular-nums text-gray-400">
+          {goalTimesLabel(item.goals)}
+        </span>
+      </p>
+      {only?.relatedPlayer?.fullName && (
+        <p className="truncate text-xs text-gray-400">
+          assist: <PlayerLink slug={only.relatedPlayer.slug}>{only.relatedPlayer.fullName}</PlayerLink>
+        </p>
+      )}
+    </div>
   );
 }
 

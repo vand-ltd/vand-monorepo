@@ -23,7 +23,7 @@ function initials(t?: { name?: string; shortName?: string }): string {
   return (t?.shortName || (t?.name ?? '').replace(/[^a-zA-Z]/g, '').slice(0, 3)).toUpperCase() || '?';
 }
 
-const LIVE_STATUSES = ['Live', 'HalfTime'];
+import { LIVE_STATUSES, useNow, liveMinuteLabel } from '@/lib/matchClock';
 
 export function FootballScoreboard() {
   const locale = useLocale();
@@ -169,6 +169,7 @@ function MatchCard({
   const isLive = LIVE_STATUSES.includes(m.status);
   const isFinished = m.status === 'FullTime';
   const hasScore = m.homeScore != null && m.awayScore != null;
+  const now = useNow(m.status === 'Live');
 
   const statusNode = isLive ? (
     <span className="inline-flex items-center gap-1 text-red-600 dark:text-red-400 font-semibold">
@@ -176,7 +177,7 @@ function MatchCard({
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
         <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500" />
       </span>
-      {m.minute != null ? `${m.minute}'` : t('live')}
+      {liveMinuteLabel(m, now, { live: t('live'), halfTime: t('halfTime') })}
     </span>
   ) : isFinished ? (
     <span className="font-medium text-gray-400">{t('ft')}</span>

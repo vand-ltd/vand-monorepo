@@ -141,6 +141,9 @@ export interface Match {
   winnerTeamId?: string | null;
   decidedBy?: 'normal' | 'extra_time' | 'penalties' | null;
   minute?: number | null;
+  // Real start of the current half (the "whistle"), stamped on each transition
+  // into Live — the anchor the live clock counts from. Null until kickoff.
+  liveStartedAt?: string | null;
   venueId?: string | null;
   homeTeam?: Team;
   awayTeam?: Team;
@@ -313,6 +316,51 @@ export async function addSquadPlayers(
 export async function removeSquadPlayer(teamId: string, membershipId: string): Promise<any> {
   const { data } = await api.delete(`/api/menyesha/teams/${teamId}/squad/${membershipId}`);
   return unwrap<any>(data);
+}
+
+// Partial edit of the SQUAD MEMBERSHIP (season-specific). The endpoint strictly
+// whitelists these fields — person-level fields (name, nationality, photo…) live
+// on the player and must go through updatePlayer instead. Send null to clear.
+export interface SquadPlayerUpdate {
+  shirtNumber?: number | null;
+  position?: string | null; // position for THIS squad
+  joinedAt?: string | null;
+  leftAt?: string | null;
+}
+
+// PATCH /api/menyesha/teams/:id/squad/:membershipId -> update a squad membership.
+export async function updateSquadPlayer(
+  teamId: string,
+  membershipId: string,
+  payload: SquadPlayerUpdate
+): Promise<Player> {
+  const { data } = await api.patch(
+    `/api/menyesha/teams/${teamId}/squad/${membershipId}`,
+    payload
+  );
+  return unwrap<Player>(data);
+}
+
+// Partial edit of the PLAYER record (shared across every season/team). Note the
+// DTO uses `fullName`, not `name`. Send null to clear an optional field.
+export interface PlayerUpdate {
+  fullName?: string;
+  nationality?: string | null;
+  position?: string | null; // general position
+  photo?: string | null; // plain URL from uploadMedia().url, or null to clear
+  dateOfBirth?: string | null;
+  placeOfBirth?: string | null;
+  height?: number | null;
+  bio?: string | null;
+}
+
+// PATCH /api/menyesha/players/:playerId -> update the player record.
+export async function updatePlayer(
+  playerId: string,
+  payload: PlayerUpdate
+): Promise<Player> {
+  const { data } = await api.patch(`/api/menyesha/players/${playerId}`, payload);
+  return unwrap<Player>(data);
 }
 
 export interface MatchInput {

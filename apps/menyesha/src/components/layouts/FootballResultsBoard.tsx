@@ -144,7 +144,7 @@ function DateNav({ date, onChange }: { date: string; onChange: (d: string) => vo
   );
 }
 
-const LIVE_STATUSES = ['Live', 'HalfTime'];
+import { LIVE_STATUSES, useNow, liveMinuteLabel } from '@/lib/matchClock';
 
 // Competition tabs, in display order. 'overview' is the default (bare URL);
 // the rest are reflected in the path as /…/<tab>. Add future tabs here.
@@ -1188,6 +1188,7 @@ function MatchListRow({
   const hasScore = m.homeScore != null && m.awayScore != null;
   const home = (m as any).homeTeam;
   const away = (m as any).awayTeam;
+  const now = useNow(m.status === 'Live');
 
   const status = isLive ? (
     <span className="inline-flex items-center gap-1 text-red-600 dark:text-red-400 font-semibold">
@@ -1195,7 +1196,7 @@ function MatchListRow({
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
         <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500" />
       </span>
-      {m.minute != null ? `${m.minute}'` : t('live')}
+      {liveMinuteLabel(m, now, { live: t('live'), halfTime: t('halfTime') })}
     </span>
   ) : isFinished ? (
     // A tie decided in extra time shows AET instead of FT.
