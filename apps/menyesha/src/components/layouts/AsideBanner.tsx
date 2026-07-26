@@ -1,7 +1,7 @@
 'use client'
 
 import React, { ReactNode, useEffect, useState } from "react";
-import { TrendingUp, Clock, Eye, ArrowUp, Flame, Megaphone, Mail } from "lucide-react";
+import { TrendingUp, Clock, Eye, ArrowUp, Flame, Megaphone } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { getTrendingArticles, getRelatedArticles, getArticles } from "@org/api";
@@ -12,6 +12,9 @@ import Image from "next/image";
 import { formatTimeAgo } from "@/lib/timeago";
 import { FootballWidget } from "./FootballWidget";
 import { FootballStrip } from "./FootballStrip";
+import { AdSlot } from "@/components/ads/AdSlot";
+import { AdCoordinatorProvider } from "@/components/ads/AdCoordinator";
+import type { AdSection, AdPageType } from "@org/api";
 
 type AsideBannerProps = {
   children: ReactNode;
@@ -59,15 +62,44 @@ function SectionAdCard({ section, title }: { section: 'football' | 'data'; title
   );
 }
 
-function StickyBottomBanner({ label }: { label: string }) {
+function StickyBottomBanner({
+  label,
+  section,
+  pageType,
+}: {
+  label: string;
+  section: AdSection;
+  pageType: AdPageType;
+}) {
   return (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-gray-200 dark:border-gray-700 px-3 py-2 shadow-lg">
-      <div className="max-w-screen-xl mx-auto h-[50px] border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg flex items-center justify-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-        <Megaphone className="h-4 w-4 text-gray-400 dark:text-gray-500" />
-        <span className="font-medium">{label}</span>
-        <span className="text-[10px] text-gray-400">· 320×50</span>
+      <div className="max-w-screen-xl mx-auto flex items-center justify-center">
+        <AdSlot
+          placement="Footer"
+          section={section}
+          pageType={pageType}
+          fallback={
+            <div className="h-[50px] w-full border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg flex items-center justify-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+              <Megaphone className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+              <span className="font-medium">{label}</span>
+              <span className="text-[10px] text-gray-400">· 320×50</span>
+            </div>
+          }
+        />
       </div>
     </div>
+  );
+}
+
+function BackToTop({ t }: { t: ReturnType<typeof useTranslations> }) {
+  return (
+    <button
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      className="w-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 py-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2"
+    >
+      <ArrowUp className="h-4 w-4" />
+      <span>{t('backToTop')}</span>
+    </button>
   );
 }
 
@@ -100,6 +132,31 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
 
   const articleSlug = isArticleView ? pathWithoutLocale.replace('/article/', '').split('/')[0] : '';
   const categorySlug = isCategoryPage ? pathWithoutLocale.split('/').filter(Boolean)[0] : '';
+
+  // Map the current page to the ad-targeting vocabulary (section + pageType) so
+  // the dynamic ad slots below serve the right campaign.
+  const footballPageType = (): AdPageType => {
+    const parts = pathWithoutLocale.split('/').filter(Boolean); // ['football', ...]
+    if (parts.length <= 1) return 'list';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(parts[1])) return 'date';
+    if (parts[1] === 'player') return 'player';
+    if (parts.length >= 3) return parts[2].includes('-vs-') ? 'match' : 'competition';
+    return 'competition';
+  };
+  const adSection: AdSection = isFootballPage
+    ? 'football'
+    : isDataPage
+      ? 'fuel'
+      : isHomePage
+        ? 'home'
+        : 'news';
+  const adPageType: AdPageType = isArticleView
+    ? 'article'
+    : isFootballPage
+      ? footballPageType()
+      : isHomePage
+        ? 'home'
+        : 'list';
 
   // Trending — for home and fallback
   const { data: trendingData } = useQuery({
@@ -136,26 +193,42 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
   }
   const trendingStories = stories;
 
+  // One header "advertise here" box (matches the Header ad size). Reused for
+  // both header slots so an empty box keeps the leaderboard shape.
+  const headerAdBox = (
+    <div
+      className="w-full border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg flex items-center justify-center gap-3 text-sm text-gray-500 dark:text-gray-400"
+      style={{ aspectRatio: '728 / 90' }}
+    >
+      <Megaphone className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+      <div className="text-center">
+        <p className="text-xs font-medium">{t('adSpaceAvailable')}</p>
+        <p className="text-[10px] text-gray-400 dark:text-gray-500">{t('adLeaderboard')}</p>
+      </div>
+    </div>
+  );
+
   return (
-    <>
-      {/* Top Banner Ads — scrolls away with the page */}
+    <AdCoordinatorProvider>
+      {/* Top Banner — two side-by-side header ad slots. Each shows an ad when
+          available, otherwise its "advertise here" box. Second is desktop-only. */}
       <div className='bg-background border-b'>
         <div className="max-w-screen-xl mx-auto my-4 px-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Ad #1 — always visible */}
-          <div className="h-[100px] sm:h-[140px] border-2 border-dashed border-gray-200 dark:border-gray-700 flex items-center justify-center gap-3 text-sm text-gray-500 dark:text-gray-400 rounded-lg">
-            <Megaphone className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-            <div className="text-center">
-              <p className="text-xs font-medium">{t('adSpaceAvailable')}</p>
-              <p className="text-[10px] text-gray-400 dark:text-gray-500">{t('adLeaderboard')}</p>
-            </div>
-          </div>
-          {/* Ad #2 — desktop only */}
-          <div className="hidden sm:flex h-[140px] border-2 border-dashed border-gray-200 dark:border-gray-700 items-center justify-center gap-3 text-sm text-gray-500 dark:text-gray-400 rounded-lg">
-            <Megaphone className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-            <div className="text-center">
-              <p className="text-xs font-medium">{t('adSpaceAvailable')}</p>
-              <p className="text-[10px] text-gray-400 dark:text-gray-500">{t('adLeaderboard')}</p>
-            </div>
+          <AdSlot
+            placement="Header"
+            section={adSection}
+            pageType={adPageType}
+            alwaysShowFallback
+            fallback={headerAdBox}
+          />
+          <div className="hidden sm:block">
+            <AdSlot
+              placement="Header"
+              section={adSection}
+              pageType={adPageType}
+              alwaysShowFallback
+              fallback={headerAdBox}
+            />
           </div>
         </div>
       </div>
@@ -237,8 +310,12 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
                 </Card>
 
                 <div className="sticky space-y-6" style={{ top: headerHeight + 120 }}>
-                  <AdPlaceholder size="300 x 250" label={t('adSpaceAvailable')} />
-                  <AdPlaceholder size="300 x 250" label={t('adSpaceAvailable')} />
+                  <AdSlot
+                    placement="Sidebar"
+                    section={adSection}
+                    pageType={adPageType}
+                    fallback={<AdPlaceholder size="300 x 250" label={t('adSpaceAvailable')} />}
+                  />
 
                   <button
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -261,10 +338,24 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
               </div>
             )}
             {isFootballPage || isDataPage ? (
-              <SectionAdCard
-                section={isFootballPage ? 'football' : 'data'}
-                title={t('adSpaceAvailable')}
-              />
+              // Football/data: the ad, the advertise card and back-to-top all
+              // stick together as one block on desktop.
+              <div className="lg:sticky space-y-6" style={{ top: headerHeight + 16 }}>
+                <AdSlot
+                  placement="Sidebar"
+                  section={adSection}
+                  pageType={adPageType}
+                  fallback={
+                    <SectionAdCard
+                      section={isFootballPage ? 'football' : 'data'}
+                      title={t('adSpaceAvailable')}
+                    />
+                  }
+                />
+                {/* A second box appears only once a second ad is sold. */}
+                <AdSlot placement="Sidebar" section={adSection} pageType={adPageType} />
+                <BackToTop t={t} />
+              </div>
             ) : (
             <Card className="overflow-hidden !py-0 !gap-0">
               <div
@@ -376,46 +467,20 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
             </Card>
             )}
 
-            {/* Advertise With Us CTA */}
-            <Card className="overflow-hidden !p-0 !gap-0">
-              <div
-                className="relative text-white px-5 py-4"
-                style={{ background: 'linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-secondary))' }}
-              >
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(245,158,11,0.15),transparent_60%)]" />
-                <div className="relative space-y-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
-                      <Megaphone className="h-4 w-4 text-brand-accent" />
-                    </div>
-                    <h3 className="font-bold text-sm">{t('advertiseTitle')}</h3>
-                  </div>
-                  <p className="text-xs text-white/80 leading-relaxed">
-                    {t('advertiseDescription')}
-                  </p>
-                </div>
+            {/* News/home sidebar: the long trending list scrolls, while the
+                advertise card, ad and back-to-top stick together. (Football/data
+                already render their own sticky block above.) */}
+            {!isFootballPage && !isDataPage && (
+              <div className="sticky space-y-6" style={{ top: headerHeight + 16 }}>
+                <AdSlot
+                  placement="Sidebar"
+                  section={adSection}
+                  pageType={adPageType}
+                  fallback={<AdPlaceholder size="300 x 250" label={t('adSpaceAvailable')} />}
+                />
+                <BackToTop t={t} />
               </div>
-              <CardContent className="p-4">
-                <div className="w-full flex items-center justify-center gap-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-xs font-semibold py-2.5 px-4 rounded-lg">
-                  <Mail className="h-3.5 w-3.5" />
-                  <span>menyesha@vand.rw</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="sticky space-y-6" style={{ top: headerHeight + 120 }}>
-              <AdPlaceholder size="300 x 250" label={t('adSpaceAvailable')} />
-              <AdPlaceholder size="300 x 250" label={t('adSpaceAvailable')} />
-
-              {/* Back to Top */}
-              <button
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="w-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 py-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2"
-              >
-                <ArrowUp className="h-4 w-4" />
-                <span>{t('backToTop')}</span>
-              </button>
-            </div>
+            )}
               </>
             )}
           </aside>
@@ -423,8 +488,8 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
       </main>
 
       {/* Mobile-only sticky bottom banner */}
-      <StickyBottomBanner label={t('adSpaceAvailable')} />
-    </>
+      <StickyBottomBanner label={t('adSpaceAvailable')} section={adSection} pageType={adPageType} />
+    </AdCoordinatorProvider>
   );
 };
 
