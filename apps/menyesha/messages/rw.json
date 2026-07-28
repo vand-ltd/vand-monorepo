@@ -22,7 +22,8 @@
     "privacyPolicy": "Amabwiriza y'ibanga",
     "termsOfService": "Amategeko n'Amabwiriza",
     "scores": "Scores",
-    "data": "Data"
+    "data": "Data",
+    "advertise": "Kwamamaza"
   },
   "breakingNews": {
     "label": "BREAKING",
@@ -139,7 +140,8 @@
     "storyTipDescription": "Ufite amakuru ku nkuru yihutirwa? Itsinda ryacu ry'abanyamakuru rigenzura buri makuru. Amazina yawe azabikwa mu ibanga.",
     "sendTip": "Ohereza inkuru",
     "advertisingTitle": "Kwamamaza",
-    "advertisingDescription": "Urashaka kugera ku basomyi bacu? Twandikire ku byerekeye kwamamaza cyangwa ku byerekeye inkuru zishyurwa."
+    "advertisingDescription": "Urashaka kugera ku basomyi bacu? Twandikire ku byerekeye kwamamaza cyangwa ku byerekeye inkuru zishyurwa.",
+    "advertisingRates": "Reba ibiciro byo kwamamaza"
   },
   "aboutPage": {
     "heroTitle": "Ibyerekeye Menyesha",
@@ -454,5 +456,77 @@
     "matches": "Matches",
     "competitions": "Competitions",
     "allRounds": "All matchdays"
+  },
+  "advertisePage": {
+    "title": "Kwamamaza kuri Menyesha",
+    "intro": "Gera ku bakurikira umupira n'amakuru mu Rwanda — bagenewe telefone, ako kanya, kandi mu ndimi eshatu. Hitamo igice, aho byamamazwa, na paki ihuye n'ingengo yawe.",
+    "why": {
+      "audience": {
+        "title": "Abakurikira benshi",
+        "body": "Abakunda umupira n'abasoma amakuru mu Rwanda, buri munsi."
+      },
+      "mobile": {
+        "title": "Bigera kuri telefone",
+        "body": "Abenshi baturusuraho bakoresha telefone — kwamamaza kwawe kujya aho abantu bari."
+      },
+      "languages": {
+        "title": "Indimi eshatu",
+        "body": "Wamamaze mu Kinyarwanda, Icyongereza cyangwa Igifaransa."
+      },
+      "realtime": {
+        "title": "Bibaho kandi bigumaho",
+        "body": "Amanota abaho atuma abasomyi bagaruka — ikirango cyawe kigaragara kenshi."
+      }
+    },
+    "placementsTitle": "Aho kwamamaza kwawe bishobora kugaragara",
+    "placements": {
+      "header": {
+        "name": "Hejuru (leaderboard)",
+        "where": "Icyapa cyo hejuru kuri buri paji"
+      },
+      "sidebar": {
+        "name": "Ku ruhande",
+        "where": "Ku ruhande, bigumaho iyo usoma"
+      },
+      "inline": {
+        "name": "Mu nkuru",
+        "where": "Imbere mu nkuru, hagati y'imirongo"
+      },
+      "infeed": {
+        "name": "Hagati y'inkuru",
+        "where": "Hagati y'inkuru ku rutonde"
+      },
+      "footer": {
+        "name": "Hasi (telefone)",
+        "where": "Icyapa cyo hasi kuri telefone"
+      }
+    },
+    "pricingTitle": "Uko ibiciro bikorwa",
+    "pricingIntro": "Ibiciro biterwa n'ibintu bibiri — igice ushaka n'igihe umara. Twandikire kugira ngo ubone ibiciro biriho.",
+    "bySectionTitle": "Ku gice",
+    "tiers": {
+      "premium": {
+        "name": "Premium",
+        "sections": "Ahabanza · Siporo — amapaji afite abasomyi benshi"
+      },
+      "standard": {
+        "name": "Standard",
+        "sections": "Imyidagaduro, Politiki, Ubucuruzi n'ibindi bice · Imibare"
+      }
+    },
+    "byPackageTitle": "Ku gihe (paki)",
+    "durations": {
+      "month": "Ukwezi 1",
+      "quarter": "Amezi 3",
+      "year": "Umwaka 1"
+    },
+    "packageNote": "Paki z'amezi 3 n'umwaka zifite igiciro cyiza kuruta icy'ukwezi.",
+    "cta": {
+      "title": "Saba ibiciro",
+      "body": "Tubwire igice ushaka n'igihe — tukoherereza ibiciro biriho tukagushyira ku murongo.",
+      "button": "Twandikire usabe ibiciro"
+    },
+    "backHint": "Ufite ibibazo? Reba",
+    "contactLink": "urupapuro rwo kutwandikira"
   }
 }

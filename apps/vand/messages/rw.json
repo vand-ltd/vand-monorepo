@@ -1,11 +1,85 @@
 {
-  "comingSoon": {
-    "title": "Vand",
-    "subtitle": "Ikintu cyiza kiraje vuba.",
-    "stayTuned": "Komeza ukurikirane"
-  },
-  "toggleTheme": {
-    "light": "Umucyo",
-    "dark": "Umwijima"
+  "site": {
+    "nav": {
+      "services": "Ibyo dukora",
+      "products": "Ibicuruzwa",
+      "about": "Abo turi bo",
+      "contact": "Twandikire",
+      "cta": "Tangira umushinga"
+    },
+    "hero": {
+      "eyebrow": "Ikigo cya software · Kigali, Rwanda",
+      "titleLead": "Software iteza imbere",
+      "titleHighlight": "u Rwanda.",
+      "subtitle": "Vand yubaka software zihariye, porogaramu za web na mobile, ndetse n'ibicuruzwa byayo bwite — byubatswe kugira ngo bihute, byizewe kandi bimare igihe.",
+      "ctaPrimary": "Tangira umushinga",
+      "ctaSecondary": "Reba ibicuruzwa byacu",
+      "trust": "Ubunyabuki bwizewe · Byakorewe mu Rwanda"
+    },
+    "services": {
+      "kicker": "Ibyo dukora",
+      "title": "Software, kuva ku ntangiriro kugeza ku musozo.",
+      "subtitle": "Kuva ku gitekerezo cya mbere kugeza ku gicuruzwa kigera ku bantu — turabishushanya, tukabyubaka, tukabitanga.",
+      "items": {
+        "custom": {
+          "title": "Software zihariye",
+          "body": "Sisitemu na porogaramu zubakiwe uko ubucuruzi bwawe bukora koko."
+        },
+        "apps": {
+          "title": "Porogaramu za web na mobile",
+          "body": "Porogaramu za web na mobile zihuta kandi zizewe abakoresha bawe bazakunda."
+        },
+        "products": {
+          "title": "Ibicuruzwa byacu bwite",
+          "body": "Ntitwubakira abandi gusa — twubaka kandi tukayobora ibicuruzwa byacu, nka Menyesha."
+        }
+      }
+    },
+    "products": {
+      "kicker": "Ibicuruzwa byacu",
+      "title": "Ibicuruzwa twubaka kandi tuyobora.",
+      "subtitle": "Dushora imari mu bitekerezo byacu — dutanga ibicuruzwa bikoreshwa n'abantu nyabo mu Rwanda.",
+      "flagship": "Igicuruzwa cy'ibanze",
+      "menyesha": {
+        "tagline": "Aho Abanyarwanda bakurikirira amakuru n'imikino y'umupira ku buryo bwihuse, bugenewe telefone, kandi mu rurimi rwawe.",
+        "features": {
+          "live": "Amanota, imikino, ibisubizo n'imbonerahamwe, bivugururwa ako kanya.",
+          "news": "Amakuru ashyushye n'inkuru mu mikino no mu bindi.",
+          "multilang": "Kiraboneka mu Kinyarwanda, Icyongereza n'Igifaransa."
+        },
+        "cta": "Sura Menyesha"
+      },
+      "more": "Hari ibindi bicuruzwa biraje."
+    },
+    "about": {
+      "kicker": "Ibyerekeye Vand",
+      "title": "Byakorewe mu Rwanda, ku isi yose.",
+      "lead": "Vand ni ikigo cya software gifite intego yo kubaka ikoranabuhanga rituma ubuzima bwa buri munsi buba bwiza — dutangiriye iwacu mu Rwanda.",
+      "body": "Duhuza ubunyabuki bukomeye n'ibitekerezo nyabyo by'ibicuruzwa. Twaba twubakira umukiriya cyangwa dutangiza igicuruzwa cyacu, twita ku birango, dutanga vuba, kandi twubaka ibimara igihe.",
+      "values": {
+        "rooted": {
+          "title": "Dushingiye iwacu",
+          "body": "Twubaka twita ku muco wacu mbere — bugenewe telefone, indimi nyinshi, kandi bigenewe uko abantu babaho."
+        },
+        "craft": {
+          "title": "Byubatswe n'ubuhanga",
+          "body": "Ubunyabuki busukuye n'igishushanyo cyitondewe, kuva ku rupapuro rwa mbere kugeza ku bibazo bike."
+        },
+        "partner": {
+          "title": "Umufatanyabikorwa nyawe",
+          "body": "Dukorana namwe, atari ukubakorera gusa — kuva ku gitekerezo kugeza ku itangizwa n'ikirenga."
+        }
+      },
+      "based": "Twishimira kuba i Kigali"
+    },
+    "contact": {
+      "title": "Reka twubake ikintu.",
+      "subtitle": "Ufite umushinga mu mutwe, cyangwa ushaka gukorana natwe? Twakwishimira kukumva.",
+      "location": "Kigali, Rwanda"
+    },
+    "footer": {
+      "tagline": "Ikigo cya software kubaka ibisubizo n'ibicuruzwa — kuva mu Rwanda kugeza ku isi.",
+      "rights": "Uburenganzira bwose burabitswe."
+    }
   }
 }

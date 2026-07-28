@@ -45,16 +45,12 @@ type CreativeDraft = {
   imageUrl: string;
   linkUrl: string;
   alt: string;
-  width: string;
-  height: string;
   uploading: boolean;
 };
 const emptyCreative = (): CreativeDraft => ({
   imageUrl: '',
   linkUrl: '',
   alt: '',
-  width: '',
-  height: '',
   uploading: false,
 });
 
@@ -76,7 +72,6 @@ export function AdEditorModal({
   const [sections, setSections] = useState<string[]>(ad?.sections ?? []);
   const [pageTypes, setPageTypes] = useState<string[]>(ad?.pageTypes ?? []);
   const [category, setCategory] = useState(ad?.category ?? '');
-  const [weight, setWeight] = useState(String(ad?.weight ?? 1));
   const [isFallback, setIsFallback] = useState(!!ad?.isFallback);
   const [isActive, setIsActive] = useState(ad?.isActive ?? true);
   const [startAt, setStartAt] = useState(isoToLocalInput(ad?.startAt));
@@ -95,8 +90,6 @@ export function AdEditorModal({
           imageUrl: c.imageUrl,
           linkUrl: c.linkUrl,
           alt: c.alt ?? '',
-          width: c.width != null ? String(c.width) : '',
-          height: c.height != null ? String(c.height) : '',
           uploading: false,
         };
       }
@@ -112,21 +105,9 @@ export function AdEditorModal({
 
   const uploadCreative = async (locale: AdLocale, file: File) => {
     setCreative(locale, { uploading: true });
-    // Read the natural dimensions so the frontend can reserve space (no CLS).
-    const dims = await new Promise<{ w?: number; h?: number }>((resolve) => {
-      const img = new Image();
-      img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
-      img.onerror = () => resolve({});
-      img.src = URL.createObjectURL(file);
-    });
     try {
       const media = await uploadMedia(file);
-      setCreative(locale, {
-        imageUrl: media.url,
-        uploading: false,
-        ...(dims.w ? { width: String(dims.w) } : {}),
-        ...(dims.h ? { height: String(dims.h) } : {}),
-      });
+      setCreative(locale, { imageUrl: media.url, uploading: false });
     } catch {
       toast.error('Image upload failed');
       setCreative(locale, { uploading: false });
@@ -141,8 +122,6 @@ export function AdEditorModal({
         imageUrl: c.imageUrl,
         linkUrl: c.linkUrl.trim(),
         alt: c.alt.trim() || undefined,
-        width: c.width.trim() ? Number(c.width) : undefined,
-        height: c.height.trim() ? Number(c.height) : undefined,
       };
     });
 
@@ -155,7 +134,6 @@ export function AdEditorModal({
         sections,
         pageTypes,
         category: category.trim() || null,
-        weight: weight.trim() ? Number(weight) : 1,
         isFallback,
         isActive,
         startAt: localInputToIso(startAt),
@@ -285,18 +263,8 @@ export function AdEditorModal({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div>
-              <label className={labelClass}>Weight</label>
-              <input
-                type="number"
-                min="1"
-                value={weight}
-                onChange={(e) => setWeight(e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div className="col-span-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="sm:col-span-2">
               <label className={labelClass}>Category (optional)</label>
               <input
                 value={category}
@@ -397,28 +365,12 @@ export function AdEditorModal({
                           placeholder="Click URL (https://…)"
                           className={inputClass}
                         />
-                        <div className="flex gap-2">
-                          <input
-                            value={c.alt}
-                            onChange={(e) => setCreative(locale, { alt: e.target.value })}
-                            placeholder="Alt text"
-                            className={`${inputClass} flex-1`}
-                          />
-                          <input
-                            type="number"
-                            value={c.width}
-                            onChange={(e) => setCreative(locale, { width: e.target.value })}
-                            placeholder="W"
-                            className={`${inputClass} w-16`}
-                          />
-                          <input
-                            type="number"
-                            value={c.height}
-                            onChange={(e) => setCreative(locale, { height: e.target.value })}
-                            placeholder="H"
-                            className={`${inputClass} w-16`}
-                          />
-                        </div>
+                        <input
+                          value={c.alt}
+                          onChange={(e) => setCreative(locale, { alt: e.target.value })}
+                          placeholder="Alt text (optional)"
+                          className={inputClass}
+                        />
                       </div>
                     </div>
                   </div>

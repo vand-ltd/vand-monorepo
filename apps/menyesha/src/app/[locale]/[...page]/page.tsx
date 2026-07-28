@@ -10,6 +10,27 @@ type Props = {
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://menyesha.vand.rw';
 
+// Localized metadata for the custom single-page routes. These page components
+// are 'use client', so their exported generateMetadata is a client reference
+// that can't be called from the server — instead we read the page's own title
+// (and description) from its translation namespace for the current locale.
+const PAGE_META_KEYS: Record<string, { ns: string; titleKey: string; descKey?: string }> = {
+  about: { ns: 'aboutPage', titleKey: 'heroTitle', descKey: 'heroDescription' },
+  contact: { ns: 'contactPage', titleKey: 'title', descKey: 'description' },
+  'privacy-policy': { ns: 'privacyPage', titleKey: 'title' },
+  'terms-of-service': { ns: 'termsPage', titleKey: 'title' },
+  advertise: { ns: 'advertisePage', titleKey: 'title', descKey: 'intro' },
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function loadMessages(locale: string): Promise<any> {
+  try {
+    return (await import(`../../../../messages/${locale}.json`)).default;
+  } catch {
+    return (await import(`../../../../messages/en.json`)).default;
+  }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function fetchCategories(locale: string): Promise<any[]> {
   try {
@@ -84,15 +105,24 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   }
 
   if (page.length === 1) {
-    try {
-      const mod = await import(`./pages/${mainPage}`);
-      if (typeof mod.generateMetadata === 'function') {
-        return await mod.generateMetadata();
+    const cfg = PAGE_META_KEYS[mainPage];
+    if (cfg) {
+      const messages = await loadMessages(locale);
+      const ns = messages[cfg.ns] ?? {};
+      const raw = ns[cfg.titleKey];
+      if (raw) {
+        // Avoid "Menyesha — Menyesha" when the title already names the brand.
+        const title = String(raw).includes('Menyesha') ? raw : `${raw} — Menyesha`;
+        const description = cfg.descKey ? ns[cfg.descKey] : undefined;
+        return description ? { title, description } : { title };
       }
-      return { title: "Default Title" };
-    } catch {
-      return { title: "Page Not Found" };
     }
+    // Unknown single page — humanize the slug (the page itself 404s if missing).
+    const pretty = mainPage
+      .split('-')
+      .map((s) => (s ? s[0].toUpperCase() + s.slice(1) : s))
+      .join(' ');
+    return { title: `${pretty} — Menyesha` };
   }
 
   return { title: "Page Not Found" };

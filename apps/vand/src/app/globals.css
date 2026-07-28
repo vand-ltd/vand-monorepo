@@ -4,7 +4,30 @@
 
 @source "../../../../packages/ui/src/**/*.{ts,tsx}";
 
+@theme {
+  --color-brand-primary: #003153;
+  --color-brand-secondary: #005f73;
+  --color-brand-accent: #f59e0b;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   padding: 0;
+}
+
+/* Reveal-on-scroll: elements fade/slide in when they enter the viewport. */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
 }

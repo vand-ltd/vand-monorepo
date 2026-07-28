@@ -12,9 +12,10 @@ import Image from "next/image";
 import { formatTimeAgo } from "@/lib/timeago";
 import { FootballWidget } from "./FootballWidget";
 import { FootballStrip } from "./FootballStrip";
-import { AdSlot } from "@/components/ads/AdSlot";
+import { Link as IntlLink } from "@/i18n/navigation";
+import { AdSlot, AdList } from "@/components/ads/AdSlot";
 import { AdCoordinatorProvider } from "@/components/ads/AdCoordinator";
-import type { AdSection, AdPageType } from "@org/api";
+import { AD_PLACEMENT_SIZES, type AdSection, type AdPageType } from "@org/api";
 
 type AsideBannerProps = {
   children: ReactNode;
@@ -27,16 +28,19 @@ function formatViews(count: number): string {
 }
 
 function AdPlaceholder({ size, label }: { size: string; label: string }) {
+  // Empty ad space doubles as a funnel: clicking it opens the rate card.
   return (
-    <Card className="overflow-hidden !p-0 !gap-0 hidden lg:block">
-      <div className="w-full h-[250px] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex flex-col items-center justify-center text-center p-6">
-        <div className="w-12 h-12 rounded-xl bg-brand-primary/10 dark:bg-brand-accent/10 flex items-center justify-center mb-3">
-          <Megaphone className="h-6 w-6 text-brand-primary dark:text-brand-accent" />
+    <IntlLink href="/advertise" className="hidden lg:block">
+      <Card className="overflow-hidden !p-0 !gap-0 transition-shadow hover:shadow-md">
+        <div className="w-full h-[250px] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex flex-col items-center justify-center text-center p-6">
+          <div className="w-12 h-12 rounded-xl bg-brand-primary/10 dark:bg-brand-accent/10 flex items-center justify-center mb-3">
+            <Megaphone className="h-6 w-6 text-brand-primary dark:text-brand-accent" />
+          </div>
+          <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{label}</p>
+          <p className="text-[10px] text-gray-400 dark:text-gray-500">{size}</p>
         </div>
-        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{label}</p>
-        <p className="text-[10px] text-gray-400 dark:text-gray-500">{size}</p>
-      </div>
-    </Card>
+      </Card>
+    </IntlLink>
   );
 }
 
@@ -44,7 +48,8 @@ function AdPlaceholder({ size, label }: { size: string; label: string }) {
 // The data-ad-slot differs per section so each can serve its own campaign.
 function SectionAdCard({ section, title }: { section: 'football' | 'data'; title: string }) {
   return (
-    <Card className="overflow-hidden !p-0 !gap-0">
+    <IntlLink href="/advertise" className="block">
+    <Card className="overflow-hidden !p-0 !gap-0 transition-shadow hover:shadow-md">
       <div
         data-ad-slot={`${section}-sidebar`}
         className="relative h-[250px] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex flex-col items-center justify-center text-center p-6"
@@ -59,6 +64,7 @@ function SectionAdCard({ section, title }: { section: 'football' | 'data'; title
         <p className="text-[10px] text-gray-400 dark:text-gray-500">300 × 250</p>
       </div>
     </Card>
+    </IntlLink>
   );
 }
 
@@ -124,7 +130,12 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
   const isArticleView = pathWithoutLocale.startsWith('/article/');
   const isAuthorPage = pathWithoutLocale.startsWith('/author/');
   const isHomePage = pathWithoutLocale === '/' || pathWithoutLocale === '';
-  const isCategoryPage = !isArticleView && !isAuthorPage && !isHomePage && pathWithoutLocale !== '/search' && !pathWithoutLocale.startsWith('/login');
+  // Static info pages (about, contact, advertise, legal) aren't article-related,
+  // so they render clean — no sidebar, no ads, no related/trending articles.
+  const STATIC_PAGES = ['about', 'contact', 'advertise', 'privacy-policy', 'terms-of-service'];
+  const firstSeg = pathWithoutLocale.split('/').filter(Boolean)[0] ?? '';
+  const isStaticPage = STATIC_PAGES.includes(firstSeg);
+  const isCategoryPage = !isArticleView && !isAuthorPage && !isHomePage && !isStaticPage && pathWithoutLocale !== '/search' && !pathWithoutLocale.startsWith('/login');
   // Non-article sections (football, data hub) have no "related/category" articles,
   // so the sidebar shows a section ad slot there instead of an empty list.
   const isFootballPage = pathWithoutLocale.startsWith('/football');
@@ -193,12 +204,21 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
   }
   const trendingStories = stories;
 
+  // Static info pages: just the content, centered — no sidebar, no ad slots.
+  if (isStaticPage) {
+    return (
+      <main className="w-full bg-gray-50 dark:bg-gray-900/50 min-h-[60vh]">
+        <div className="max-w-screen-xl mx-auto px-4 py-8 sm:py-12">{children}</div>
+      </main>
+    );
+  }
+
   // One header "advertise here" box (matches the Header ad size). Reused for
   // both header slots so an empty box keeps the leaderboard shape.
   const headerAdBox = (
     <div
       className="w-full border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg flex items-center justify-center gap-3 text-sm text-gray-500 dark:text-gray-400"
-      style={{ aspectRatio: '728 / 90' }}
+      style={{ aspectRatio: `${AD_PLACEMENT_SIZES.Header.width} / ${AD_PLACEMENT_SIZES.Header.height}` }}
     >
       <Megaphone className="h-5 w-5 text-gray-400 dark:text-gray-500" />
       <div className="text-center">
@@ -213,12 +233,14 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
       {/* Top Banner — two side-by-side header ad slots. Each shows an ad when
           available, otherwise its "advertise here" box. Second is desktop-only. */}
       <div className='bg-background border-b'>
-        <div className="max-w-screen-xl mx-auto my-4 px-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Matches the site content width; two leaderboards fill it side by side. */}
+        <div className="max-w-screen-xl mx-auto my-4 px-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
           <AdSlot
             placement="Header"
             section={adSection}
             pageType={adPageType}
             alwaysShowFallback
+            fill
             fallback={headerAdBox}
           />
           <div className="hidden sm:block">
@@ -227,6 +249,7 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
               section={adSection}
               pageType={adPageType}
               alwaysShowFallback
+              fill
               fallback={headerAdBox}
             />
           </div>
@@ -310,7 +333,7 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
                 </Card>
 
                 <div className="sticky space-y-6" style={{ top: headerHeight + 120 }}>
-                  <AdSlot
+                  <AdList
                     placement="Sidebar"
                     section={adSection}
                     pageType={adPageType}
@@ -341,7 +364,8 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
               // Football/data: the ad, the advertise card and back-to-top all
               // stick together as one block on desktop.
               <div className="lg:sticky space-y-6" style={{ top: headerHeight + 16 }}>
-                <AdSlot
+                {/* One box per Sidebar ad sold (dynamic count). */}
+                <AdList
                   placement="Sidebar"
                   section={adSection}
                   pageType={adPageType}
@@ -352,8 +376,6 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
                     />
                   }
                 />
-                {/* A second box appears only once a second ad is sold. */}
-                <AdSlot placement="Sidebar" section={adSection} pageType={adPageType} />
                 <BackToTop t={t} />
               </div>
             ) : (
@@ -472,7 +494,7 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
                 already render their own sticky block above.) */}
             {!isFootballPage && !isDataPage && (
               <div className="sticky space-y-6" style={{ top: headerHeight + 16 }}>
-                <AdSlot
+                <AdList
                   placement="Sidebar"
                   section={adSection}
                   pageType={adPageType}

@@ -22,7 +22,8 @@
     "privacyPolicy": "Politique de confidentialité",
     "termsOfService": "Conditions d'utilisation",
     "scores": "Scores",
-    "data": "Données"
+    "data": "Données",
+    "advertise": "Publicité"
   },
   "breakingNews": {
     "label": "BREAKING",
@@ -139,7 +140,8 @@
     "storyTipDescription": "Vous avez une piste sur une actualité ? Notre équipe éditoriale examine chaque information. Votre identité restera confidentielle.",
     "sendTip": "Envoyer un scoop",
     "advertisingTitle": "Publicité",
-    "advertisingDescription": "Intéressé par notre audience ? Contactez-nous pour des emplacements publicitaires et du contenu sponsorisé."
+    "advertisingDescription": "Intéressé par notre audience ? Contactez-nous pour des emplacements publicitaires et du contenu sponsorisé.",
+    "advertisingRates": "Voir nos tarifs publicitaires"
   },
   "aboutPage": {
     "heroTitle": "À propos de Menyesha",
@@ -454,5 +456,77 @@
     "matches": "Matchs",
     "competitions": "Compétitions",
     "allRounds": "Toutes les journées"
+  },
+  "advertisePage": {
+    "title": "Faire de la publicité sur Menyesha",
+    "intro": "Touchez l'audience football et actualités du Rwanda — pensée mobile, en temps réel et en trois langues. Choisissez une section, un emplacement et un forfait adapté à votre budget.",
+    "why": {
+      "audience": {
+        "title": "Une audience locale engagée",
+        "body": "Des passionnés de football et des lecteurs d'actualités partout au Rwanda, chaque jour."
+      },
+      "mobile": {
+        "title": "Portée mobile",
+        "body": "La grande majorité de notre trafic est sur mobile — votre publicité là où sont les gens."
+      },
+      "languages": {
+        "title": "Trois langues",
+        "body": "Annoncez en kinyarwanda, anglais ou français."
+      },
+      "realtime": {
+        "title": "En direct et fidélisant",
+        "body": "Les scores en direct font revenir les lecteurs — une exposition répétée pour votre marque."
+      }
+    },
+    "placementsTitle": "Où votre publicité peut apparaître",
+    "placements": {
+      "header": {
+        "name": "En-tête (leaderboard)",
+        "where": "Bannière en haut de chaque page"
+      },
+      "sidebar": {
+        "name": "Barre latérale",
+        "where": "Dans la barre latérale, fixe au défilement"
+      },
+      "inline": {
+        "name": "Dans l'article",
+        "where": "Dans l'article, entre les paragraphes"
+      },
+      "infeed": {
+        "name": "Dans le fil",
+        "where": "Entre les articles du fil"
+      },
+      "footer": {
+        "name": "Pied de page (mobile)",
+        "where": "Barre fixe en bas sur mobile"
+      }
+    },
+    "pricingTitle": "Comment fonctionne la tarification",
+    "pricingIntro": "Les tarifs dépendent de deux choses — la section choisie et la durée de réservation. Contactez-nous pour notre grille tarifaire actuelle.",
+    "bySectionTitle": "Par section",
+    "tiers": {
+      "premium": {
+        "name": "Premium",
+        "sections": "Accueil · Sports — nos pages les plus consultées"
+      },
+      "standard": {
+        "name": "Standard",
+        "sections": "Divertissement, Politique, Affaires et autres catégories · Données"
+      }
+    },
+    "byPackageTitle": "Par forfait",
+    "durations": {
+      "month": "1 mois",
+      "quarter": "3 mois",
+      "year": "1 an"
+    },
+    "packageNote": "Les forfaits 3 mois et annuel bénéficient d'un meilleur tarif que le mensuel.",
+    "cta": {
+      "title": "Demandez une grille tarifaire",
+      "body": "Indiquez-nous votre section cible et la durée — nous envoyons nos tarifs actuels et vous mettons en ligne.",
+      "button": "Contactez-nous pour les tarifs"
+    },
+    "backHint": "Des questions ? Consultez notre",
+    "contactLink": "page de contact"
   }
 }

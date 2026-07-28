@@ -1,11 +1,85 @@
 {
-  "comingSoon": {
-    "title": "Vand",
-    "subtitle": "Something great is coming soon.",
-    "stayTuned": "Stay tuned"
-  },
-  "toggleTheme": {
-    "light": "Light",
-    "dark": "Dark"
+  "site": {
+    "nav": {
+      "services": "What we do",
+      "products": "Products",
+      "about": "About",
+      "contact": "Contact",
+      "cta": "Start a project"
+    },
+    "hero": {
+      "eyebrow": "Software company · Kigali, Rwanda",
+      "titleLead": "Software that moves",
+      "titleHighlight": "Rwanda forward.",
+      "subtitle": "Vand builds custom software, web & mobile apps, and its own products — engineered to be fast, reliable, and built to last.",
+      "ctaPrimary": "Start a project",
+      "ctaSecondary": "See our products",
+      "trust": "Trusted engineering · Built in Rwanda"
+    },
+    "services": {
+      "kicker": "What we do",
+      "title": "Software, end to end.",
+      "subtitle": "From a first idea to a product in people's hands — we design, build, and ship.",
+      "items": {
+        "custom": {
+          "title": "Custom software",
+          "body": "Bespoke systems and platforms built around how your business actually works."
+        },
+        "apps": {
+          "title": "Web & mobile apps",
+          "body": "Fast, reliable web and mobile applications your users will love to use."
+        },
+        "products": {
+          "title": "Our own products",
+          "body": "We don't just build for others — we build and run our own products, like Menyesha."
+        }
+      }
+    },
+    "products": {
+      "kicker": "Our products",
+      "title": "Products we build and run.",
+      "subtitle": "We invest in our own ideas — shipping real products used by real people across Rwanda.",
+      "flagship": "Flagship product",
+      "menyesha": {
+        "tagline": "Rwanda's home for live football scores and news — fast, mobile-first, and in your language.",
+        "features": {
+          "live": "Live scores, fixtures, results and league tables, updated in real time.",
+          "news": "Breaking news and stories across sports and more.",
+          "multilang": "Available in Kinyarwanda, English and French."
+        },
+        "cta": "Visit Menyesha"
+      },
+      "more": "More products are on the way."
+    },
+    "about": {
+      "kicker": "About Vand",
+      "title": "Built in Rwanda, for the world.",
+      "lead": "Vand is a software company on a mission to build technology that makes everyday life better — starting at home in Rwanda.",
+      "body": "We combine sharp engineering with real product thinking. Whether we're building for a client or launching our own product, we care about the details, ship quickly, and build things meant to last.",
+      "values": {
+        "rooted": {
+          "title": "Rooted locally",
+          "body": "We build for our context first — mobile-first, multilingual, and made for how people here actually live."
+        },
+        "craft": {
+          "title": "Built with craft",
+          "body": "Clean engineering and thoughtful design, from the first screen to the last edge case."
+        },
+        "partner": {
+          "title": "A real partner",
+          "body": "We work alongside you, not just for you — from idea to launch and beyond."
+        }
+      },
+      "based": "Proudly based in Kigali"
+    },
+    "contact": {
+      "title": "Let's build something.",
+      "subtitle": "Have a project in mind, or want to work with us? We'd love to hear from you.",
+      "location": "Kigali, Rwanda"
+    },
+    "footer": {
+      "tagline": "A software company building solutions and products — from Rwanda to the world.",
+      "rights": "All rights reserved."
+    }
   }
 }

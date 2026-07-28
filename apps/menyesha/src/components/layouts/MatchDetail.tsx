@@ -9,6 +9,7 @@ import {
   normalizePosition,
   type Match,
   type MatchEvent,
+  type MatchLineup,
   type LineupSlot,
 } from '@org/api';
 import { toPng } from 'html-to-image';
@@ -94,10 +95,20 @@ export function MatchDetail({
   slug,
   competition,
   tab = 'info',
+  initialMatch,
+  initialEvents,
+  initialHomeLineup,
+  initialAwayLineup,
 }: {
   slug: string;
   competition: string;
   tab?: MatchTab;
+  // Server-fetched seed data so the content is in the initial HTML (crawlable);
+  // the client still refetches/polls for live updates.
+  initialMatch?: Match | null;
+  initialEvents?: MatchEvent[];
+  initialHomeLineup?: MatchLineup | null;
+  initialAwayLineup?: MatchLineup | null;
 }) {
   const locale = useLocale();
   const t = useTranslations('football');
@@ -107,6 +118,7 @@ export function MatchDetail({
     queryKey: ['match', slug],
     queryFn: () => getMatch(slug),
     refetchInterval: 30000,
+    initialData: initialMatch ?? undefined,
   });
 
   const home = (m as any)?.homeTeam;
@@ -144,6 +156,9 @@ export function MatchDetail({
           competition={competition}
           slug={slug}
           activeTab={tab}
+          initialEvents={initialEvents}
+          initialHomeLineup={initialHomeLineup}
+          initialAwayLineup={initialAwayLineup}
         />
       )}
     </div>
@@ -157,6 +172,9 @@ function MatchCardDetail({
   competition,
   slug,
   activeTab,
+  initialEvents,
+  initialHomeLineup,
+  initialAwayLineup,
 }: {
   m: Match;
   dateLocale: string;
@@ -164,6 +182,9 @@ function MatchCardDetail({
   competition: string;
   slug: string;
   activeTab: MatchTab;
+  initialEvents?: MatchEvent[];
+  initialHomeLineup?: MatchLineup | null;
+  initialAwayLineup?: MatchLineup | null;
 }) {
   const home = (m as any).homeTeam;
   const away = (m as any).awayTeam;
@@ -275,6 +296,9 @@ function MatchCardDetail({
         competition={competition}
         slug={slug}
         activeTab={activeTab}
+        initialEvents={initialEvents}
+        initialHomeLineup={initialHomeLineup}
+        initialAwayLineup={initialAwayLineup}
       />
     </div>
   );
@@ -293,6 +317,9 @@ function MatchTabs({
   competition,
   slug,
   activeTab,
+  initialEvents,
+  initialHomeLineup,
+  initialAwayLineup,
 }: {
   m: Match;
   home: any;
@@ -304,6 +331,9 @@ function MatchTabs({
   competition: string;
   slug: string;
   activeTab: MatchTab;
+  initialEvents?: MatchEvent[];
+  initialHomeLineup?: MatchLineup | null;
+  initialAwayLineup?: MatchLineup | null;
 }) {
   const tab = activeTab;
   const tabs: MatchTab[] = ['info', 'events', 'lineups'];
@@ -332,7 +362,13 @@ function MatchTabs({
       <div className="px-4 sm:px-6 py-5">
         {tab === 'info' && <MatchInfo m={m} venue={venue} dateLocale={dateLocale} t={t} />}
         {tab === 'events' && (
-          <MatchEvents matchId={m.id} homeTeamId={m.homeTeamId ?? home?.id} live={isLive} t={t} />
+          <MatchEvents
+            matchId={m.id}
+            homeTeamId={m.homeTeamId ?? home?.id}
+            live={isLive}
+            t={t}
+            initialEvents={initialEvents}
+          />
         )}
         {tab === 'lineups' && (
           <MatchLineups
@@ -343,6 +379,9 @@ function MatchTabs({
             awayTeam={away}
             referee={((m as any).referee ?? (m as any).refereeName) || undefined}
             t={t}
+            initialHome={initialHomeLineup}
+            initialAway={initialAwayLineup}
+            initialEvents={initialEvents}
           />
         )}
       </div>
@@ -537,16 +576,19 @@ function MatchEvents({
   homeTeamId,
   live,
   t,
+  initialEvents,
 }: {
   matchId: string;
   homeTeamId?: string;
   live: boolean;
   t: ReturnType<typeof useTranslations>;
+  initialEvents?: MatchEvent[];
 }) {
   const { data: events = [] } = useQuery({
     queryKey: ['match-events', matchId],
     queryFn: () => getMatchEvents(matchId),
     refetchInterval: live ? 30000 : false,
+    initialData: initialEvents,
   });
 
   if (events.length === 0)
@@ -666,6 +708,9 @@ function MatchLineups({
   awayTeam,
   referee,
   t,
+  initialHome,
+  initialAway,
+  initialEvents,
 }: {
   matchId: string;
   homeTeamId?: string;
@@ -674,18 +719,23 @@ function MatchLineups({
   awayTeam: any;
   referee?: string;
   t: ReturnType<typeof useTranslations>;
+  initialHome?: MatchLineup | null;
+  initialAway?: MatchLineup | null;
+  initialEvents?: MatchEvent[];
 }) {
   const homeQuery = useQuery({
     queryKey: ['match-lineup', matchId, homeTeamId],
     queryFn: () => getMatchLineup(matchId, homeTeamId as string),
     enabled: !!matchId && !!homeTeamId,
     retry: false,
+    initialData: initialHome ?? undefined,
   });
   const awayQuery = useQuery({
     queryKey: ['match-lineup', matchId, awayTeamId],
     queryFn: () => getMatchLineup(matchId, awayTeamId as string),
     enabled: !!matchId && !!awayTeamId,
     retry: false,
+    initialData: initialAway ?? undefined,
   });
 
   // All events — drives the per-player pitch badges and the substitutions list.
@@ -693,6 +743,7 @@ function MatchLineups({
     queryKey: ['match-events', matchId],
     queryFn: () => getMatchEvents(matchId),
     enabled: !!matchId,
+    initialData: initialEvents,
   });
   const events = eventsQuery.data ?? [];
   const badges = buildPlayerBadges(events);

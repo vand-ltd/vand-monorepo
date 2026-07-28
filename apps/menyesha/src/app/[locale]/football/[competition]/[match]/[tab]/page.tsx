@@ -4,6 +4,7 @@ import { Link } from '@/i18n/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { MatchDetail } from '@/components/layouts/MatchDetail';
 import { FootballResultsBoard } from '@/components/layouts/FootballResultsBoard';
+import { ssrMatchBundle } from '@/lib/matchSSR';
 
 // /football/<competition>/<match-slug>/<tab>  -> match detail tab (info|events|lineups)
 // /football/<competition>/<season-slug>/<tab> -> that competition's season (fixtures|results|…)
@@ -110,13 +111,23 @@ export default async function Page({ params }: Props) {
   const t = await getTranslations('football');
   const { competition, match, tab } = await params;
 
-  // Match detail with a selected tab
+  // Match detail with a selected tab — server-seeded so events/lineups are in
+  // the initial HTML (crawlable), while the client still polls for live updates.
   if (isMatchSlug(match)) {
+    const { match: m, events, homeLineup, awayLineup } = await ssrMatchBundle(match);
     return (
       <div className="w-full max-w-full bg-gray-50 dark:bg-gray-900 min-h-screen">
         <section className="py-8">
           <div className="max-w-3xl mx-auto px-4">
-            <MatchDetail slug={match} competition={competition} tab={asMatchTab(tab)} />
+            <MatchDetail
+              slug={match}
+              competition={competition}
+              tab={asMatchTab(tab)}
+              initialMatch={m}
+              initialEvents={events}
+              initialHomeLineup={homeLineup}
+              initialAwayLineup={awayLineup}
+            />
           </div>
         </section>
       </div>

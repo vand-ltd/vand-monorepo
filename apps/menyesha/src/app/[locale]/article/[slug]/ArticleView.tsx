@@ -20,6 +20,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { CommentSection } from '@/components/article/CommentSection';
 import { ShareButton } from '@/components/article/ShareButton';
+import { AdSlot } from '@/components/ads/AdSlot';
 
 // Category color map keyed by slug
 const categoryColorMap: Record<string, { lightBg: string; darkBg: string; lightText: string; darkText: string }> = {
@@ -53,15 +54,26 @@ function getCategoryColors(slug: string) {
   };
 }
 
-// Tiptap JSON renderer
+// In-article ad — a dynamic Inline slot (300×250 medium rectangle). Serves a
+// real ad when sold, otherwise the "advertise here" box. Two are injected per
+// article; with the coordinator they show distinct ads / fill as inventory grows.
 function InArticleAd({ label }: { label: string }) {
   return (
-    <div className="my-8 w-full max-w-[728px] mx-auto">
-      <p className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-gray-500 text-center mb-2">Advertisement</p>
-      <div className="w-full h-[120px] sm:h-[200px] rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center text-center px-4">
-        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{label}</p>
-        <p className="text-[10px] text-gray-400 dark:text-gray-500">300 × 250 · Medium Rectangle</p>
-      </div>
+    <div className="my-8">
+      <AdSlot
+        placement="Inline"
+        section="news"
+        pageType="article"
+        fallback={
+          <div
+            className="mx-auto w-full max-w-[300px] rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center text-center px-4"
+            style={{ aspectRatio: '300 / 250' }}
+          >
+            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{label}</p>
+            <p className="text-[10px] text-gray-400 dark:text-gray-500">300 × 250 · Medium Rectangle</p>
+          </div>
+        }
+      />
     </div>
   );
 }

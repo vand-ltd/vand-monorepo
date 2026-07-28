@@ -16,10 +16,11 @@ export type AdPlacement = (typeof AD_PLACEMENTS)[number];
 // fits the creative inside this box, so an oddly-sized upload can't change the
 // slot's dimensions; the admin uses it to tell advertisers the target size.
 export const AD_PLACEMENT_SIZES: Record<AdPlacement, { width: number; height: number }> = {
-  Header: { width: 728, height: 90 }, // leaderboard
+  Header: { width: 728, height: 100 }, // leaderboard-ish (two fill the header side by side)
   Sidebar: { width: 300, height: 250 }, // medium rectangle
   InFeed: { width: 300, height: 250 },
-  Inline: { width: 300, height: 250 },
+  Inline: { width: 300, height: 250 }, // medium rectangle — the in-article workhorse
+
   Footer: { width: 320, height: 50 }, // mobile banner
 };
 
@@ -48,8 +49,6 @@ export interface AdCreative {
   imageUrl: string; // plain URL from uploadMedia().url
   linkUrl: string;
   alt?: string | null;
-  width?: number | null;
-  height?: number | null;
 }
 
 export interface Advertiser {
@@ -76,7 +75,6 @@ export interface Ad {
   sections: string[]; // empty = all
   pageTypes: string[]; // empty = all
   category?: string | null;
-  weight: number;
   isFallback: boolean;
   startAt?: string | null;
   endAt?: string | null;
@@ -93,7 +91,6 @@ export interface AdInput {
   sections?: string[];
   pageTypes?: string[];
   category?: string | null;
-  weight?: number;
   isFallback?: boolean;
   startAt?: string | null;
   endAt?: string | null;
@@ -106,7 +103,6 @@ export interface AdInput {
 export interface ServedAd {
   id: string;
   placement: AdPlacement;
-  weight: number;
   category?: string | null;
   // Serve returns the advertiser as { id, name } (or null); tolerate a bare
   // string too.
@@ -117,7 +113,7 @@ export interface ServedAd {
 /* ------------------------------- Public serve ----------------------------- */
 
 // GET /api/menyesha/ads/serve — the eligible ads for a slot (cacheable). The
-// client rotates by weight and fires impressions, so this stays cache-friendly.
+// client renders/rotates and fires impressions, so this stays cache-friendly.
 export async function serveAds(params: {
   placement: AdPlacement;
   section?: AdSection | string;
@@ -126,19 +122,6 @@ export async function serveAds(params: {
 }): Promise<ServedAd[]> {
   const { data } = await api.get('/api/menyesha/ads/serve', { params });
   return unwrap<ServedAd[]>(data) ?? [];
-}
-
-// Weighted-random pick among the eligible ads (client-side rotation). Falls
-// back to a uniform pick if weights are missing/zero.
-export function pickWeightedAd(ads: ServedAd[]): ServedAd | null {
-  if (!ads.length) return null;
-  const total = ads.reduce((s, a) => s + (a.weight > 0 ? a.weight : 1), 0);
-  let r = Math.random() * total;
-  for (const a of ads) {
-    r -= a.weight > 0 ? a.weight : 1;
-    if (r <= 0) return a;
-  }
-  return ads[ads.length - 1];
 }
 
 /* ------------------------------- Tracking --------------------------------- */

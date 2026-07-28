@@ -22,7 +22,8 @@
     "privacyPolicy": "Privacy Policy",
     "termsOfService": "Terms of Service",
     "scores": "Scores",
-    "data": "Data"
+    "data": "Data",
+    "advertise": "Advertise"
   },
   "breakingNews": {
     "label": "BREAKING",
@@ -139,7 +140,8 @@
     "storyTipDescription": "Got a lead on a breaking story? Our editorial team reviews every tip. Your identity will be kept confidential.",
     "sendTip": "Send a Tip",
     "advertisingTitle": "Advertising",
-    "advertisingDescription": "Interested in reaching our audience? Contact us for ad placements and sponsored content opportunities."
+    "advertisingDescription": "Interested in reaching our audience? Contact us for ad placements and sponsored content opportunities.",
+    "advertisingRates": "See our advertising rates"
   },
   "aboutPage": {
     "heroTitle": "About Menyesha",
@@ -454,5 +456,77 @@
     "matches": "Matches",
     "competitions": "Competitions",
     "allRounds": "All matchdays"
+  },
+  "advertisePage": {
+    "title": "Advertise on Menyesha",
+    "intro": "Reach Rwanda's football and news audience — mobile-first, real-time, and in three languages. Choose a section, a placement, and a package that fits your budget.",
+    "why": {
+      "audience": {
+        "title": "Engaged local audience",
+        "body": "Football fans and news readers across Rwanda, every day."
+      },
+      "mobile": {
+        "title": "Mobile-first reach",
+        "body": "The vast majority of our traffic is mobile — your ad goes where people are."
+      },
+      "languages": {
+        "title": "Three languages",
+        "body": "Advertise in Kinyarwanda, English or French."
+      },
+      "realtime": {
+        "title": "Live & sticky",
+        "body": "Live scores keep readers coming back — repeat exposure for your brand."
+      }
+    },
+    "placementsTitle": "Where your ad can appear",
+    "placements": {
+      "header": {
+        "name": "Header (leaderboard)",
+        "where": "Top banner on every page"
+      },
+      "sidebar": {
+        "name": "Sidebar",
+        "where": "In the sidebar, sticky as readers scroll"
+      },
+      "inline": {
+        "name": "In-article",
+        "where": "Inside the article, between paragraphs"
+      },
+      "infeed": {
+        "name": "In-feed",
+        "where": "Between articles in the feed"
+      },
+      "footer": {
+        "name": "Footer (mobile)",
+        "where": "Sticky bar at the bottom on phones"
+      }
+    },
+    "pricingTitle": "How pricing works",
+    "pricingIntro": "Rates depend on two things — the section you want, and how long you book. Contact us for our current rate card.",
+    "bySectionTitle": "By section",
+    "tiers": {
+      "premium": {
+        "name": "Premium",
+        "sections": "Home · Sports — our highest-traffic pages"
+      },
+      "standard": {
+        "name": "Standard",
+        "sections": "Entertainment, Politics, Business & other categories · Data"
+      }
+    },
+    "byPackageTitle": "By package",
+    "durations": {
+      "month": "1 month",
+      "quarter": "3 months",
+      "year": "1 year"
+    },
+    "packageNote": "3-month and yearly bookings come at a better rate than monthly.",
+    "cta": {
+      "title": "Get a rate card",
+      "body": "Tell us your target section and package length — we'll send our current rates and get you live.",
+      "button": "Contact us for rates"
+    },
+    "backHint": "Questions? See our",
+    "contactLink": "contact page"
   }
 }
