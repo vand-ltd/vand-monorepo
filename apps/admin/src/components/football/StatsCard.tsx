@@ -1,6 +1,7 @@
 import { forwardRef, type ReactNode } from 'react';
 import { Oswald } from 'next/font/google';
 import { teamInitials } from './ResultCard';
+import { MENYESHA_LOGO } from './brand';
 
 const oswald = Oswald({ subsets: ['latin'], weight: ['500', '600', '700'] });
 const DISPLAY = oswald.style.fontFamily;
@@ -103,9 +104,10 @@ export const StatsCard = forwardRef<
           paddingTop: 22,
         }}
       >
-        <div style={{ fontFamily: DISPLAY, fontSize: d.brand, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase' }}>
-          <span style={{ color: '#fff' }}>menyesha</span>
-          <span style={{ color: '#F59E0B' }}>.vand.rw</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={MENYESHA_LOGO} alt="Menyesha" style={{ height: d.brand * 1.15, width: 'auto', display: 'block' }} />
+          <span style={{ fontSize: d.foot * 0.9, letterSpacing: 1, color: '#7f93a8' }}>menyesha.vand.rw</span>
         </div>
         {seasonLabel && <div style={{ fontSize: d.foot, color: '#9fb3c8' }}>{seasonLabel}</div>}
       </div>

@@ -1,6 +1,7 @@
 import { forwardRef } from 'react';
 import { Oswald } from 'next/font/google';
 import type { Match, MatchEvent, Team } from '@org/api';
+import { MENYESHA_LOGO } from './brand';
 
 // Condensed, broadcast-style display font for the scoreline / names / labels.
 // Self-hosted by next/font (same-origin), so html-to-image can embed it cleanly.
@@ -302,9 +303,10 @@ export const ResultCard = forwardRef<HTMLDivElement, Props>(function ResultCard(
           marginTop: size === 'story' ? 0 : 'auto',
         }}
       >
-        <div style={{ fontFamily: DISPLAY, fontSize: d.brand, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase' }}>
-          <span style={{ color: '#fff' }}>menyesha</span>
-          <span style={{ color: '#F59E0B' }}>.vand.rw</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={MENYESHA_LOGO} alt="Menyesha" style={{ height: d.brand * 1.15, width: 'auto', display: 'block' }} />
+          <span style={{ fontSize: d.foot * 0.9, letterSpacing: 1, color: '#7f93a8' }}>menyesha.vand.rw</span>
         </div>
         <div style={{ fontSize: d.foot, color: '#9fb3c8', textAlign: 'right' }}>
           {kickoff}
