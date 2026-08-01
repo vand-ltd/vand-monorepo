@@ -1099,7 +1099,7 @@ function StandingsGrid({
               <td className={`${teamSticky(!!r.isLive)} py-2.5`}>
                 <span className="flex items-center gap-2 min-w-0">
                   <Crest team={r.team} />
-                  <TeamLink slug={r.team?.slug} className="truncate font-medium text-gray-900 dark:text-white">
+                  <TeamLink slug={r.team?.slug} className="min-w-0 flex-1 truncate font-medium text-gray-900 dark:text-white">
                     {teamName(r.team)}
                   </TeamLink>
                   {r.isLive && (

@@ -432,7 +432,7 @@ function GroupTable({ rows, teamId }: { rows: StandingRow[]; teamId: string }) {
                     <Crest url={resolveLogo(r.team?.logo, r.team?.logoUrl)} name={r.team?.name} slug={r.team?.slug} size={18} />
                     <TeamLink
                       slug={r.team?.slug}
-                      className={`truncate ${
+                      className={`min-w-0 flex-1 truncate ${
                         isTeam
                           ? 'font-bold text-[#003153] dark:text-[#F59E0B]'
                           : 'font-medium text-gray-900 dark:text-white'
