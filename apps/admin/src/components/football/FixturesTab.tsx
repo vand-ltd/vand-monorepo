@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   getSeasonEntries,
@@ -19,10 +19,24 @@ import {
   type Season,
 } from '@org/api';
 import { toast } from 'sonner';
-import { Loader2, Plus, Trash2, CalendarDays, Save, ListPlus, Users, MapPin } from 'lucide-react';
+import {
+  Loader2,
+  Plus,
+  Trash2,
+  CalendarDays,
+  Save,
+  ListPlus,
+  Users,
+  MapPin,
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
+  ImageDown,
+} from 'lucide-react';
 import { cardClass, inputClass, labelClass, primaryBtn, ghostBtn } from './styles';
 import { MatchEventsPanel } from './MatchEventsPanel';
 import { MatchLineupsPanel } from './MatchLineupsPanel';
+import { MatchGraphicModal } from './MatchGraphicModal';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,6 +51,164 @@ import {
 function errMessage(error: any, fallback: string) {
   const m = error?.response?.data?.message || fallback;
   return Array.isArray(m) ? m.join(', ') : m;
+}
+
+/* --------------------------- Date-filter helpers -------------------------- */
+// Local-time YYYY-MM-DD (matches how a match's kickoff day reads to the admin).
+const pad2 = (n: number) => String(n).padStart(2, '0');
+const dateKey = (d: Date) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const todayKey = () => dateKey(new Date());
+const shiftKey = (key: string, days: number) => {
+  const [y, m, d] = key.split('-').map(Number);
+  return dateKey(new Date(y, m - 1, d + days));
+};
+const prettyKey = (key: string) => {
+  const [y, m, d] = key.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+};
+// Compact date navigation — an exact copy of the menyesha scores date nav.
+// The middle label shows "Today", or the date once you step away with the arrows.
+// A self-contained calendar popover — pure DOM, so it works everywhere (real
+// mobile, the DevTools emulator, and desktop) without the native OS date picker.
+function DatePickerButton({
+  date,
+  onChange,
+  dateLocale,
+  btn,
+  todayLabel,
+}: {
+  date: string;
+  onChange: (d: string) => void;
+  dateLocale: string;
+  btn: string;
+  todayLabel: string;
+}) {
+  const today = todayKey();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const base = date ? new Date(`${date}T00:00:00`) : new Date();
+  const [viewY, setViewY] = useState(base.getFullYear());
+  const [viewM, setViewM] = useState(base.getMonth());
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: Event) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    document.addEventListener('touchstart', onDoc);
+    return () => {
+      document.removeEventListener('mousedown', onDoc);
+      document.removeEventListener('touchstart', onDoc);
+    };
+  }, [open]);
+
+  const openPicker = () => {
+    const b = date ? new Date(`${date}T00:00:00`) : new Date();
+    setViewY(b.getFullYear());
+    setViewM(b.getMonth());
+    setOpen(true);
+  };
+
+  const daysInMonth = new Date(viewY, viewM + 1, 0).getDate();
+  const firstDow = new Date(viewY, viewM, 1).getDay();
+  const cells: (number | null)[] = [
+    ...Array(firstDow).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
+  const cellKey = (d: number) => `${viewY}-${pad2(viewM + 1)}-${pad2(d)}`;
+  const monthLabel = new Date(viewY, viewM, 1).toLocaleDateString(dateLocale, {
+    month: 'long',
+    year: 'numeric',
+  });
+  const prevMonth = () =>
+    viewM === 0 ? (setViewM(11), setViewY((y) => y - 1)) : setViewM((m) => m - 1);
+  const nextMonth = () =>
+    viewM === 11 ? (setViewM(0), setViewY((y) => y + 1)) : setViewM((m) => m + 1);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => (open ? setOpen(false) : openPicker())}
+        className={btn}
+        aria-label="Pick date"
+        aria-expanded={open}
+      >
+        <Calendar className="h-4 w-4" />
+      </button>
+      {open && (
+        <div className="absolute right-0 z-50 mt-2 w-64 rounded-xl border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+          <div className="mb-2 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={prevMonth}
+              className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+              aria-label="Previous month"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="text-sm font-semibold text-gray-900 dark:text-white">{monthLabel}</span>
+            <button
+              type="button"
+              onClick={nextMonth}
+              className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+              aria-label="Next month"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="mb-1 grid grid-cols-7 gap-0.5 text-center text-[10px] text-gray-400">
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+              <span key={i}>{d}</span>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-0.5">
+            {cells.map((d, i) =>
+              d === null ? (
+                <span key={i} />
+              ) : (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => {
+                    onChange(cellKey(d));
+                    setOpen(false);
+                  }}
+                  className={`h-8 rounded-md text-sm transition-colors ${
+                    cellKey(d) === date
+                      ? 'bg-[#003153] text-white dark:bg-[#F59E0B] dark:text-gray-900'
+                      : cellKey(d) === today
+                        ? 'ring-1 ring-inset ring-[#003153] dark:ring-[#F59E0B] text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'
+                        : 'text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  {d}
+                </button>
+              )
+            )}
+          </div>
+          {/* Quick jump back to today, however far you've navigated. */}
+          <div className="mt-2 border-t border-gray-100 pt-2 dark:border-gray-700">
+            <button
+              type="button"
+              onClick={() => {
+                onChange(today);
+                setOpen(false);
+              }}
+              className="w-full rounded-md py-1.5 text-xs font-semibold text-[#003153] transition-colors hover:bg-gray-100 dark:text-[#F59E0B] dark:hover:bg-gray-700"
+            >
+              {todayLabel}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 type FixtureRow = {
@@ -79,6 +251,47 @@ export function FixturesTab({ seasonId, season }: { seasonId: string; season: Se
     queryFn: () => getMatches({ seasonId, order: 'asc' }),
     enabled: !!seasonId,
   });
+  const allMatches = matchesQuery.data ?? [];
+
+  // Filter the match list by kickoff day — a season can have dozens of games, so
+  // updating scores/events is far easier scoped to one day. Defaults to today;
+  // "All dates" (showAll) drops the filter to show every game.
+  const [dateFilter, setDateFilter] = useState<string>(() => todayKey());
+  const [showAll, setShowAll] = useState(false);
+  const pickDate = (d: string) => {
+    setDateFilter(d);
+    setShowAll(false);
+  };
+  const matchesForDate = useMemo(
+    () =>
+      showAll
+        ? allMatches
+        : allMatches.filter((m) => m.kickoffAt && dateKey(new Date(m.kickoffAt)) === dateFilter),
+    [allMatches, dateFilter, showAll]
+  );
+
+  // Competition/season name for the shareable result graphic's header.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const competitionLabel: string | undefined =
+    (season as any)?.competition?.name ?? season?.name ?? undefined;
+
+  // Date-nav labelling — identical to the menyesha scores nav.
+  const navBtn =
+    'p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors';
+  const navIsToday = dateFilter === todayKey();
+  const navLabel = navIsToday
+    ? 'Today'
+    : dateFilter === shiftKey(todayKey(), 1)
+      ? 'Tomorrow'
+      : dateFilter === shiftKey(todayKey(), -1)
+        ? 'Yesterday'
+        : (() => {
+            const d = new Date(`${dateFilter}T00:00:00`);
+            return `${d.toLocaleDateString('en', { weekday: 'long' })}, ${d.getDate()} ${d.toLocaleDateString(
+              'en',
+              { month: 'short' }
+            )}`;
+          })();
 
   // Cup structure — lets fixtures be tagged with a stage and (for group stages) a group.
   const stagesQuery = useQuery({
@@ -350,21 +563,92 @@ export function FixturesTab({ seasonId, season }: { seasonId: string; season: Se
           <div className="flex items-center gap-2 text-sm text-gray-400">
             <Loader2 className="h-4 w-4 animate-spin" /> Loading…
           </div>
-        ) : (matchesQuery.data ?? []).length === 0 ? (
+        ) : allMatches.length === 0 ? (
           <p className="text-sm text-gray-400">No matches scheduled for this season yet.</p>
         ) : (
-          <div className="space-y-2">
-            {(matchesQuery.data ?? []).map((m: Match) => (
-              <MatchRow
-                key={m.id}
-                match={m}
-                homeName={teamName(m.homeTeamId, m.homeTeam)}
-                awayName={teamName(m.awayTeamId, m.awayTeam)}
-                venues={venues}
-                onSaved={() => qc.invalidateQueries({ queryKey: ['football', 'matches', seasonId] })}
+          <>
+            {/* Filter by day — same date nav as the menyesha scores board.
+                Defaults to today so score/event updates land on the games
+                actually being played. */}
+            <div className="mb-4 flex flex-wrap items-center gap-1">
+              <button
+                type="button"
+                onClick={() => pickDate(shiftKey(dateFilter, -1))}
+                className={navBtn}
+                aria-label="Yesterday"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => pickDate(todayKey())}
+                title="Return to today"
+                className={`px-2.5 py-2 rounded-lg text-xs font-medium min-w-[64px] whitespace-nowrap text-center transition-colors ${
+                  navIsToday && !showAll
+                    ? 'bg-[#003153] text-white dark:bg-[#F59E0B] dark:text-gray-900'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                {navLabel}
+              </button>
+              <button
+                type="button"
+                onClick={() => pickDate(shiftKey(dateFilter, 1))}
+                className={navBtn}
+                aria-label="Tomorrow"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+              <DatePickerButton
+                date={dateFilter}
+                onChange={pickDate}
+                dateLocale="en"
+                btn={navBtn}
+                todayLabel="Today"
               />
-            ))}
-          </div>
+              <button
+                type="button"
+                onClick={() => setShowAll(true)}
+                className={`px-2.5 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+                  showAll
+                    ? 'bg-[#003153] text-white dark:bg-[#F59E0B] dark:text-gray-900'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                All dates
+              </button>
+              <span className="ml-auto text-xs text-gray-400">
+                {showAll
+                  ? `${allMatches.length} total`
+                  : `${matchesForDate.length} on ${prettyKey(dateFilter)}`}
+              </span>
+            </div>
+
+            {matchesForDate.length === 0 ? (
+              <p className="text-sm text-gray-400">
+                No matches on {prettyKey(dateFilter)}. Use the arrows, pick another date, or “All
+                dates”.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {matchesForDate.map((m: Match) => (
+                  <MatchRow
+                    key={m.id}
+                    match={m}
+                    homeName={teamName(m.homeTeamId, m.homeTeam)}
+                    awayName={teamName(m.awayTeamId, m.awayTeam)}
+                    homeTeam={teamMap.get(m.homeTeamId) ?? m.homeTeam ?? null}
+                    awayTeam={teamMap.get(m.awayTeamId) ?? m.awayTeam ?? null}
+                    competitionLabel={competitionLabel}
+                    venues={venues}
+                    onSaved={() =>
+                      qc.invalidateQueries({ queryKey: ['football', 'matches', seasonId] })
+                    }
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </section>
     </div>
@@ -375,12 +659,18 @@ function MatchRow({
   match,
   homeName,
   awayName,
+  homeTeam,
+  awayTeam,
+  competitionLabel,
   venues,
   onSaved,
 }: {
   match: Match;
   homeName: string;
   awayName: string;
+  homeTeam?: Team | null;
+  awayTeam?: Team | null;
+  competitionLabel?: string;
   venues: Venue[];
   onSaved: () => void;
 }) {
@@ -401,6 +691,7 @@ function MatchRow({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showEvents, setShowEvents] = useState(false);
   const [showLineups, setShowLineups] = useState(false);
+  const [showGraphic, setShowGraphic] = useState(false);
 
   // Shootout tally only applies to knockout ties. A blank field clears it (null).
   const isKnockout = (match.stage as any)?.type === 'Knockout';
@@ -551,6 +842,15 @@ function MatchRow({
       </button>
       <button
         type="button"
+        onClick={() => setShowGraphic(true)}
+        title="Download shareable result graphic"
+        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+      >
+        <ImageDown className="h-3.5 w-3.5" />
+        Graphic
+      </button>
+      <button
+        type="button"
         onClick={() => setConfirmDelete(true)}
         disabled={deleteMut.isPending}
         title="Delete match"
@@ -657,6 +957,18 @@ function MatchRow({
         <div className="px-3 pb-3">
           <MatchLineupsPanel match={match} homeName={homeName} awayName={awayName} />
         </div>
+      )}
+
+      {showGraphic && (
+        <MatchGraphicModal
+          match={match}
+          homeName={homeName}
+          awayName={awayName}
+          homeTeam={homeTeam}
+          awayTeam={awayTeam}
+          competitionLabel={competitionLabel}
+          onClose={() => setShowGraphic(false)}
+        />
       )}
     </div>
   );

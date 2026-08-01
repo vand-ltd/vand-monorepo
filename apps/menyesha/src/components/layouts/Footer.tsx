@@ -1,7 +1,7 @@
 'use client'
 
 import Link from "next/link";
-import { Mail, MapPin } from "lucide-react";
+import { Mail, MapPin, Megaphone } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 
 const Footer = () => {
@@ -63,6 +63,10 @@ const Footer = () => {
                 <Mail className="h-4 w-4 shrink-0" />
                 <span>menyesha@vand.rw</span>
               </a>
+              <Link href={`/${locale}/advertise`} className="flex items-center space-x-2.5 text-sm text-gray-400 hover:text-brand-accent transition-colors">
+                <Megaphone className="h-4 w-4 shrink-0" />
+                <span>{tNav('advertise')}</span>
+              </Link>
               {/* <div className="flex items-center space-x-2.5 text-sm text-gray-400">
                 <Phone className="h-4 w-4 shrink-0" />
                 <span>+250 788 123 456</span>

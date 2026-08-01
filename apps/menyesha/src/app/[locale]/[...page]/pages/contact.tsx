@@ -1,8 +1,9 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Mail, MapPin, MessageSquare } from 'lucide-react';
+import { Mail, MapPin, MessageSquare, ArrowRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Link } from '@/i18n/navigation';
 
 export default function ContactPage() {
   const t = useTranslations('contactPage');
@@ -79,12 +80,21 @@ export default function ContactPage() {
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
           {t('advertisingDescription')}
         </p>
-        <a
-          href="mailto:menyesha@vand.rw?subject=Advertising%20Inquiry"
-          className="text-sm text-brand-secondary hover:text-brand-accent font-medium transition-colors"
-        >
-          menyesha@vand.rw
-        </a>
+        <div className="flex flex-wrap items-center gap-4">
+          <Link
+            href="/advertise"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-secondary hover:text-brand-accent transition-colors"
+          >
+            {t('advertisingRates')}
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+          <a
+            href="mailto:menyesha@vand.rw?subject=Advertising%20Inquiry"
+            className="text-sm text-gray-500 hover:text-brand-accent transition-colors dark:text-gray-400"
+          >
+            menyesha@vand.rw
+          </a>
+        </div>
       </div>
     </div>
   );

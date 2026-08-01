@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getPlayerProfile, type PlayerTeamRef } from '@org/api';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
+import { TeamLink } from '@/components/football/TeamLink';
 import { Loader2, ArrowLeft, ArrowRight } from 'lucide-react';
 
 function crestUrl(t?: PlayerTeamRef | null): string | null {
@@ -38,7 +39,7 @@ function TeamChip({ team, name }: { team?: PlayerTeamRef | null; name?: string }
   const url = crestUrl(team);
   const label = team?.name ?? name ?? '—';
   return (
-    <span className="inline-flex items-center gap-1.5 min-w-0">
+    <TeamLink slug={team?.slug} title={label} className="inline-flex items-center gap-1.5 min-w-0">
       {url ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={url} alt="" className="h-4 w-4 rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0" />
@@ -48,7 +49,7 @@ function TeamChip({ team, name }: { team?: PlayerTeamRef | null; name?: string }
         </span>
       )}
       <span className="truncate">{label}</span>
-    </span>
+    </TeamLink>
   );
 }
 
@@ -169,7 +170,11 @@ export function PlayerProfile({ slug }: { slug: string }) {
             {t('currentTeam')}
           </h2>
           <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
-            <div className="flex items-center gap-4">
+            <TeamLink
+              slug={currentTeam.team?.slug}
+              title={currentTeam.team.name}
+              className="flex items-center gap-4 min-w-0"
+            >
             {crestUrl(currentTeam.team) ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -197,7 +202,7 @@ export function PlayerProfile({ slug }: { slug: string }) {
                   .join(' · ')}
               </p>
             </div>
-            </div>
+            </TeamLink>
 
             {/* Same label/value grid as the vitals — aligns on mobile instead of
                 floating right-aligned under the team name. */}

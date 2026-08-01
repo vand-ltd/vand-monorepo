@@ -5,6 +5,33 @@ export async function login(email: string, password: string) {
   return data;
 }
 
+// Public external-user registration. Creates an unverified reader and emails a
+// verification link; no tokens are returned until the email is confirmed.
+export async function signup(body: {
+  fullName: string;
+  email: string;
+  password: string;
+  phone?: string;
+  language?: string;
+}) {
+  const { data } = await api.post('/api/auth/signup', body);
+  return data;
+}
+
+// Confirms the email from the link's token; on success the user is logged in
+// (returns access + refresh tokens + user, same shape as login).
+export async function verifyEmail(token: string) {
+  const { data } = await api.post('/api/auth/verify-email', { token });
+  return data;
+}
+
+// Re-sends the verification link. Always resolves with a neutral message
+// (can't be used to probe which emails exist).
+export async function resendVerification(email: string) {
+  const { data } = await api.post('/api/auth/resend-verification', { email });
+  return data;
+}
+
 export async function getMe(language?: string) {
   const { data } = await api.get('/api/auth/me', {
     params: language ? { language } : undefined,

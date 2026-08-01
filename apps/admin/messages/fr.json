@@ -54,7 +54,8 @@
     "createSponsoredArticle": "Article Sponsorisé",
     "createFuelPrices": "Ajouter des prix",
     "fuelPrices": "Prix du carburant",
-    "football": "Football"
+    "football": "Football",
+    "ads": "Publicités"
   },
   "user": {
     "profileTitle": "Utilisateur Admin",

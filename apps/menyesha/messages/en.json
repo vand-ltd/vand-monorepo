@@ -22,7 +22,11 @@
     "privacyPolicy": "Privacy Policy",
     "termsOfService": "Terms of Service",
     "scores": "Scores",
-    "data": "Data"
+    "data": "Data",
+    "advertise": "Advertise",
+    "account": "Account",
+    "login": "Sign in",
+    "logout": "Log out"
   },
   "breakingNews": {
     "label": "BREAKING",
@@ -127,7 +131,32 @@
     "submit": "Register",
     "submitting": "Registering...",
     "success": "Registration successful!",
-    "backToHome": "Back to homepage"
+    "backToHome": "Back to homepage",
+    "passwordMin": "At least 8 characters",
+    "loginFailed": "Invalid email or password.",
+    "registerFailed": "Something went wrong. Please try again.",
+    "verifyNeeded": "Please verify your email before logging in.",
+    "checkEmailTitle": "Check your email",
+    "checkEmailBody": "We sent a verification link to {email}. Click it to activate your account.",
+    "noEmail": "Didn't get it?",
+    "resend": "Resend link",
+    "resending": "Sending…",
+    "resent": "Sent — check your inbox."
+  },
+  "verifyEmail": {
+    "verifying": "Verifying your email…",
+    "successTitle": "Email verified",
+    "successBody": "You're all set. Redirecting you now…",
+    "failTitle": "Verification failed",
+    "failBody": "This link is invalid or has expired. Request a new one below.",
+    "missingToken": "This link is missing its verification code. Request a new one below.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "resend": "Send a new link",
+    "resending": "Sending…",
+    "resent": "If that address needs verifying, a new link is on its way.",
+    "continue": "Continue",
+    "backToLogin": "Back to login"
   },
   "contactPage": {
     "title": "Contact Us",
@@ -139,7 +168,8 @@
     "storyTipDescription": "Got a lead on a breaking story? Our editorial team reviews every tip. Your identity will be kept confidential.",
     "sendTip": "Send a Tip",
     "advertisingTitle": "Advertising",
-    "advertisingDescription": "Interested in reaching our audience? Contact us for ad placements and sponsored content opportunities."
+    "advertisingDescription": "Interested in reaching our audience? Contact us for ad placements and sponsored content opportunities.",
+    "advertisingRates": "See our advertising rates"
   },
   "aboutPage": {
     "heroTitle": "About Menyesha",
@@ -378,6 +408,22 @@
     "team": "Team",
     "form": "Form",
     "noStandings": "No standings yet",
+    "liveTable": "Live table",
+    "liveTableNote": "Positions update as live matches play",
+    "teamNotFound": "Team not found",
+    "backToScores": "Back to scores",
+    "founded": "Founded",
+    "honours": "Honours",
+    "recentResults": "Recent results",
+    "squadTab": "Squad",
+    "matchesTab": "Matches",
+    "noSquad": "No squad for this season",
+    "leagueTable": "Current league table",
+    "competition": "Competition",
+    "pos": "Pos",
+    "league": "League",
+    "cup": "Cup",
+    "noSeasons": "No records yet",
     "stages": "Groups",
     "stage": "Stage",
     "group": "Group",
@@ -441,6 +487,7 @@
     "today": "Today",
     "yesterday": "Yesterday",
     "tomorrow": "Tomorrow",
+    "returnToToday": "Return to today",
     "allCompetitions": "All competitions",
     "selectCompetition": "Select a competition to see its table",
     "noMatches": "No matches on this day",
@@ -453,6 +500,79 @@
     "upcomingFixtures": "Upcoming fixtures",
     "matches": "Matches",
     "competitions": "Competitions",
-    "allRounds": "All matchdays"
+    "allRounds": "All matchdays",
+    "knockout": "Knockout"
+  },
+  "advertisePage": {
+    "title": "Advertise on Menyesha",
+    "intro": "Reach Rwanda's football and news audience — mobile-first, real-time, and in three languages. Choose a section, a placement, and a package that fits your budget.",
+    "why": {
+      "audience": {
+        "title": "Engaged local audience",
+        "body": "Football fans and news readers across Rwanda, every day."
+      },
+      "mobile": {
+        "title": "Mobile-first reach",
+        "body": "The vast majority of our traffic is mobile — your ad goes where people are."
+      },
+      "languages": {
+        "title": "Three languages",
+        "body": "Advertise in Kinyarwanda, English or French."
+      },
+      "realtime": {
+        "title": "Live & sticky",
+        "body": "Live scores keep readers coming back — repeat exposure for your brand."
+      }
+    },
+    "placementsTitle": "Where your ad can appear",
+    "placements": {
+      "header": {
+        "name": "Header (leaderboard)",
+        "where": "Top banner on every page"
+      },
+      "sidebar": {
+        "name": "Sidebar",
+        "where": "In the sidebar, sticky as readers scroll"
+      },
+      "inline": {
+        "name": "In-article",
+        "where": "Inside the article, between paragraphs"
+      },
+      "infeed": {
+        "name": "In-feed",
+        "where": "Between articles in the feed"
+      },
+      "footer": {
+        "name": "Footer (mobile)",
+        "where": "Sticky bar at the bottom on phones"
+      }
+    },
+    "pricingTitle": "How pricing works",
+    "pricingIntro": "Rates depend on two things — the section you want, and how long you book. Contact us for our current rate card.",
+    "bySectionTitle": "By section",
+    "tiers": {
+      "premium": {
+        "name": "Premium",
+        "sections": "Home · Sports — our highest-traffic pages"
+      },
+      "standard": {
+        "name": "Standard",
+        "sections": "Entertainment, Politics, Business & other categories · Data"
+      }
+    },
+    "byPackageTitle": "By package",
+    "durations": {
+      "month": "1 month",
+      "quarter": "3 months",
+      "year": "1 year"
+    },
+    "packageNote": "3-month and yearly bookings come at a better rate than monthly.",
+    "cta": {
+      "title": "Get a rate card",
+      "body": "Tell us your target section and package length — we'll send our current rates and get you live.",
+      "button": "Contact us for rates"
+    },
+    "backHint": "Questions? See our",
+    "contactLink": "contact page"
   }
 }

@@ -1,13 +1,16 @@
 'use client'
 
 import Link from "next/link";
+import { EmptyAdSlot } from "@/components/ads/EmptyAdSlot";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { MessageCircle, Clock, Eye, Grid, List, Zap, Loader2, ChevronDown, ArrowUp, BookOpen } from "lucide-react";
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight as ChevronRightIcon } from 'lucide-react';
 import { getArticlesFeed, getArticles } from '@org/api';
 import { useLocale, useTranslations } from 'next-intl';
+import { AdSlot } from '@/components/ads/AdSlot';
+import type { AdSection } from '@org/api';
 import { useRouter } from 'next/navigation';
 import { formatTimeAgo } from '@/lib/timeago';
 
@@ -37,6 +40,25 @@ const categoryStyles: Record<string, { lightBg: string; darkBg: string; lightTex
 };
 
 const defaultCategoryStyle = { lightBg: "#f3f4f6", darkBg: "#374151", lightText: "#374151", darkText: "#d1d5db", dot: "#6b7280" };
+
+// An in-feed ad between article cards — a 300×250 medium rectangle, spanning
+// the full row in grid view. Serves a real ad when sold, else the placeholder.
+function InFeedAd({ section, label }: { section: AdSection; label: string }) {
+  return (
+    <div className="md:col-span-2">
+      <AdSlot
+        placement="InFeed"
+        section={section}
+        pageType="list"
+        fallback={
+          <div className="mx-auto w-full max-w-[300px]">
+            <EmptyAdSlot label={label} sizeLabel="300 × 250 · Medium Rectangle" aspectRatio="300 / 250" />
+          </div>
+        }
+      />
+    </div>
+  );
+}
 
 function SponsoredBadge({ className = "" }: { className?: string }) {
   return (
@@ -622,9 +644,9 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
 
           <div className={`space-y-5 lg:space-y-6 ${viewMode === 'grid' ? 'md:grid md:grid-cols-2 md:gap-6 md:space-y-0' : ''}`}>
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {feedArticles.map((article: any) => (
+            {feedArticles.map((article: any, i: number) => (
+              <Fragment key={article.id}>
               <Link
-                key={article.id}
                 href={`/${locale}/article/${article.slug}`}
                 className={`group block ${viewMode === 'grid' ? 'h-full' : ''}`}
               >
@@ -712,6 +734,14 @@ const Article = ({ categoryKey, subCategoryKey }: { categoryKey?: string; subCat
                   </div>
                 </article>
               </Link>
+              {/* In-feed ad after every 6th article (not right at the end). */}
+              {(i + 1) % 6 === 0 && i < feedArticles.length - 1 && (
+                <InFeedAd
+                  section={isHomeFeed ? 'home' : 'news'}
+                  label={tSidebar('adSpaceAvailable')}
+                />
+              )}
+              </Fragment>
             ))}
 
             {isFetchingNextPage && (

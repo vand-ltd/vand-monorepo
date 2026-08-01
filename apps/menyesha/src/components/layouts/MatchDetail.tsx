@@ -9,11 +9,13 @@ import {
   normalizePosition,
   type Match,
   type MatchEvent,
+  type MatchLineup,
   type LineupSlot,
 } from '@org/api';
 import { toPng } from 'html-to-image';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
+import { TeamLink } from '@/components/football/TeamLink';
 import { Loader2, ArrowLeft, MapPin, ArrowUp, ArrowDown, ChevronUp, Download, CheckCircle2 } from 'lucide-react';
 import { ShareButton } from '@/components/article/ShareButton';
 import { LIVE_STATUSES, useNow, liveMinuteLabel } from '@/lib/matchClock';
@@ -94,10 +96,20 @@ export function MatchDetail({
   slug,
   competition,
   tab = 'info',
+  initialMatch,
+  initialEvents,
+  initialHomeLineup,
+  initialAwayLineup,
 }: {
   slug: string;
   competition: string;
   tab?: MatchTab;
+  // Server-fetched seed data so the content is in the initial HTML (crawlable);
+  // the client still refetches/polls for live updates.
+  initialMatch?: Match | null;
+  initialEvents?: MatchEvent[];
+  initialHomeLineup?: MatchLineup | null;
+  initialAwayLineup?: MatchLineup | null;
 }) {
   const locale = useLocale();
   const t = useTranslations('football');
@@ -107,6 +119,7 @@ export function MatchDetail({
     queryKey: ['match', slug],
     queryFn: () => getMatch(slug),
     refetchInterval: 30000,
+    initialData: initialMatch ?? undefined,
   });
 
   const home = (m as any)?.homeTeam;
@@ -144,6 +157,9 @@ export function MatchDetail({
           competition={competition}
           slug={slug}
           activeTab={tab}
+          initialEvents={initialEvents}
+          initialHomeLineup={initialHomeLineup}
+          initialAwayLineup={initialAwayLineup}
         />
       )}
     </div>
@@ -157,6 +173,9 @@ function MatchCardDetail({
   competition,
   slug,
   activeTab,
+  initialEvents,
+  initialHomeLineup,
+  initialAwayLineup,
 }: {
   m: Match;
   dateLocale: string;
@@ -164,6 +183,9 @@ function MatchCardDetail({
   competition: string;
   slug: string;
   activeTab: MatchTab;
+  initialEvents?: MatchEvent[];
+  initialHomeLineup?: MatchLineup | null;
+  initialAwayLineup?: MatchLineup | null;
 }) {
   const home = (m as any).homeTeam;
   const away = (m as any).awayTeam;
@@ -275,6 +297,9 @@ function MatchCardDetail({
         competition={competition}
         slug={slug}
         activeTab={activeTab}
+        initialEvents={initialEvents}
+        initialHomeLineup={initialHomeLineup}
+        initialAwayLineup={initialAwayLineup}
       />
     </div>
   );
@@ -293,6 +318,9 @@ function MatchTabs({
   competition,
   slug,
   activeTab,
+  initialEvents,
+  initialHomeLineup,
+  initialAwayLineup,
 }: {
   m: Match;
   home: any;
@@ -304,6 +332,9 @@ function MatchTabs({
   competition: string;
   slug: string;
   activeTab: MatchTab;
+  initialEvents?: MatchEvent[];
+  initialHomeLineup?: MatchLineup | null;
+  initialAwayLineup?: MatchLineup | null;
 }) {
   const tab = activeTab;
   const tabs: MatchTab[] = ['info', 'events', 'lineups'];
@@ -332,7 +363,13 @@ function MatchTabs({
       <div className="px-4 sm:px-6 py-5">
         {tab === 'info' && <MatchInfo m={m} venue={venue} dateLocale={dateLocale} t={t} />}
         {tab === 'events' && (
-          <MatchEvents matchId={m.id} homeTeamId={m.homeTeamId ?? home?.id} live={isLive} t={t} />
+          <MatchEvents
+            matchId={m.id}
+            homeTeamId={m.homeTeamId ?? home?.id}
+            live={isLive}
+            t={t}
+            initialEvents={initialEvents}
+          />
         )}
         {tab === 'lineups' && (
           <MatchLineups
@@ -343,6 +380,9 @@ function MatchTabs({
             awayTeam={away}
             referee={((m as any).referee ?? (m as any).refereeName) || undefined}
             t={t}
+            initialHome={initialHomeLineup}
+            initialAway={initialAwayLineup}
+            initialEvents={initialEvents}
           />
         )}
       </div>
@@ -537,16 +577,19 @@ function MatchEvents({
   homeTeamId,
   live,
   t,
+  initialEvents,
 }: {
   matchId: string;
   homeTeamId?: string;
   live: boolean;
   t: ReturnType<typeof useTranslations>;
+  initialEvents?: MatchEvent[];
 }) {
   const { data: events = [] } = useQuery({
     queryKey: ['match-events', matchId],
     queryFn: () => getMatchEvents(matchId),
     refetchInterval: live ? 30000 : false,
+    initialData: initialEvents,
   });
 
   if (events.length === 0)
@@ -666,6 +709,9 @@ function MatchLineups({
   awayTeam,
   referee,
   t,
+  initialHome,
+  initialAway,
+  initialEvents,
 }: {
   matchId: string;
   homeTeamId?: string;
@@ -674,18 +720,23 @@ function MatchLineups({
   awayTeam: any;
   referee?: string;
   t: ReturnType<typeof useTranslations>;
+  initialHome?: MatchLineup | null;
+  initialAway?: MatchLineup | null;
+  initialEvents?: MatchEvent[];
 }) {
   const homeQuery = useQuery({
     queryKey: ['match-lineup', matchId, homeTeamId],
     queryFn: () => getMatchLineup(matchId, homeTeamId as string),
     enabled: !!matchId && !!homeTeamId,
     retry: false,
+    initialData: initialHome ?? undefined,
   });
   const awayQuery = useQuery({
     queryKey: ['match-lineup', matchId, awayTeamId],
     queryFn: () => getMatchLineup(matchId, awayTeamId as string),
     enabled: !!matchId && !!awayTeamId,
     retry: false,
+    initialData: initialAway ?? undefined,
   });
 
   // All events — drives the per-player pitch badges and the substitutions list.
@@ -693,6 +744,7 @@ function MatchLineups({
     queryKey: ['match-events', matchId],
     queryFn: () => getMatchEvents(matchId),
     enabled: !!matchId,
+    initialData: initialEvents,
   });
   const events = eventsQuery.data ?? [];
   const badges = buildPlayerBadges(events);
@@ -992,17 +1044,19 @@ function TeamBar({
   return (
     <div className="flex items-center justify-center gap-2 bg-emerald-800 text-white px-3 py-2">
       <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${dot}`} />
-      {url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={url}
-          alt=""
-          crossOrigin="anonymous"
-          onError={imgCorsFallback}
-          className="h-5 w-5 rounded-full object-cover bg-white/10 shrink-0"
-        />
-      ) : null}
-      <span className="font-semibold text-sm truncate">{teamName(team)}</span>
+      <TeamLink slug={team?.slug} title={teamName(team)} className="flex items-center gap-2 min-w-0">
+        {url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={url}
+            alt=""
+            crossOrigin="anonymous"
+            onError={imgCorsFallback}
+            className="h-5 w-5 rounded-full object-cover bg-white/10 shrink-0"
+          />
+        ) : null}
+        <span className="font-semibold text-sm truncate">{teamName(team)}</span>
+      </TeamLink>
       {formation && <span className="text-[11px] text-white/70 shrink-0">{formation}</span>}
       {statusBadge && (
         <span
@@ -1037,21 +1091,23 @@ function StarterColumn({
   return (
     <div className="min-w-0">
       <div className="flex items-center gap-2 mb-3 min-w-0">
-        {url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={url}
-            alt=""
-            className="h-6 w-6 rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0"
-          />
-        ) : (
-          <span className="h-6 w-6 rounded-full bg-[#003153] text-white text-[9px] font-bold flex items-center justify-center shrink-0">
-            {initials(team)}
+        <TeamLink slug={team?.slug} title={teamName(team)} className="flex items-center gap-2 min-w-0">
+          {url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={url}
+              alt=""
+              className="h-6 w-6 rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0"
+            />
+          ) : (
+            <span className="h-6 w-6 rounded-full bg-[#003153] text-white text-[9px] font-bold flex items-center justify-center shrink-0">
+              {initials(team)}
+            </span>
+          )}
+          <span className="font-semibold text-sm text-gray-900 dark:text-white truncate">
+            {teamName(team)}
           </span>
-        )}
-        <span className="font-semibold text-sm text-gray-900 dark:text-white truncate">
-          {teamName(team)}
-        </span>
+        </TeamLink>
         {formation && (
           <span className="text-[11px] text-gray-400 shrink-0">{formation}</span>
         )}
@@ -1472,11 +1528,15 @@ function TeamBlock({
   advancedLabel?: string;
 }) {
   const url = crestUrl(team);
-  return (
-    <div className="flex flex-col items-center gap-2 text-center min-w-0">
+  const inner = (
+    <>
       {url ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt="" className="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover bg-gray-100 dark:bg-gray-700" />
+        <img
+          src={url}
+          alt=""
+          className="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover bg-gray-100 dark:bg-gray-700 transition-shadow group-hover:ring-2 group-hover:ring-[#003153]/40 dark:group-hover:ring-[#F59E0B]/40"
+        />
       ) : (
         <span className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-[#003153] text-white text-sm font-bold flex items-center justify-center">
           {initials(team)}
@@ -1484,8 +1544,18 @@ function TeamBlock({
       )}
       <span className="flex items-center gap-1 text-sm font-semibold text-gray-900 dark:text-white min-w-0">
         {through && <ChevronUp className="h-4 w-4 shrink-0 text-emerald-500" aria-label={advancedLabel} />}
-        <span className="truncate max-w-[9rem]">{teamName(team)}</span>
+        <span className="truncate max-w-[9rem] group-hover:text-[#003153] dark:group-hover:text-[#F59E0B] transition-colors">
+          {teamName(team)}
+        </span>
       </span>
-    </div>
+    </>
+  );
+  const cls = 'flex flex-col items-center gap-2 text-center min-w-0';
+  return team?.slug ? (
+    <Link href={`/football/team/${team.slug}`} className={`${cls} group`}>
+      {inner}
+    </Link>
+  ) : (
+    <div className={cls}>{inner}</div>
   );
 }

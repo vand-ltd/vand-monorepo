@@ -8,7 +8,8 @@ import { ToggleMode } from "./ToggleMode"
 import { SearchInput } from "./SearchInput"
 import LanguageSwitcher from "./LanguageSwitcher"
 import { Button } from "@/components/ui/button"
-import { Menu, User, ChevronDown, ChevronRight, ChevronLeft } from "lucide-react"
+import { Menu, ChevronDown, ChevronRight, ChevronLeft } from "lucide-react"
+import { AccountMenu } from "./AccountMenu"
 import { BreakingNewsTicker } from "./BreakingNewsTicker"
 import { FuelPriceStrip } from "./FuelPriceStrip"
 import { useTranslations, useLocale } from "next-intl"
@@ -181,11 +182,7 @@ export const Header = () => {
 
             {/* Actions */}
             <div className="flex items-center space-x-3">
-              <Link href={`/${locale}/login`}>
-                <Button variant="ghost" size="icon">
-                  <User className="h-5 w-5" />
-                </Button>
-              </Link>
+              <AccountMenu />
               <ToggleMode />
               <LanguageSwitcher />
               <Button

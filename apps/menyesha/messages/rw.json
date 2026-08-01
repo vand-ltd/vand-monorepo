@@ -22,7 +22,11 @@
     "privacyPolicy": "Amabwiriza y'ibanga",
     "termsOfService": "Amategeko n'Amabwiriza",
     "scores": "Scores",
-    "data": "Data"
+    "data": "Data",
+    "advertise": "Kwamamaza",
+    "account": "Konti",
+    "login": "Kwinjira",
+    "logout": "Gusohoka"
   },
   "breakingNews": {
     "label": "BREAKING",
@@ -127,7 +131,32 @@
     "submit": "Iyandikishe",
     "submitting": "Birimo kwandikisha...",
     "success": "Kwiyandikisha byagenze neza!",
-    "backToHome": "Subira ku rubuga"
+    "backToHome": "Subira ku rubuga",
+    "passwordMin": "Nibura inyuguti 8",
+    "loginFailed": "Imeyili cyangwa ijambo ry'ibanga si byo.",
+    "registerFailed": "Habaye ikibazo. Ongera ugerageze.",
+    "verifyNeeded": "Banza wemeze imeyili yawe mbere yo kwinjira.",
+    "checkEmailTitle": "Reba imeyili yawe",
+    "checkEmailBody": "Twoherereje ihuza ryo kwemeza kuri {email}. Rikandeho kugira ngo ushyire konti yawe mu bikorwa.",
+    "noEmail": "Ntabwo wayibonye?",
+    "resend": "Ongera wohereze ihuza",
+    "resending": "Kohereza…",
+    "resent": "Byoherejwe — reba imeyili yawe."
+  },
+  "verifyEmail": {
+    "verifying": "Kwemeza imeyili yawe…",
+    "successTitle": "Imeyili yemejwe",
+    "successBody": "Byose birakozwe. Turi kugusubiza ku rubuga…",
+    "failTitle": "Kwemeza byanze",
+    "failBody": "Iri huza ntabwo ari ryo cyangwa ryararengeje igihe. Saba irindi hano hepfo.",
+    "missingToken": "Iri huza ntabwo rifite kode yo kwemeza. Saba irindi hano hepfo.",
+    "emailLabel": "Imeyili",
+    "emailPlaceholder": "wowe@urugero.com",
+    "resend": "Ohereza ihuza rishya",
+    "resending": "Kohereza…",
+    "resent": "Niba iyo meyili ikeneye kwemezwa, ihuza rishya riraje.",
+    "continue": "Komeza",
+    "backToLogin": "Subira kwinjira"
   },
   "contactPage": {
     "title": "Twandikire",
@@ -139,7 +168,8 @@
     "storyTipDescription": "Ufite amakuru ku nkuru yihutirwa? Itsinda ryacu ry'abanyamakuru rigenzura buri makuru. Amazina yawe azabikwa mu ibanga.",
     "sendTip": "Ohereza inkuru",
     "advertisingTitle": "Kwamamaza",
-    "advertisingDescription": "Urashaka kugera ku basomyi bacu? Twandikire ku byerekeye kwamamaza cyangwa ku byerekeye inkuru zishyurwa."
+    "advertisingDescription": "Urashaka kugera ku basomyi bacu? Twandikire ku byerekeye kwamamaza cyangwa ku byerekeye inkuru zishyurwa.",
+    "advertisingRates": "Reba ibiciro byo kwamamaza"
   },
   "aboutPage": {
     "heroTitle": "Ibyerekeye Menyesha",
@@ -378,6 +408,22 @@
     "team": "Team",
     "form": "Form",
     "noStandings": "No standings yet",
+    "liveTable": "Live table",
+    "liveTableNote": "Positions update as live matches play",
+    "teamNotFound": "Team not found",
+    "backToScores": "Back to scores",
+    "founded": "Founded",
+    "honours": "Honours",
+    "recentResults": "Recent results",
+    "squadTab": "Squad",
+    "matchesTab": "Matches",
+    "noSquad": "No squad for this season",
+    "leagueTable": "Current league table",
+    "competition": "Competition",
+    "pos": "Pos",
+    "league": "League",
+    "cup": "Cup",
+    "noSeasons": "No records yet",
     "stages": "Groups",
     "stage": "Stage",
     "group": "Group",
@@ -441,6 +487,7 @@
     "today": "Today",
     "yesterday": "Yesterday",
     "tomorrow": "Tomorrow",
+    "returnToToday": "Return to today",
     "allCompetitions": "All competitions",
     "selectCompetition": "Select a competition to see its table",
     "noMatches": "No matches on this day",
@@ -453,6 +500,79 @@
     "upcomingFixtures": "Upcoming fixtures",
     "matches": "Matches",
     "competitions": "Competitions",
-    "allRounds": "All matchdays"
+    "allRounds": "All matchdays",
+    "knockout": "Knockout"
+  },
+  "advertisePage": {
+    "title": "Kwamamaza kuri Menyesha",
+    "intro": "Gera ku bakurikira umupira n'amakuru mu Rwanda — bagenewe telefone, ako kanya, kandi mu ndimi eshatu. Hitamo igice, aho byamamazwa, na paki ihuye n'ingengo yawe.",
+    "why": {
+      "audience": {
+        "title": "Abakurikira benshi",
+        "body": "Abakunda umupira n'abasoma amakuru mu Rwanda, buri munsi."
+      },
+      "mobile": {
+        "title": "Bigera kuri telefone",
+        "body": "Abenshi baturusuraho bakoresha telefone — kwamamaza kwawe kujya aho abantu bari."
+      },
+      "languages": {
+        "title": "Indimi eshatu",
+        "body": "Wamamaze mu Kinyarwanda, Icyongereza cyangwa Igifaransa."
+      },
+      "realtime": {
+        "title": "Bibaho kandi bigumaho",
+        "body": "Amanota abaho atuma abasomyi bagaruka — ikirango cyawe kigaragara kenshi."
+      }
+    },
+    "placementsTitle": "Aho kwamamaza kwawe bishobora kugaragara",
+    "placements": {
+      "header": {
+        "name": "Hejuru (leaderboard)",
+        "where": "Icyapa cyo hejuru kuri buri paji"
+      },
+      "sidebar": {
+        "name": "Ku ruhande",
+        "where": "Ku ruhande, bigumaho iyo usoma"
+      },
+      "inline": {
+        "name": "Mu nkuru",
+        "where": "Imbere mu nkuru, hagati y'imirongo"
+      },
+      "infeed": {
+        "name": "Hagati y'inkuru",
+        "where": "Hagati y'inkuru ku rutonde"
+      },
+      "footer": {
+        "name": "Hasi (telefone)",
+        "where": "Icyapa cyo hasi kuri telefone"
+      }
+    },
+    "pricingTitle": "Uko ibiciro bikorwa",
+    "pricingIntro": "Ibiciro biterwa n'ibintu bibiri — igice ushaka n'igihe umara. Twandikire kugira ngo ubone ibiciro biriho.",
+    "bySectionTitle": "Ku gice",
+    "tiers": {
+      "premium": {
+        "name": "Premium",
+        "sections": "Ahabanza · Siporo — amapaji afite abasomyi benshi"
+      },
+      "standard": {
+        "name": "Standard",
+        "sections": "Imyidagaduro, Politiki, Ubucuruzi n'ibindi bice · Imibare"
+      }
+    },
+    "byPackageTitle": "Ku gihe (paki)",
+    "durations": {
+      "month": "Ukwezi 1",
+      "quarter": "Amezi 3",
+      "year": "Umwaka 1"
+    },
+    "packageNote": "Paki z'amezi 3 n'umwaka zifite igiciro cyiza kuruta icy'ukwezi.",
+    "cta": {
+      "title": "Saba ibiciro",
+      "body": "Tubwire igice ushaka n'igihe — tukoherereza ibiciro biriho tukagushyira ku murongo.",
+      "button": "Twandikire usabe ibiciro"
+    },
+    "backHint": "Ufite ibibazo? Reba",
+    "contactLink": "urupapuro rwo kutwandikira"
   }
 }

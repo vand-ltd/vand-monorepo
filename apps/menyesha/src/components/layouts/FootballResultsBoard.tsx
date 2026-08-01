@@ -17,8 +17,17 @@ import {
   type Stage,
 } from '@org/api';
 import { useLocale, useTranslations } from 'next-intl';
-import { Loader2, ChevronRight, ChevronLeft, ChevronUp, ArrowLeft, Calendar } from 'lucide-react';
-import { Link } from '@/i18n/navigation';
+import {
+  Loader2,
+  ChevronRight,
+  ChevronLeft,
+  ChevronUp,
+  ArrowLeft,
+  Calendar,
+  RotateCcw,
+} from 'lucide-react';
+import { Link, useRouter } from '@/i18n/navigation';
+import { TeamLink } from '@/components/football/TeamLink';
 
 function teamName(t?: { name?: string; shortName?: string }): string {
   return t?.name ?? t?.shortName ?? 'TBD';
@@ -72,11 +81,150 @@ function shiftDate(date: string, delta: number): string {
 
 // Compact date navigation: ‹ Today ›  + a calendar-icon-only picker.
 // The middle label shows "Today", or the date once you step away with the arrows.
+// A self-contained calendar popover — pure DOM, so it works everywhere (real
+// mobile, the DevTools emulator, and desktop) without the native OS date picker.
+function DatePickerButton({
+  date,
+  onChange,
+  dateLocale,
+  btn,
+  todayLabel,
+}: {
+  date: string;
+  onChange: (d: string) => void;
+  dateLocale: string;
+  btn: string;
+  todayLabel: string;
+}) {
+  const todayKey = dayOffsetKey(0);
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const base = date ? new Date(`${date}T00:00:00`) : new Date();
+  const [viewY, setViewY] = useState(base.getFullYear());
+  const [viewM, setViewM] = useState(base.getMonth());
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: Event) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    document.addEventListener('touchstart', onDoc);
+    return () => {
+      document.removeEventListener('mousedown', onDoc);
+      document.removeEventListener('touchstart', onDoc);
+    };
+  }, [open]);
+
+  const openPicker = () => {
+    const b = date ? new Date(`${date}T00:00:00`) : new Date();
+    setViewY(b.getFullYear());
+    setViewM(b.getMonth());
+    setOpen(true);
+  };
+
+  const daysInMonth = new Date(viewY, viewM + 1, 0).getDate();
+  const firstDow = new Date(viewY, viewM, 1).getDay();
+  const cells: (number | null)[] = [
+    ...Array(firstDow).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
+  const key = (d: number) =>
+    `${viewY}-${String(viewM + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  const monthLabel = new Date(viewY, viewM, 1).toLocaleDateString(dateLocale, {
+    month: 'long',
+    year: 'numeric',
+  });
+  const prevMonth = () =>
+    viewM === 0 ? (setViewM(11), setViewY((y) => y - 1)) : setViewM((m) => m - 1);
+  const nextMonth = () =>
+    viewM === 11 ? (setViewM(0), setViewY((y) => y + 1)) : setViewM((m) => m + 1);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => (open ? setOpen(false) : openPicker())}
+        className={btn}
+        aria-label="Pick date"
+        aria-expanded={open}
+      >
+        <Calendar className="h-4 w-4" />
+      </button>
+      {open && (
+        <div className="absolute right-0 z-50 mt-2 w-64 rounded-xl border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+          <div className="mb-2 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={prevMonth}
+              className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+              aria-label="Previous month"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="text-sm font-semibold text-gray-900 dark:text-white">{monthLabel}</span>
+            <button
+              type="button"
+              onClick={nextMonth}
+              className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+              aria-label="Next month"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="mb-1 grid grid-cols-7 gap-0.5 text-center text-[10px] text-gray-400">
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+              <span key={i}>{d}</span>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-0.5">
+            {cells.map((d, i) =>
+              d === null ? (
+                <span key={i} />
+              ) : (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => {
+                    onChange(key(d));
+                    setOpen(false);
+                  }}
+                  className={`h-8 rounded-md text-sm transition-colors ${
+                    key(d) === date
+                      ? 'bg-[#003153] text-white dark:bg-[#F59E0B] dark:text-gray-900'
+                      : key(d) === todayKey
+                        ? 'ring-1 ring-inset ring-[#003153] dark:ring-[#F59E0B] text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'
+                        : 'text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  {d}
+                </button>
+              )
+            )}
+          </div>
+          {/* Quick jump back to today, however far you've navigated. */}
+          <div className="mt-2 border-t border-gray-100 pt-2 dark:border-gray-700">
+            <button
+              type="button"
+              onClick={() => {
+                onChange(todayKey);
+                setOpen(false);
+              }}
+              className="w-full rounded-md py-1.5 text-xs font-semibold text-[#003153] transition-colors hover:bg-gray-100 dark:text-[#F59E0B] dark:hover:bg-gray-700"
+            >
+              {todayLabel}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function DateNav({ date, onChange }: { date: string; onChange: (d: string) => void }) {
   const t = useTranslations('football');
   const locale = useLocale();
   const dateLocale = locale === 'rw' ? 'en' : locale;
-  const inputRef = useRef<HTMLInputElement>(null);
   const isToday = date === dayOffsetKey(0);
   let label = '';
   if (isToday) label = t('today');
@@ -105,12 +253,17 @@ function DateNav({ date, onChange }: { date: string; onChange: (d: string) => vo
       <button
         type="button"
         onClick={() => onChange(dayOffsetKey(0))}
-        className={`px-2.5 py-2 rounded-lg text-xs font-medium min-w-[64px] whitespace-nowrap text-center transition-colors ${
+        title={t('returnToToday')}
+        aria-label={isToday ? label : t('returnToToday')}
+        className={`inline-flex items-center justify-center gap-1 px-2.5 py-2 rounded-lg text-xs font-medium min-w-[64px] whitespace-nowrap text-center transition-colors ${
           isToday
             ? 'bg-[#003153] text-white dark:bg-[#F59E0B] dark:text-gray-900'
             : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700'
         }`}
       >
+        {/* No hover on mobile — this icon makes "tap to return to today"
+            discoverable whenever you've stepped away from today. */}
+        {!isToday && <RotateCcw className="h-3 w-3 shrink-0 text-[#003153] dark:text-[#F59E0B]" />}
         {label}
       </button>
       <button
@@ -121,25 +274,13 @@ function DateNav({ date, onChange }: { date: string; onChange: (d: string) => vo
       >
         <ChevronRight className="h-4 w-4" />
       </button>
-      <div className="relative inline-flex">
-        <button
-          type="button"
-          onClick={() => (inputRef.current as any)?.showPicker?.()}
-          className={btn}
-          aria-label="Pick date"
-        >
-          <Calendar className="h-4 w-4" />
-        </button>
-        <input
-          ref={inputRef}
-          type="date"
-          value={date}
-          onChange={(e) => e.target.value && onChange(e.target.value)}
-          className="absolute inset-0 opacity-0 pointer-events-none"
-          tabIndex={-1}
-          aria-hidden
-        />
-      </div>
+      <DatePickerButton
+        date={date}
+        onChange={onChange}
+        dateLocale={dateLocale}
+        btn={btn}
+        todayLabel={t('today')}
+      />
     </div>
   );
 }
@@ -347,12 +488,13 @@ export function FootballResultsBoard({
     setSelectedRound('');
   }, [competitionId, selectedSeasonId]);
 
-  // Standings by competition + selected season.
+  // Standings by competition + selected season. Request the live table so
+  // in-progress scores fold in; poll fast only while a match is actually live.
   const standingsQuery = useQuery({
     queryKey: ['public-standings', competitionId, selectedSeasonId],
-    queryFn: () => getCompetitionStandings(competitionId, selectedSeasonId || undefined),
+    queryFn: () => getCompetitionStandings(competitionId, selectedSeasonId || undefined, { live: true }),
     enabled: !!competitionId && !!selectedSeasonId && view === 'standings',
-    refetchInterval: 60000,
+    refetchInterval: (query) => (query.state.data?.hasLiveMatches ? 20000 : 60000),
   });
 
   // Top scorers / assists leaderboards for the selected season.
@@ -850,6 +992,7 @@ function StandingsTable({
 }) {
   const rows = query.data?.standings ?? [];
   const groups = query.data?.groups ?? [];
+  const hasLive = !!query.data?.hasLiveMatches;
 
   if (query.isLoading) {
     return (
@@ -866,12 +1009,24 @@ function StandingsTable({
     );
   }
 
+  // Shown while a table folds in an in-progress match — positions are provisional.
+  const liveBadge = hasLive ? (
+    <div className="mb-3 flex items-center gap-2">
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-red-600 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+        {t('liveTable')}
+      </span>
+      <span className="text-[11px] text-gray-400">{t('liveTableNote')}</span>
+    </div>
+  ) : null;
+
   if (groups.length > 0) {
     const ordered = [...groups].sort(
       (a, b) => (a.group?.order ?? 99) - (b.group?.order ?? 99)
     );
     return (
       <div className="space-y-6">
+        {liveBadge}
         {ordered.map((g) => (
           <section key={g.group?.id ?? g.group?.name}>
             <div className="flex items-center gap-2 mb-2">
@@ -889,7 +1044,12 @@ function StandingsTable({
     );
   }
 
-  return <StandingsGrid rows={rows} t={t} />;
+  return (
+    <div>
+      {liveBadge}
+      <StandingsGrid rows={rows} t={t} />
+    </div>
+  );
 }
 
 function StandingsGrid({
@@ -902,16 +1062,20 @@ function StandingsGrid({
   const th = 'px-2 py-2 text-center font-medium';
   const td = 'px-2 py-2.5 text-center tabular-nums text-gray-600 dark:text-gray-300';
   // Pinned (sticky) first columns keep team visible while the stats scroll.
+  // A live row tints amber so the sticky columns must match that tint (not white).
   const stickyBg = 'bg-white dark:bg-gray-800';
-  const posSticky = `sticky left-0 z-10 ${stickyBg} w-10`;
-  const teamSticky = `sticky left-10 z-10 ${stickyBg} w-40 pr-2 border-r border-gray-100 dark:border-gray-700`;
+  const liveStickyBg = 'bg-amber-50 dark:bg-amber-950/40';
+  const posSticky = (live: boolean) =>
+    `sticky left-0 z-10 ${live ? liveStickyBg : stickyBg} w-10`;
+  const teamSticky = (live: boolean) =>
+    `sticky left-10 z-10 ${live ? liveStickyBg : stickyBg} w-40 pr-2 border-r border-gray-100 dark:border-gray-700`;
   return (
     <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
       <table className="min-w-[640px] w-full text-sm">
         <thead>
           <tr className="text-[11px] uppercase tracking-wide text-gray-400 border-b border-gray-200 dark:border-gray-700">
-            <th className={`${posSticky} py-2 text-center font-medium`}>#</th>
-            <th className={`${teamSticky} py-2 text-left font-medium`}>{t('team')}</th>
+            <th className={`${posSticky(false)} py-2 text-center font-medium`}>#</th>
+            <th className={`${teamSticky(false)} py-2 text-left font-medium`}>{t('team')}</th>
             <th className={th}>P</th>
             <th className={th}>W</th>
             <th className={th}>D</th>
@@ -925,14 +1089,25 @@ function StandingsGrid({
         </thead>
         <tbody>
           {rows.map((r) => (
-            <tr key={r.team?.id ?? r.position} className="border-b border-gray-100 dark:border-gray-700 last:border-0">
-              <td className={`${posSticky} py-2.5 text-center text-gray-400`}>{r.position}</td>
-              <td className={`${teamSticky} py-2.5`}>
+            <tr
+              key={r.team?.id ?? r.position}
+              className={`border-b border-gray-100 dark:border-gray-700 last:border-0 ${
+                r.isLive ? 'bg-amber-50 dark:bg-amber-950/40' : ''
+              }`}
+            >
+              <td className={`${posSticky(!!r.isLive)} py-2.5 text-center text-gray-400`}>{r.position}</td>
+              <td className={`${teamSticky(!!r.isLive)} py-2.5`}>
                 <span className="flex items-center gap-2 min-w-0">
                   <Crest team={r.team} />
-                  <span className="truncate font-medium text-gray-900 dark:text-white">
+                  <TeamLink slug={r.team?.slug} className="truncate font-medium text-gray-900 dark:text-white">
                     {teamName(r.team)}
-                  </span>
+                  </TeamLink>
+                  {r.isLive && (
+                    <span
+                      className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-red-600"
+                      title="Live"
+                    />
+                  )}
                 </span>
               </td>
               <td className={td}>{r.played}</td>
@@ -1019,9 +1194,9 @@ function StagesView({
                         {(g.teams ?? []).map((team) => (
                           <li key={team.id} className="flex items-center gap-2 px-3 py-2 text-sm">
                             <Crest team={team} />
-                            <span className="truncate text-gray-900 dark:text-white">
+                            <TeamLink slug={team?.slug} className="truncate text-gray-900 dark:text-white">
                               {teamName(team)}
-                            </span>
+                            </TeamLink>
                           </li>
                         ))}
                       </ul>
@@ -1117,7 +1292,7 @@ function StatLeaders({
                     )}
                     <span className="flex items-center gap-1 text-xs text-gray-400 min-w-0">
                       <Crest team={r.team} />
-                      <span className="truncate">{teamName(r.team)}</span>
+                      <TeamLink slug={r.team?.slug} className="truncate">{teamName(r.team)}</TeamLink>
                     </span>
                   </span>
                 </span>
@@ -1288,13 +1463,17 @@ function MatchListRow({
         <div className="flex-1 min-w-0 space-y-1.5">
           <div className="flex items-center gap-2">
             <Crest team={home} />
-            <span className={nameCls(homeWin)}>{teamName(home)}</span>
+            <TeamLink nested slug={home?.slug} className={nameCls(homeWin)}>
+              {teamName(home)}
+            </TeamLink>
             {throughMark(homeThrough)}
             {hasScore && <span className={`${scoreCls(homeWin)} ml-auto`}>{m.homeScore}</span>}
           </div>
           <div className="flex items-center gap-2">
             <Crest team={away} />
-            <span className={nameCls(awayWin)}>{teamName(away)}</span>
+            <TeamLink nested slug={away?.slug} className={nameCls(awayWin)}>
+              {teamName(away)}
+            </TeamLink>
             {throughMark(awayThrough)}
             {hasScore && <span className={`${scoreCls(awayWin)} ml-auto`}>{m.awayScore}</span>}
           </div>
@@ -1306,13 +1485,15 @@ function MatchListRow({
         <span className="w-24 shrink-0 text-xs">{statusCol}</span>
         <div className="flex-1 flex items-center justify-end gap-2 min-w-0">
           {throughMark(homeThrough)}
-          <span
+          <TeamLink
+            nested
+            slug={home?.slug}
             className={`truncate text-right ${
               homeWin ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'
             }`}
           >
             {teamName(home)}
-          </span>
+          </TeamLink>
           <Crest team={home} />
         </div>
         <span className="shrink-0 w-14 text-center">
@@ -1327,13 +1508,15 @@ function MatchListRow({
         </span>
         <div className="flex-1 flex items-center gap-2 min-w-0">
           <Crest team={away} />
-          <span
+          <TeamLink
+            nested
+            slug={away?.slug}
             className={`truncate ${
               awayWin ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'
             }`}
           >
             {teamName(away)}
-          </span>
+          </TeamLink>
           {throughMark(awayThrough)}
         </div>
       </div>
@@ -1342,13 +1525,38 @@ function MatchListRow({
 }
 
 function Crest({ team }: { team: any }) {
+  const router = useRouter();
   const url = crestUrl(team);
-  return url ? (
+  const inner = url ? (
     // eslint-disable-next-line @next/next/no-img-element
     <img src={url} alt="" className="h-6 w-6 rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0" />
   ) : (
     <span className="h-6 w-6 rounded-full bg-[#003153] text-white text-[9px] font-bold flex items-center justify-center shrink-0">
       {initials(team)}
+    </span>
+  );
+
+  // When the team has a profile slug, the crest links to /football/team/:slug.
+  // We navigate via onClick (not an <a>) so it's safe inside a match-row link —
+  // preventDefault/stopPropagation stop the row from also firing.
+  if (!team?.slug) return inner;
+  const go = (e: React.SyntheticEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    router.push(`/football/team/${team.slug}`);
+  };
+  return (
+    <span
+      role="link"
+      tabIndex={0}
+      onClick={go}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') go(e);
+      }}
+      title={teamName(team)}
+      className="shrink-0 cursor-pointer rounded-full transition-shadow hover:ring-2 hover:ring-[#003153]/40 dark:hover:ring-[#F59E0B]/40"
+    >
+      {inner}
     </span>
   );
 }

@@ -11,6 +11,7 @@ import {
   BadgeDollarSign,
   Fuel,
   Trophy,
+  Megaphone,
 } from 'lucide-react';
 
 /**
@@ -46,6 +47,7 @@ export const ADMIN_NAV_LINKS = [
     adminOnly: true,
   },
   { href: '/football', labelKey: 'football', icon: Trophy, auth: true, adminOnly: true },
+  { href: '/ads', labelKey: 'ads', icon: Megaphone, auth: true, adminOnly: true },
 ] as const;
 
 export type AdminNavLink = (typeof ADMIN_NAV_LINKS)[number];

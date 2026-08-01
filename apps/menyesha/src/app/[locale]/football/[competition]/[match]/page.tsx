@@ -4,6 +4,7 @@ import { Link } from '@/i18n/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { MatchDetail } from '@/components/layouts/MatchDetail';
 import { FootballResultsBoard } from '@/components/layouts/FootballResultsBoard';
+import { ssrMatchBundle } from '@/lib/matchSSR';
 
 // /football/<competition>/<match-slug>  -> match detail  (slug contains "-vs-")
 // /football/<competition>/<season-slug> -> that competition's season
@@ -129,8 +130,9 @@ export default async function Page({ params }: Props) {
     );
   }
 
-  // Match detail (+ SportsEvent structured data for rich results)
-  const m = await fetchMatch(match);
+  // Match detail (+ SportsEvent structured data for rich results). Server-fetch
+  // the full bundle (match, events, lineups) to seed the client — crawlable HTML.
+  const { match: m, events, homeLineup, awayLineup } = await ssrMatchBundle(match);
   const jsonLd = m
     ? {
         '@context': 'https://schema.org',
@@ -161,7 +163,8 @@ export default async function Page({ params }: Props) {
         ],
         organizer: {
           '@type': 'Organization',
-          name: m.season?.competition?.name ?? 'Rwanda Football',
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          name: (m as any).season?.competition?.name ?? 'Rwanda Football',
         },
       }
     : null;
@@ -176,7 +179,15 @@ export default async function Page({ params }: Props) {
       )}
       <section className="py-8">
         <div className="max-w-3xl mx-auto px-4">
-          <MatchDetail slug={match} competition={competition} tab="info" />
+          <MatchDetail
+            slug={match}
+            competition={competition}
+            tab="info"
+            initialMatch={m}
+            initialEvents={events}
+            initialHomeLineup={homeLineup}
+            initialAwayLineup={awayLineup}
+          />
         </div>
       </section>
     </div>

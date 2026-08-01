@@ -1,11 +1,85 @@
 {
-  "comingSoon": {
-    "title": "Vand",
-    "subtitle": "Quelque chose de grand arrive bient\u00f4t.",
-    "stayTuned": "Restez connect\u00e9"
-  },
-  "toggleTheme": {
-    "light": "Clair",
-    "dark": "Sombre"
+  "site": {
+    "nav": {
+      "services": "Ce que nous faisons",
+      "products": "Produits",
+      "about": "À propos",
+      "contact": "Contact",
+      "cta": "Démarrer un projet"
+    },
+    "hero": {
+      "eyebrow": "Société de logiciels · Kigali, Rwanda",
+      "titleLead": "Des logiciels qui font avancer",
+      "titleHighlight": "le Rwanda.",
+      "subtitle": "Vand conçoit des logiciels sur mesure, des applications web et mobiles, et ses propres produits — rapides, fiables et durables.",
+      "ctaPrimary": "Démarrer un projet",
+      "ctaSecondary": "Voir nos produits",
+      "trust": "Ingénierie de confiance · Conçu au Rwanda"
+    },
+    "services": {
+      "kicker": "Ce que nous faisons",
+      "title": "Du logiciel, de bout en bout.",
+      "subtitle": "De la première idée au produit entre les mains des utilisateurs — nous concevons, développons et livrons.",
+      "items": {
+        "custom": {
+          "title": "Logiciels sur mesure",
+          "body": "Des systèmes et plateformes conçus autour du fonctionnement réel de votre activité."
+        },
+        "apps": {
+          "title": "Applications web & mobiles",
+          "body": "Des applications web et mobiles rapides et fiables que vos utilisateurs adoreront."
+        },
+        "products": {
+          "title": "Nos propres produits",
+          "body": "Nous ne construisons pas que pour les autres — nous créons et gérons nos propres produits, comme Menyesha."
+        }
+      }
+    },
+    "products": {
+      "kicker": "Nos produits",
+      "title": "Des produits que nous créons et gérons.",
+      "subtitle": "Nous investissons dans nos propres idées — de vrais produits utilisés par de vraies personnes au Rwanda.",
+      "flagship": "Produit phare",
+      "menyesha": {
+        "tagline": "La référence au Rwanda pour les scores de football en direct et l'actualité — rapide, pensé mobile, et dans votre langue.",
+        "features": {
+          "live": "Scores en direct, calendriers, résultats et classements, mis à jour en temps réel.",
+          "news": "Actualités et articles sur le sport et bien plus.",
+          "multilang": "Disponible en kinyarwanda, anglais et français."
+        },
+        "cta": "Visiter Menyesha"
+      },
+      "more": "D'autres produits arrivent bientôt."
+    },
+    "about": {
+      "kicker": "À propos de Vand",
+      "title": "Conçu au Rwanda, pour le monde.",
+      "lead": "Vand est une société de logiciels qui a pour mission de créer des technologies qui améliorent le quotidien — en commençant chez nous, au Rwanda.",
+      "body": "Nous allions une ingénierie pointue à une vraie réflexion produit. Que nous construisions pour un client ou lancions notre propre produit, nous soignons les détails, livrons vite et bâtissons pour durer.",
+      "values": {
+        "rooted": {
+          "title": "Ancrés localement",
+          "body": "Nous construisons d'abord pour notre contexte — pensé mobile, multilingue, adapté à la vie réelle."
+        },
+        "craft": {
+          "title": "Fait avec soin",
+          "body": "Une ingénierie propre et un design réfléchi, du premier écran au moindre détail."
+        },
+        "partner": {
+          "title": "Un vrai partenaire",
+          "body": "Nous travaillons avec vous, pas seulement pour vous — de l'idée au lancement et au-delà."
+        }
+      },
+      "based": "Fièrement basés à Kigali"
+    },
+    "contact": {
+      "title": "Créons quelque chose ensemble.",
+      "subtitle": "Un projet en tête, ou envie de collaborer ? Nous serions ravis d'échanger avec vous.",
+      "location": "Kigali, Rwanda"
+    },
+    "footer": {
+      "tagline": "Une société de logiciels qui crée des solutions et des produits — du Rwanda vers le monde.",
+      "rights": "Tous droits réservés."
+    }
   }
 }

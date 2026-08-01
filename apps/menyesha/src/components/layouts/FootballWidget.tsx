@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Trophy, ChevronRight } from 'lucide-react';
+import { TeamLink } from '@/components/football/TeamLink';
 
 import { LIVE_STATUSES, useNow, liveMinuteLabel } from '@/lib/matchClock';
 
@@ -162,11 +163,18 @@ export function FootballWidget() {
                 >
                   {comp && <div className="text-[10px] text-gray-400 truncate mb-1">{comp}</div>}
                   <div className="flex items-center gap-2 text-xs">
-                    <span className="flex-1 flex items-center justify-end gap-1.5 min-w-0">
-                      <span className="truncate text-gray-700 dark:text-gray-300">
-                        {teamName((m as any).homeTeam)}
-                      </span>
-                      <MiniCrest team={(m as any).homeTeam} />
+                    <span className="flex-1 flex items-center justify-end min-w-0">
+                      <TeamLink
+                        nested
+                        slug={(m as any).homeTeam?.slug}
+                        title={teamName((m as any).homeTeam)}
+                        className="flex items-center gap-1.5 min-w-0"
+                      >
+                        <span className="truncate text-gray-700 dark:text-gray-300">
+                          {teamName((m as any).homeTeam)}
+                        </span>
+                        <MiniCrest team={(m as any).homeTeam} />
+                      </TeamLink>
                     </span>
                     <span
                       className={`shrink-0 w-14 text-center font-bold tabular-nums ${
@@ -175,11 +183,18 @@ export function FootballWidget() {
                     >
                       {center}
                     </span>
-                    <span className="flex-1 flex items-center gap-1.5 min-w-0">
-                      <MiniCrest team={(m as any).awayTeam} />
-                      <span className="truncate text-gray-700 dark:text-gray-300">
-                        {teamName((m as any).awayTeam)}
-                      </span>
+                    <span className="flex-1 flex items-center min-w-0">
+                      <TeamLink
+                        nested
+                        slug={(m as any).awayTeam?.slug}
+                        title={teamName((m as any).awayTeam)}
+                        className="flex items-center gap-1.5 min-w-0"
+                      >
+                        <MiniCrest team={(m as any).awayTeam} />
+                        <span className="truncate text-gray-700 dark:text-gray-300">
+                          {teamName((m as any).awayTeam)}
+                        </span>
+                      </TeamLink>
                     </span>
                   </div>
                 </Link>
