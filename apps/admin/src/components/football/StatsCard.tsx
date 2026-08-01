@@ -119,12 +119,12 @@ export const StatsCard = forwardRef<
 
 function Circle({ url, name, size }: { url: string | null; name: string; size: number }) {
   if (url) {
+    // `url` is an embedded data URL (from the modal), so no crossOrigin needed.
     // eslint-disable-next-line @next/next/no-img-element
     return (
       <img
         src={url}
         alt=""
-        crossOrigin="anonymous"
         style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', background: 'rgba(255,255,255,0.08)' }}
       />
     );

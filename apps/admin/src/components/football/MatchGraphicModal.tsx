@@ -90,9 +90,10 @@ export function MatchGraphicModal({
       if (typeof document !== 'undefined' && document.fonts?.ready) {
         await document.fonts.ready;
       }
+      // No cacheBust: our images are embedded data URLs, and cache-busting
+      // appends a query string that corrupts data URIs (crest drops out of PNG).
       const dataUrl = await toPng(cardRef.current, {
         pixelRatio: 2,
-        cacheBust: true,
         backgroundColor: '#003153',
       });
       const a = document.createElement('a');

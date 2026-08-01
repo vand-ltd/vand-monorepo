@@ -136,14 +136,10 @@ export const ResultCard = forwardRef<HTMLDivElement, Props>(function ResultCard(
           overflow: 'hidden',
         }}
       >
-        {/* Fill the circle and crop to it, so a square-background logo reads round. */}
+        {/* Fill the circle and crop to it, so a square-background logo reads round.
+            `url` is an embedded data URL (from the modal), so no crossOrigin. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={url}
-          alt={name}
-          crossOrigin="anonymous"
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-        />
+        <img src={url} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
       </div>
     ) : (
       <div

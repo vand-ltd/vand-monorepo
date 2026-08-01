@@ -23,7 +23,9 @@ export async function downloadCardPng(node: HTMLElement, filename: string): Prom
   if (typeof document !== 'undefined' && document.fonts?.ready) {
     await document.fonts.ready;
   }
-  const dataUrl = await toPng(node, { pixelRatio: 2, cacheBust: true, backgroundColor: '#003153' });
+  // No cacheBust: images are embedded data URLs; cache-busting appends a query
+  // that corrupts data URIs and drops crests/photos from the exported PNG.
+  const dataUrl = await toPng(node, { pixelRatio: 2, backgroundColor: '#003153' });
   const a = document.createElement('a');
   a.href = dataUrl;
   a.download = filename;
