@@ -12,28 +12,7 @@ import {
   buildCaption,
   type CardSize,
 } from './ResultCard';
-
-// Fetch a crest and inline it as a data URL so the exported canvas isn't tainted
-// by a cross-origin image (which would otherwise blank the whole PNG). Returns
-// null on any CORS/network failure — the card then draws initials instead.
-async function urlToDataUrl(url: string): Promise<string | null> {
-  try {
-    const res = await fetch(url, { mode: 'cors' });
-    if (!res.ok) return null;
-    const blob = await res.blob();
-    return await new Promise<string | null>((resolve) => {
-      const r = new FileReader();
-      r.onload = () => resolve(r.result as string);
-      r.onerror = () => resolve(null);
-      r.readAsDataURL(blob);
-    });
-  } catch {
-    return null;
-  }
-}
-
-const slug = (s: string) =>
-  s.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'team';
+import { urlToDataUrl, slugify } from './graphicUtils';
 
 export function MatchGraphicModal({
   match,
@@ -98,7 +77,7 @@ export function MatchGraphicModal({
       });
       const a = document.createElement('a');
       a.href = dataUrl;
-      a.download = `menyesha-${slug(homeName)}-vs-${slug(awayName)}-${size}.png`;
+      a.download = `menyesha-${slugify(homeName)}-vs-${slugify(awayName)}-${size}.png`;
       a.click();
     } finally {
       setDownloading(false);

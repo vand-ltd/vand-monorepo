@@ -1,10 +1,13 @@
 import { toPng } from 'html-to-image';
 
 // Fetch an image and inline it as a data URL so the exported canvas isn't tainted
-// by a cross-origin image (which would blank the whole PNG). null on any failure.
+// by a cross-origin image (which would blank the whole PNG). Remote http(s) URLs
+// go through the same-origin /api/media-proxy so the media host's missing CORS
+// headers don't matter. null on any failure (→ the card draws initials).
 export async function urlToDataUrl(url: string): Promise<string | null> {
   try {
-    const res = await fetch(url, { mode: 'cors' });
+    const src = /^https?:\/\//i.test(url) ? `/api/media-proxy?url=${encodeURIComponent(url)}` : url;
+    const res = await fetch(src);
     if (!res.ok) return null;
     const blob = await res.blob();
     return await new Promise<string | null>((resolve) => {
