@@ -35,11 +35,42 @@ export const AD_PAGE_TYPES = [
   'competition',
   'date',
   'player',
+  'team',
 ] as const;
 export type AdPageType = (typeof AD_PAGE_TYPES)[number];
 
 export const AD_LOCALES = ['rw', 'fr', 'en'] as const;
 export type AdLocale = (typeof AD_LOCALES)[number];
+
+// The (section, pageType) contexts that ACTUALLY have a slot for each placement
+// — i.e. where an ad can really appear. The admin uses this to only offer valid
+// section/page-type combinations (e.g. an Inline ad can only be news/article).
+// Keep in sync with where <AdSlot>/<AdList> are placed on the site.
+const CONTENT_CONTEXTS: { section: AdSection; pageType: AdPageType }[] = [
+  { section: 'home', pageType: 'home' },
+  { section: 'news', pageType: 'list' },
+  { section: 'news', pageType: 'article' },
+  { section: 'football', pageType: 'list' }, // the football hub + a day's scores
+  { section: 'football', pageType: 'match' },
+  { section: 'football', pageType: 'competition' },
+  { section: 'football', pageType: 'player' },
+  { section: 'football', pageType: 'team' },
+  { section: 'fuel', pageType: 'list' },
+];
+
+export const AD_PLACEMENT_CONTEXTS: Record<
+  AdPlacement,
+  { section: AdSection; pageType: AdPageType }[]
+> = {
+  Header: CONTENT_CONTEXTS, // top banner on every content page
+  Sidebar: CONTENT_CONTEXTS, // sidebar on every content page
+  Footer: CONTENT_CONTEXTS, // mobile sticky on every content page
+  Inline: [{ section: 'news', pageType: 'article' }], // only inside articles
+  InFeed: [
+    { section: 'home', pageType: 'list' }, // home feed
+    { section: 'news', pageType: 'list' }, // category listings
+  ],
+};
 
 /* --------------------------------- Types ---------------------------------- */
 

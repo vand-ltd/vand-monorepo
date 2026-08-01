@@ -15,6 +15,7 @@ import {
 import { toPng } from 'html-to-image';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
+import { TeamLink } from '@/components/football/TeamLink';
 import { Loader2, ArrowLeft, MapPin, ArrowUp, ArrowDown, ChevronUp, Download, CheckCircle2 } from 'lucide-react';
 import { ShareButton } from '@/components/article/ShareButton';
 import { LIVE_STATUSES, useNow, liveMinuteLabel } from '@/lib/matchClock';
@@ -1043,17 +1044,19 @@ function TeamBar({
   return (
     <div className="flex items-center justify-center gap-2 bg-emerald-800 text-white px-3 py-2">
       <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${dot}`} />
-      {url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={url}
-          alt=""
-          crossOrigin="anonymous"
-          onError={imgCorsFallback}
-          className="h-5 w-5 rounded-full object-cover bg-white/10 shrink-0"
-        />
-      ) : null}
-      <span className="font-semibold text-sm truncate">{teamName(team)}</span>
+      <TeamLink slug={team?.slug} title={teamName(team)} className="flex items-center gap-2 min-w-0">
+        {url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={url}
+            alt=""
+            crossOrigin="anonymous"
+            onError={imgCorsFallback}
+            className="h-5 w-5 rounded-full object-cover bg-white/10 shrink-0"
+          />
+        ) : null}
+        <span className="font-semibold text-sm truncate">{teamName(team)}</span>
+      </TeamLink>
       {formation && <span className="text-[11px] text-white/70 shrink-0">{formation}</span>}
       {statusBadge && (
         <span
@@ -1088,21 +1091,23 @@ function StarterColumn({
   return (
     <div className="min-w-0">
       <div className="flex items-center gap-2 mb-3 min-w-0">
-        {url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={url}
-            alt=""
-            className="h-6 w-6 rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0"
-          />
-        ) : (
-          <span className="h-6 w-6 rounded-full bg-[#003153] text-white text-[9px] font-bold flex items-center justify-center shrink-0">
-            {initials(team)}
+        <TeamLink slug={team?.slug} title={teamName(team)} className="flex items-center gap-2 min-w-0">
+          {url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={url}
+              alt=""
+              className="h-6 w-6 rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0"
+            />
+          ) : (
+            <span className="h-6 w-6 rounded-full bg-[#003153] text-white text-[9px] font-bold flex items-center justify-center shrink-0">
+              {initials(team)}
+            </span>
+          )}
+          <span className="font-semibold text-sm text-gray-900 dark:text-white truncate">
+            {teamName(team)}
           </span>
-        )}
-        <span className="font-semibold text-sm text-gray-900 dark:text-white truncate">
-          {teamName(team)}
-        </span>
+        </TeamLink>
         {formation && (
           <span className="text-[11px] text-gray-400 shrink-0">{formation}</span>
         )}
@@ -1523,11 +1528,15 @@ function TeamBlock({
   advancedLabel?: string;
 }) {
   const url = crestUrl(team);
-  return (
-    <div className="flex flex-col items-center gap-2 text-center min-w-0">
+  const inner = (
+    <>
       {url ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt="" className="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover bg-gray-100 dark:bg-gray-700" />
+        <img
+          src={url}
+          alt=""
+          className="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover bg-gray-100 dark:bg-gray-700 transition-shadow group-hover:ring-2 group-hover:ring-[#003153]/40 dark:group-hover:ring-[#F59E0B]/40"
+        />
       ) : (
         <span className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-[#003153] text-white text-sm font-bold flex items-center justify-center">
           {initials(team)}
@@ -1535,8 +1544,18 @@ function TeamBlock({
       )}
       <span className="flex items-center gap-1 text-sm font-semibold text-gray-900 dark:text-white min-w-0">
         {through && <ChevronUp className="h-4 w-4 shrink-0 text-emerald-500" aria-label={advancedLabel} />}
-        <span className="truncate max-w-[9rem]">{teamName(team)}</span>
+        <span className="truncate max-w-[9rem] group-hover:text-[#003153] dark:group-hover:text-[#F59E0B] transition-colors">
+          {teamName(team)}
+        </span>
       </span>
-    </div>
+    </>
+  );
+  const cls = 'flex flex-col items-center gap-2 text-center min-w-0';
+  return team?.slug ? (
+    <Link href={`/football/team/${team.slug}`} className={`${cls} group`}>
+      {inner}
+    </Link>
+  ) : (
+    <div className={cls}>{inner}</div>
   );
 }

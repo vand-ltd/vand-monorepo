@@ -27,12 +27,17 @@ function AdView({
   placement,
   pageType,
   fill = false,
+  lockHeight = false,
   className = '',
 }: {
   ad: ServedAd;
   placement: AdPlacement;
   pageType?: AdPageType;
   fill?: boolean;
+  // Keep the slot a FIXED height (the placement's base height) and just fit the
+  // creative inside it, whatever its own dimensions. Used by the sticky footer
+  // bar so its height never changes between ads or across screen widths.
+  lockHeight?: boolean;
   className?: string;
 }) {
   const locale = useLocale();
@@ -74,11 +79,20 @@ function AdView({
   const advertiserName =
     typeof ad.advertiser === 'string' ? ad.advertiser : ad.advertiser?.name;
 
+  // Full-width / fixed-height slots (header leaderboards, footer bar) show the
+  // disclosure as a tiny corner badge INSIDE the box instead of a block label
+  // above — otherwise a filled slot is taller than an empty placeholder beside
+  // it and the two header boxes stop lining up. Content-blended slots (in-feed,
+  // in-article, sidebar) keep the clearer block label above.
+  const overlayLabel = lockHeight || fill;
+
   return (
     <div ref={ref} className={`flex flex-col items-center ${className}`}>
-      <span className="mb-1 text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500">
-        Ad
-      </span>
+      {!overlayLabel && (
+        <span className="mb-1 text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500">
+          Ad
+        </span>
+      )}
       <a
         href={c.linkUrl}
         target="_blank"
@@ -89,8 +103,17 @@ function AdView({
       >
         <span
           className="relative block w-full overflow-hidden rounded-lg bg-gray-50 dark:bg-gray-800"
-          style={{ aspectRatio: `${box.width} / ${box.height}` }}
+          style={
+            lockHeight
+              ? { height: box.height }
+              : { aspectRatio: `${box.width} / ${box.height}` }
+          }
         >
+          {overlayLabel && (
+            <span className="absolute left-1 top-1 z-10 rounded bg-black/45 px-1 text-[8px] uppercase leading-tight tracking-wide text-white/90">
+              Ad
+            </span>
+          )}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={c.imageUrl}
@@ -117,6 +140,7 @@ export function AdSlot({
   fallback = null,
   alwaysShowFallback = false,
   fill = false,
+  lockHeight = false,
 }: {
   placement: AdPlacement;
   section?: AdSection;
@@ -125,6 +149,8 @@ export function AdSlot({
   // Fill the container width instead of capping at the placement's width (used
   // by the full-bleed header, where each half is wider than the base size).
   fill?: boolean;
+  // Keep the slot a fixed height and fit the creative inside it (sticky footer).
+  lockHeight?: boolean;
   // Rendered when the slot has no ad (not even a house/fallback ad) — e.g. the
   // "advertise here" placeholder, so the space is never blank.
   fallback?: ReactNode;
@@ -164,7 +190,16 @@ export function AdSlot({
     return noAdsForGroup && index === 0 ? <>{fallback}</> : null;
   }
 
-  return <AdView ad={ad} placement={placement} pageType={pageType} fill={fill} className={className} />;
+  return (
+    <AdView
+      ad={ad}
+      placement={placement}
+      pageType={pageType}
+      fill={fill}
+      lockHeight={lockHeight}
+      className={className}
+    />
+  );
 }
 
 /**

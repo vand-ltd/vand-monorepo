@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getArticleBySlug, getRelatedArticles, getCommentCount } from '@org/api';
 import Image from 'next/image';
 import Link from 'next/link';
+import { EmptyAdSlot } from '@/components/ads/EmptyAdSlot';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import {
@@ -65,12 +66,8 @@ function InArticleAd({ label }: { label: string }) {
         section="news"
         pageType="article"
         fallback={
-          <div
-            className="mx-auto w-full max-w-[300px] rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center text-center px-4"
-            style={{ aspectRatio: '300 / 250' }}
-          >
-            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{label}</p>
-            <p className="text-[10px] text-gray-400 dark:text-gray-500">300 × 250 · Medium Rectangle</p>
+          <div className="mx-auto w-full max-w-[300px]">
+            <EmptyAdSlot label={label} sizeLabel="300 × 250 · Medium Rectangle" aspectRatio="300 / 250" />
           </div>
         }
       />

@@ -84,6 +84,7 @@ export interface Season {
 
 export interface Team {
   id: string;
+  slug?: string; // SEO slug for the team profile route (/football/team/:slug)
   name: string;
   shortName?: string;
   city?: string;
@@ -108,6 +109,7 @@ export interface Venue {
 export interface Player {
   id: string;
   membershipId?: string; // squad-row id (for DELETE /teams/:id/squad/:membershipId)
+  slug?: string; // SEO slug for the player profile route
   name: string;
   shirtNumber?: number;
   position?: PlayerPosition | string;
@@ -617,6 +619,7 @@ export interface StandingRow {
   goalDifference: number;
   points: number;
   form?: string[]; // recent results, e.g. ['W','D','L']
+  isLive?: boolean; // true (live=true only) when an in-progress match is moving this row
 }
 
 export interface StandingsGroup {
@@ -634,31 +637,47 @@ export interface StandingsGroup {
 export interface StandingsResult {
   standings: StandingRow[];
   groups: StandingsGroup[];
+  live?: boolean; // echoes the ?live= flag
+  hasLiveMatches?: boolean; // true when a table actually includes an in-progress game
 }
 
 function extractStandings(payload: any): StandingsResult {
   // Tolerate a bare array (older shape) as a plain league table.
-  if (Array.isArray(payload)) return { standings: payload as StandingRow[], groups: [] };
+  if (Array.isArray(payload)) {
+    return { standings: payload as StandingRow[], groups: [], live: false, hasLiveMatches: false };
+  }
   return {
     standings: (payload?.standings ?? []) as StandingRow[],
     groups: (payload?.groups ?? []) as StandingsGroup[],
+    live: !!payload?.live,
+    hasLiveMatches: !!payload?.hasLiveMatches,
   };
 }
 
-// GET /api/menyesha/seasons/:id/standings -> { season, standings, groups }
-export async function getStandings(seasonId: string): Promise<StandingsResult> {
-  const { data } = await api.get(`/api/menyesha/seasons/${seasonId}/standings`);
+// GET /api/menyesha/seasons/:id/standings -> { season, standings, groups }.
+// Pass { live: true } to fold in-progress (Live/HalfTime) scores into the table.
+export async function getStandings(
+  seasonId: string,
+  opts?: { live?: boolean }
+): Promise<StandingsResult> {
+  const { data } = await api.get(`/api/menyesha/seasons/${seasonId}/standings`, {
+    params: opts?.live ? { live: true } : undefined,
+  });
   return extractStandings(unwrap<any>(data));
 }
 
-// GET /api/menyesha/competitions/:id/standings?seasonId= -> the table for a
+// GET /api/menyesha/competitions/:id/standings?seasonId=&live= -> the table for a
 // season (server resolves the current season if seasonId is omitted).
 export async function getCompetitionStandings(
   competitionId: string,
-  seasonId?: string
+  seasonId?: string,
+  opts?: { live?: boolean }
 ): Promise<StandingsResult> {
+  const params: Record<string, string | boolean> = {};
+  if (seasonId) params.seasonId = seasonId;
+  if (opts?.live) params.live = true;
   const { data } = await api.get(`/api/menyesha/competitions/${competitionId}/standings`, {
-    params: seasonId ? { seasonId } : undefined,
+    params: Object.keys(params).length ? params : undefined,
   });
   return extractStandings(unwrap<any>(data));
 }
@@ -675,6 +694,152 @@ export async function getTeams(params?: { isActive?: boolean }): Promise<Team[]>
 export async function getTeam(id: string): Promise<Team> {
   const { data } = await api.get(`/api/menyesha/teams/${id}`);
   return unwrap<Team>(data);
+}
+
+/* ------------------------------ Team profile ------------------------------ */
+
+export interface CompetitionRef {
+  id?: string;
+  name?: string;
+  slug?: string;
+  type?: string;
+}
+
+export interface TeamHonour {
+  title: string;
+  season?: string | null;
+  year?: number | null;
+  competition?: CompetitionRef | null;
+}
+
+// One row of the team's record, per season & competition.
+export interface TeamSeasonRow {
+  season?: { id: string; name: string };
+  competition?: CompetitionRef;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDifference: number;
+  points: number;
+  position?: number | null;
+}
+
+// A match from the team's point of view (opponent + home/away + result).
+export interface TeamPerspectiveMatch {
+  slug: string;
+  status: MatchStatus;
+  kickoffAt: string;
+  isHome: boolean;
+  opponent?: {
+    id?: string;
+    slug?: string;
+    name?: string;
+    shortName?: string;
+    logo?: string | { url?: string } | null;
+  } | null;
+  homeScore?: number | null;
+  awayScore?: number | null;
+  result?: 'W' | 'D' | 'L' | null;
+  competition?: CompetitionRef | null;
+  stage?: { id?: string; name?: string } | null;
+  group?: { id?: string; name?: string } | null;
+}
+
+export interface TeamProfileTeam {
+  id: string;
+  slug: string;
+  name: string;
+  shortName?: string;
+  logo?: string | { url?: string } | null;
+  logoUrl?: string | null;
+  country?: string | null;
+  city?: string | null;
+  founded?: number | null;
+  bio?: string | null;
+  honours?: TeamHonour[];
+}
+
+export interface TeamProfile {
+  team: TeamProfileTeam;
+  currentSeason?: { id: string; name: string; competition?: CompetitionRef } | null;
+  seasons: TeamSeasonRow[];
+  form: string[]; // last 5, current season, e.g. ['W','D','L']
+  recentResults: TeamPerspectiveMatch[];
+  upcomingFixtures: TeamPerspectiveMatch[];
+}
+
+// A team's run through a single cup season — group stage table (if any) plus
+// its knockout matches in progression order, and a ready-to-display outcome.
+export interface TeamJourneyKnockout {
+  stage: { id: string; name: string; order?: number };
+  match: {
+    id: string;
+    slug: string;
+    status: MatchStatus;
+    isHome: boolean;
+    opponent?: {
+      id?: string;
+      slug?: string;
+      name?: string;
+      shortName?: string;
+      logo?: string | { url?: string } | null;
+    } | null;
+    homeScore?: number | null;
+    awayScore?: number | null;
+    homePenalties?: number | null;
+    awayPenalties?: number | null;
+    afterExtraTime?: boolean | null;
+    winnerTeamId?: string | null;
+    advanced?: boolean; // did this team go through this round?
+  };
+}
+
+export interface TeamSeasonJourney {
+  team: { id: string; name: string; shortName?: string; slug?: string; logo?: string | { url?: string } | null };
+  season: { id: string; name: string; competition?: CompetitionRef };
+  group: {
+    stage: { id: string; name: string; order?: number };
+    group: { id: string; name: string };
+    position: number;
+    row: StandingRow;
+    table: StandingRow[];
+  } | null;
+  knockout: TeamJourneyKnockout[];
+  outcome: string; // e.g. "Winner", "Runner-up", "Eliminated in the Semi-final", "In progress", "Group stage"
+}
+
+// GET /api/menyesha/teams/:id/seasons/:seasonId/journey -> a cup-season drill-down
+// (loaded on demand when a user expands a cup season on the team page).
+export async function getTeamSeasonJourney(
+  teamId: string,
+  seasonId: string
+): Promise<TeamSeasonJourney> {
+  const { data } = await api.get(`/api/menyesha/teams/${teamId}/seasons/${seasonId}/journey`);
+  const p = unwrap<any>(data);
+  return {
+    team: p?.team ?? {},
+    season: p?.season ?? {},
+    group: p?.group ?? null,
+    knockout: p?.knockout ?? [],
+    outcome: p?.outcome ?? '',
+  };
+}
+
+// GET /api/menyesha/teams/slug/:slug -> the whole team page in one call.
+export async function getTeamProfile(slug: string): Promise<TeamProfile> {
+  const { data } = await api.get(`/api/menyesha/teams/slug/${slug}`);
+  const p = unwrap<any>(data);
+  return {
+    team: p?.team ?? {},
+    currentSeason: p?.currentSeason ?? null,
+    seasons: p?.seasons ?? [],
+    form: p?.form ?? [],
+    recentResults: p?.recentResults ?? [],
+    upcomingFixtures: p?.upcomingFixtures ?? [],
+  };
 }
 
 // GET /api/menyesha/teams/:id/squad?seasonId= -> squad, filterable by season.
@@ -885,6 +1050,9 @@ export async function getMatches(params?: {
   teamId?: string;
   stageId?: string;
   groupId?: string;
+  round?: string;
+  from?: string; // ISO date, inclusive lower bound on kickoff
+  to?: string; // ISO date, inclusive upper bound on kickoff
   order?: 'asc' | 'desc';
 }): Promise<Match[]> {
   const { data } = await api.get('/api/menyesha/matches', {
@@ -1000,7 +1168,7 @@ export async function getMatchLineup(
 export interface StatLeaderRow {
   rank: number;
   player: { id: string; fullName: string; slug?: string; photo?: string | null };
-  team: { id: string; name: string; shortName?: string; logo?: string | { url?: string } | null };
+  team: { id: string; slug?: string; name: string; shortName?: string; logo?: string | { url?: string } | null };
   goals: number;
   assists: number;
 }

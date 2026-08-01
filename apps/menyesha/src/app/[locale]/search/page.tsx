@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
@@ -9,13 +9,36 @@ import { getArticles } from '@org/api';
 import { useLocale, useTranslations } from 'next-intl';
 import { Clock, Eye, MessageCircle, ArrowLeft, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { SearchInput } from '@/components/layouts/SearchInput';
+import { AdSlot } from '@/components/ads/AdSlot';
+import { EmptyAdSlot } from '@/components/ads/EmptyAdSlot';
 import { formatTimeAgo } from '@/lib/timeago';
+
+// A sponsored slot inside the results feed — search is high-intent, so an
+// in-feed ad here is prime inventory. Serves a real ad when sold, else a
+// placeholder. Targets news/list, the same context AsideBanner uses for search.
+function SearchInFeedAd({ label }: { label: string }) {
+  return (
+    <div className="py-1">
+      <AdSlot
+        placement="InFeed"
+        section="news"
+        pageType="list"
+        fallback={
+          <div className="mx-auto w-full max-w-[300px]">
+            <EmptyAdSlot label={label} sizeLabel="300 × 250 · Medium Rectangle" aspectRatio="300 / 250" />
+          </div>
+        }
+      />
+    </div>
+  );
+}
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q') || '';
   const locale = useLocale();
   const t = useTranslations('search');
+  const tAds = useTranslations('sidebar');
   const [page, setPage] = useState(1);
 
   const {
@@ -97,9 +120,9 @@ export default function SearchPage() {
         {articles.length > 0 && (
           <div className="space-y-4">
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {articles.map((article: any) => (
+            {articles.map((article: any, idx: number) => (
+              <Fragment key={article.id}>
               <Link
-                key={article.id}
                 href={`/${locale}/article/${article.slug}`}
                 className="group block"
               >
@@ -172,6 +195,12 @@ export default function SearchPage() {
                   </div>
                 </article>
               </Link>
+              {/* In-feed sponsored slot after the 3rd result (only when the list
+                  is long enough that it isn't the whole page). */}
+              {idx === 2 && articles.length > 3 && (
+                <SearchInFeedAd label={tAds('adSpaceAvailable')} />
+              )}
+              </Fragment>
             ))}
 
           </div>

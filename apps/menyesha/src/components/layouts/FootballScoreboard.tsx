@@ -6,6 +6,7 @@ import { getMatches, type Match } from '@org/api';
 import { useLocale, useTranslations } from 'next-intl';
 import { Loader2, Trophy, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
+import { TeamLink } from '@/components/football/TeamLink';
 
 function teamName(t?: { name?: string; shortName?: string }): string {
   return t?.name ?? t?.shortName ?? 'TBD';
@@ -226,21 +227,28 @@ function TeamLine({
   const url = crestUrl(team);
   return (
     <div className="flex items-center gap-2">
-      {url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt="" className="h-5 w-5 rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0" />
-      ) : (
-        <span className="h-5 w-5 rounded-full bg-[#003153] text-white text-[8px] font-bold flex items-center justify-center shrink-0">
-          {initials(team)}
-        </span>
-      )}
-      <span
-        className={`flex-1 truncate text-sm ${
-          highlight ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'
-        }`}
+      <TeamLink
+        nested
+        slug={team?.slug}
+        title={teamName(team)}
+        className="flex items-center gap-2 min-w-0 flex-1"
       >
-        {teamName(team)}
-      </span>
+        {url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={url} alt="" className="h-5 w-5 rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0" />
+        ) : (
+          <span className="h-5 w-5 rounded-full bg-[#003153] text-white text-[8px] font-bold flex items-center justify-center shrink-0">
+            {initials(team)}
+          </span>
+        )}
+        <span
+          className={`truncate text-sm ${
+            highlight ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'
+          }`}
+        >
+          {teamName(team)}
+        </span>
+      </TeamLink>
       {hasScore && (
         <span
           className={`text-sm tabular-nums ${

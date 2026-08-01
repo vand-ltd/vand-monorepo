@@ -1,7 +1,7 @@
 'use client'
 
 import React, { ReactNode, useEffect, useState } from "react";
-import { TrendingUp, Clock, Eye, ArrowUp, Flame, Megaphone } from "lucide-react";
+import { TrendingUp, Clock, Eye, ArrowUp, Flame } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { getTrendingArticles, getRelatedArticles, getArticles } from "@org/api";
@@ -12,10 +12,10 @@ import Image from "next/image";
 import { formatTimeAgo } from "@/lib/timeago";
 import { FootballWidget } from "./FootballWidget";
 import { FootballStrip } from "./FootballStrip";
-import { Link as IntlLink } from "@/i18n/navigation";
 import { AdSlot, AdList } from "@/components/ads/AdSlot";
+import { EmptyAdSlot } from "@/components/ads/EmptyAdSlot";
 import { AdCoordinatorProvider } from "@/components/ads/AdCoordinator";
-import { AD_PLACEMENT_SIZES, type AdSection, type AdPageType } from "@org/api";
+import { AD_PLACEMENT_SIZES, serveAds, type AdSection, type AdPageType } from "@org/api";
 
 type AsideBannerProps = {
   children: ReactNode;
@@ -27,70 +27,52 @@ function formatViews(count: number): string {
   return String(count);
 }
 
+// Sidebar "advertise here" box — shares the one EmptyAdSlot design; hidden on
+// mobile (the sticky footer bar carries mobile ads instead).
 function AdPlaceholder({ size, label }: { size: string; label: string }) {
-  // Empty ad space doubles as a funnel: clicking it opens the rate card.
   return (
-    <IntlLink href="/advertise" className="hidden lg:block">
-      <Card className="overflow-hidden !p-0 !gap-0 transition-shadow hover:shadow-md">
-        <div className="w-full h-[250px] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex flex-col items-center justify-center text-center p-6">
-          <div className="w-12 h-12 rounded-xl bg-brand-primary/10 dark:bg-brand-accent/10 flex items-center justify-center mb-3">
-            <Megaphone className="h-6 w-6 text-brand-primary dark:text-brand-accent" />
-          </div>
-          <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{label}</p>
-          <p className="text-[10px] text-gray-400 dark:text-gray-500">{size}</p>
-        </div>
-      </Card>
-    </IntlLink>
+    <EmptyAdSlot label={label} sizeLabel={size} aspectRatio="300 / 250" className="hidden lg:flex" />
   );
 }
 
-// Section-specific ad slot for non-article sections (football / data hub).
-// The data-ad-slot differs per section so each can serve its own campaign.
+// Section-specific empty slot for non-article sections (football / data hub) —
+// same design, with the section name as a corner tag.
 function SectionAdCard({ section, title }: { section: 'football' | 'data'; title: string }) {
-  return (
-    <IntlLink href="/advertise" className="block">
-    <Card className="overflow-hidden !p-0 !gap-0 transition-shadow hover:shadow-md">
-      <div
-        data-ad-slot={`${section}-sidebar`}
-        className="relative h-[250px] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex flex-col items-center justify-center text-center p-6"
-      >
-        <span className="absolute top-3 left-3 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-          {section}
-        </span>
-        <div className="w-12 h-12 rounded-xl bg-brand-primary/10 dark:bg-brand-accent/10 flex items-center justify-center mb-3">
-          <Megaphone className="h-6 w-6 text-brand-primary dark:text-brand-accent" />
-        </div>
-        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{title}</p>
-        <p className="text-[10px] text-gray-400 dark:text-gray-500">300 × 250</p>
-      </div>
-    </Card>
-    </IntlLink>
-  );
+  return <EmptyAdSlot label={title} sizeLabel="300 × 250" aspectRatio="300 / 250" badge={section} />;
 }
 
 function StickyBottomBanner({
-  label,
   section,
   pageType,
 }: {
-  label: string;
   section: AdSection;
   pageType: AdPageType;
 }) {
+  const locale = useLocale();
+  // Gate the whole bar on there being a real ad. Same query key as the inner
+  // AdSlot, so this shares the cache (no extra request). When nothing is sold
+  // for this footer slot, render nothing at all — no empty chrome, no placeholder.
+  const { data } = useQuery({
+    queryKey: ['ads', 'Footer', section ?? '', pageType ?? '', locale],
+    queryFn: () => serveAds({ placement: 'Footer', section, pageType, locale }),
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
+  if (!data || data.length === 0) return null;
+
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-gray-200 dark:border-gray-700 px-3 py-2 shadow-lg">
-      <div className="max-w-screen-xl mx-auto flex items-center justify-center">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-gray-200 dark:border-gray-700 px-2 py-1 shadow-lg">
+      <div className="mx-auto flex max-w-screen-xl items-center justify-center">
         <AdSlot
           placement="Footer"
           section={section}
           pageType={pageType}
-          fallback={
-            <div className="h-[50px] w-full border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg flex items-center justify-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-              <Megaphone className="h-4 w-4 text-gray-400 dark:text-gray-500" />
-              <span className="font-medium">{label}</span>
-              <span className="text-[10px] text-gray-400">· 320×50</span>
-            </div>
-          }
+          // Mobile-only sticky banner — full width, but a FIXED height (the 50px
+          // base) so the bar never changes height between ads or across screen
+          // widths; the creative just fits inside it.
+          fill
+          lockHeight
+          className="w-full"
         />
       </div>
     </div>
@@ -135,7 +117,16 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
   const STATIC_PAGES = ['about', 'contact', 'advertise', 'privacy-policy', 'terms-of-service'];
   const firstSeg = pathWithoutLocale.split('/').filter(Boolean)[0] ?? '';
   const isStaticPage = STATIC_PAGES.includes(firstSeg);
-  const isCategoryPage = !isArticleView && !isAuthorPage && !isHomePage && !isStaticPage && pathWithoutLocale !== '/search' && !pathWithoutLocale.startsWith('/login');
+  // The login and verify-email pages are focused, transactional screens — no
+  // ads, no related news, no sidebar. Distractions there only pull users away
+  // from signing in / confirming their account.
+  const isLoginPage = pathWithoutLocale.startsWith('/login');
+  const isVerifyEmailPage = pathWithoutLocale.startsWith('/verify-email');
+  const isAuthPage = isLoginPage || isVerifyEmailPage;
+  // Search is high-intent, so it keeps its ad slots; its sidebar shows trending
+  // (there's no single article/category to relate to) instead of being empty.
+  const isSearchPage = pathWithoutLocale.startsWith('/search');
+  const isCategoryPage = !isArticleView && !isAuthorPage && !isHomePage && !isStaticPage && !isSearchPage && !isAuthPage;
   // Non-article sections (football, data hub) have no "related/category" articles,
   // so the sidebar shows a section ad slot there instead of an empty list.
   const isFootballPage = pathWithoutLocale.startsWith('/football');
@@ -149,8 +140,11 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
   const footballPageType = (): AdPageType => {
     const parts = pathWithoutLocale.split('/').filter(Boolean); // ['football', ...]
     if (parts.length <= 1) return 'list';
-    if (/^\d{4}-\d{2}-\d{2}$/.test(parts[1])) return 'date';
+    // A day's scores (/football/YYYY-MM-DD) is the football landing — a listing
+    // of that day's matches — so it's page-type "list".
+    if (/^\d{4}-\d{2}-\d{2}$/.test(parts[1])) return 'list';
     if (parts[1] === 'player') return 'player';
+    if (parts[1] === 'team') return 'team';
     if (parts.length >= 3) return parts[2].includes('-vs-') ? 'match' : 'competition';
     return 'competition';
   };
@@ -173,7 +167,7 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
   const { data: trendingData } = useQuery({
     queryKey: ['trending-sidebar', locale],
     queryFn: () => getTrendingArticles({ language: locale, limit: 5 }),
-    enabled: isHomePage || isAuthorPage,
+    enabled: isHomePage || isAuthorPage || isSearchPage,
   });
 
   // Related articles — for article view
@@ -213,19 +207,21 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
     );
   }
 
+  // Login / verify-email: render the page bare so it owns its own (centered)
+  // layout — no header ads, sidebar, related news, or footer bar.
+  if (isAuthPage) {
+    return <>{children}</>;
+  }
+
   // One header "advertise here" box (matches the Header ad size). Reused for
   // both header slots so an empty box keeps the leaderboard shape.
   const headerAdBox = (
-    <div
-      className="w-full border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg flex items-center justify-center gap-3 text-sm text-gray-500 dark:text-gray-400"
-      style={{ aspectRatio: `${AD_PLACEMENT_SIZES.Header.width} / ${AD_PLACEMENT_SIZES.Header.height}` }}
-    >
-      <Megaphone className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-      <div className="text-center">
-        <p className="text-xs font-medium">{t('adSpaceAvailable')}</p>
-        <p className="text-[10px] text-gray-400 dark:text-gray-500">{t('adLeaderboard')}</p>
-      </div>
-    </div>
+    <EmptyAdSlot
+      variant="leaderboard"
+      label={t('adSpaceAvailable')}
+      sizeLabel={t('adLeaderboard')}
+      aspectRatio={`${AD_PLACEMENT_SIZES.Header.width} / ${AD_PLACEMENT_SIZES.Header.height}`}
+    />
   );
 
   return (
@@ -510,7 +506,7 @@ const AsideBanner = ({ children }: AsideBannerProps) => {
       </main>
 
       {/* Mobile-only sticky bottom banner */}
-      <StickyBottomBanner label={t('adSpaceAvailable')} section={adSection} pageType={adPageType} />
+      <StickyBottomBanner section={adSection} pageType={adPageType} />
     </AdCoordinatorProvider>
   );
 };

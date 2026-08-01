@@ -8,6 +8,7 @@ import {
   uploadMedia,
   AD_PLACEMENTS,
   AD_PLACEMENT_SIZES,
+  AD_PLACEMENT_CONTEXTS,
   AD_SECTIONS,
   AD_PAGE_TYPES,
   AD_LOCALES,
@@ -53,6 +54,24 @@ const emptyCreative = (): CreativeDraft => ({
   alt: '',
   uploading: false,
 });
+
+// Plain-language descriptions (with example URLs) shown on hover, so it's clear
+// which real page each section / page-type maps to.
+const SECTION_DESC: Record<string, string> = {
+  home: 'The homepage',
+  football: 'Scores section — match, competition, date & player pages',
+  news: 'Articles & news category pages',
+  fuel: 'Data / fuel-prices section',
+};
+const PAGE_TYPE_DESC: Record<string, string> = {
+  home: 'The homepage',
+  list: 'A listing page — a day’s football scores (e.g. /football/2026-07-28), a category’s articles, or the data hub',
+  article: 'A single article/story page (e.g. /article/apr-wins-title)',
+  match: 'A match detail page (e.g. /football/bk-pro-league/apr-vs-rayon-2026-07-20)',
+  competition: 'A competition season page (e.g. /football/bk-pro-league/2026)',
+  date: 'A day’s scores page (e.g. /football/2026-07-28)',
+  player: 'A player profile page (e.g. /football/player/meddie-kagere)',
+};
 
 export function AdEditorModal({
   ad,
@@ -100,8 +119,47 @@ export function AdEditorModal({
   const setCreative = (locale: AdLocale, patch: Partial<CreativeDraft>) =>
     setCreatives((cs) => ({ ...cs, [locale]: { ...cs[locale], ...patch } }));
 
-  const toggle = (list: string[], set: (v: string[]) => void, value: string) =>
-    set(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
+  // Only offer section/page-type combinations that actually have a slot for the
+  // chosen placement, and keep the two in sync (hide page types that don't exist
+  // for the selected sections, and vice versa).
+  const contexts = AD_PLACEMENT_CONTEXTS[placement] ?? [];
+  const validSectionsFor = (pts: string[]) => {
+    const rel = pts.length ? contexts.filter((c) => pts.includes(c.pageType)) : contexts;
+    return new Set(rel.map((c) => c.section as string));
+  };
+  const validPageTypesFor = (secs: string[]) => {
+    const rel = secs.length ? contexts.filter((c) => secs.includes(c.section)) : contexts;
+    return new Set(rel.map((c) => c.pageType as string));
+  };
+  // Show valid options, plus any already-selected value (so an existing invalid
+  // combo can still be seen and removed).
+  const shownSections = AD_SECTIONS.filter(
+    (s) => validSectionsFor(pageTypes).has(s) || sections.includes(s)
+  );
+  const shownPageTypes = AD_PAGE_TYPES.filter(
+    (p) => validPageTypesFor(sections).has(p) || pageTypes.includes(p)
+  );
+
+  const toggleSection = (s: string) => {
+    const next = sections.includes(s) ? sections.filter((x) => x !== s) : [...sections, s];
+    setSections(next);
+    const valid = validPageTypesFor(next);
+    setPageTypes((pts) => pts.filter((p) => valid.has(p)));
+  };
+  const togglePageType = (p: string) => {
+    const next = pageTypes.includes(p) ? pageTypes.filter((x) => x !== p) : [...pageTypes, p];
+    setPageTypes(next);
+    const valid = validSectionsFor(next);
+    setSections((secs) => secs.filter((s) => valid.has(s)));
+  };
+  const changePlacement = (p: AdPlacement) => {
+    setPlacement(p);
+    const ctx = AD_PLACEMENT_CONTEXTS[p] ?? [];
+    const vSec = new Set(ctx.map((c) => c.section as string));
+    const vPt = new Set(ctx.map((c) => c.pageType as string));
+    setSections((secs) => secs.filter((s) => vSec.has(s)));
+    setPageTypes((pts) => pts.filter((x) => vPt.has(x)));
+  };
 
   const uploadCreative = async (locale: AdLocale, file: File) => {
     setCreative(locale, { uploading: true });
@@ -202,7 +260,7 @@ export function AdEditorModal({
               <label className={labelClass}>Placement (slot)</label>
               <select
                 value={placement}
-                onChange={(e) => setPlacement(e.target.value as AdPlacement)}
+                onChange={(e) => changePlacement(e.target.value as AdPlacement)}
                 className={inputClass}
               >
                 {AD_PLACEMENTS.map((p) => (
@@ -224,11 +282,12 @@ export function AdEditorModal({
             <div>
               <label className={labelClass}>Sections</label>
               <div className="flex flex-wrap gap-1.5">
-                {AD_SECTIONS.map((s) => (
+                {shownSections.map((s) => (
                   <button
                     key={s}
                     type="button"
-                    onClick={() => toggle(sections, setSections, s)}
+                    title={SECTION_DESC[s] ?? s}
+                    onClick={() => toggleSection(s)}
                     className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
                       sections.includes(s)
                         ? 'border-[#003153] bg-[#003153] text-white'
@@ -239,16 +298,17 @@ export function AdEditorModal({
                   </button>
                 ))}
               </div>
-              <p className="mt-1 text-[11px] text-gray-400">None selected = all sections.</p>
+              <p className="mt-1 text-[11px] text-gray-400">None selected = all sections for this placement.</p>
             </div>
             <div>
               <label className={labelClass}>Page types</label>
               <div className="flex flex-wrap gap-1.5">
-                {AD_PAGE_TYPES.map((p) => (
+                {shownPageTypes.map((p) => (
                   <button
                     key={p}
                     type="button"
-                    onClick={() => toggle(pageTypes, setPageTypes, p)}
+                    title={PAGE_TYPE_DESC[p] ?? p}
+                    onClick={() => togglePageType(p)}
                     className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
                       pageTypes.includes(p)
                         ? 'border-[#003153] bg-[#003153] text-white'
@@ -259,7 +319,7 @@ export function AdEditorModal({
                   </button>
                 ))}
               </div>
-              <p className="mt-1 text-[11px] text-gray-400">None selected = all page types.</p>
+              <p className="mt-1 text-[11px] text-gray-400">Only page types that exist for the chosen placement/section are shown.</p>
             </div>
           </div>
 

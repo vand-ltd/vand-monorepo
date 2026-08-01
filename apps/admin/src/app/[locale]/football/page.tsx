@@ -3,15 +3,16 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getCompetitions, getSeasons, type Competition, type Season } from '@org/api';
-import { Loader2, Settings, Users, CalendarDays, ClipboardList, Layers } from 'lucide-react';
+import { Loader2, Settings, Users, CalendarDays, ClipboardList, Layers, ImageDown } from 'lucide-react';
 import { AdminGuard } from '@/components/AdminGuard';
 import { SetupTab } from '@/components/football/SetupTab';
 import { RostersTab } from '@/components/football/RostersTab';
 import { SquadsTab } from '@/components/football/SquadsTab';
 import { FixturesTab } from '@/components/football/FixturesTab';
 import { StagesTab } from '@/components/football/StagesTab';
+import { StatsTab } from '@/components/football/StatsTab';
 
-type Tab = 'setup' | 'rosters' | 'stages' | 'squads' | 'fixtures';
+type Tab = 'setup' | 'rosters' | 'stages' | 'squads' | 'fixtures' | 'stats';
 
 const TABS: { key: Tab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { key: 'setup', label: 'Setup', icon: Settings },
@@ -19,6 +20,7 @@ const TABS: { key: Tab; label: string; icon: React.ComponentType<{ className?: s
   { key: 'stages', label: 'Stages & Groups', icon: Layers },
   { key: 'squads', label: 'Squads', icon: Users },
   { key: 'fixtures', label: 'Fixtures & Results', icon: CalendarDays },
+  { key: 'stats', label: 'Graphics', icon: ImageDown },
 ];
 
 export default function FootballConsolePage() {
@@ -141,6 +143,7 @@ export default function FootballConsolePage() {
         {tab === 'stages' && <StagesTab seasonId={seasonId} season={selectedSeason} />}
         {tab === 'squads' && <SquadsTab seasonId={seasonId} season={selectedSeason} />}
         {tab === 'fixtures' && <FixturesTab seasonId={seasonId} season={selectedSeason} />}
+        {tab === 'stats' && <StatsTab seasonId={seasonId} season={selectedSeason} />}
       </div>
     </AdminGuard>
   );
