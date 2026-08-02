@@ -38,8 +38,7 @@ export interface LeaderVM {
   teamName: string;
   count: number;
 }
-// One match shown as home vs away. Used by every fixtures mode (Fixtures /
-// Results / All) — the mode only filters which matches appear, not the row.
+// One match shown as home vs away. Used by the team-fixtures and matchday cards.
 export interface FixtureVM {
   id: string;
   date: string;
@@ -47,7 +46,7 @@ export interface FixtureVM {
   homeCrest: string | null;
   awayName: string;
   awayCrest: string | null;
-  homeIsSelf: boolean; // which side is the selected team (for emphasis)
+  emphasize?: 'home' | 'away' | null; // bold one side (e.g. the selected team)
   score: string | null; // finished → "2–1" (home–away), else null
   time: string; // kickoff time for upcoming
 }
@@ -270,83 +269,84 @@ export function leaderboardBody(size: CardSize, rows: LeaderVM[]): ReactNode {
 
 /* ------------------------------- fixtures --------------------------------- */
 
+// Shared home-vs-away row list, used by both the team-fixtures and matchday cards.
+function fixtureRows(size: CardSize, rows: FixtureVM[]): ReactNode {
+  const d = S[size];
+  const dateW = size === 'story' ? 130 : 104;
+  const nameFont = d.cell + 2;
+  const nameStyle = (emphasize: boolean, align: 'left' | 'right') =>
+    ({
+      minWidth: 0,
+      fontFamily: DISPLAY,
+      fontSize: nameFont,
+      fontWeight: emphasize ? 700 : 500,
+      textTransform: 'uppercase',
+      color: emphasize ? '#fff' : '#9fb3c8',
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      textAlign: align,
+    }) as const;
+  const side = (name: string, crest: string | null, emphasize: boolean, align: 'left' | 'right') => (
+    <span style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 10, justifyContent: align === 'right' ? 'flex-end' : 'flex-start' }}>
+      {align === 'right' && <span style={nameStyle(emphasize, 'right')}>{name}</span>}
+      <Circle url={crest} name={name} size={d.crest} />
+      {align === 'left' && <span style={nameStyle(emphasize, 'left')}>{name}</span>}
+    </span>
+  );
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      {rows.map((r) => (
+        <div
+          key={r.id}
+          style={{ display: 'flex', alignItems: 'center', gap: 10, height: d.rowH, flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.07)' }}
+        >
+          <span style={{ width: dateW, fontSize: d.colH, color: '#9fb3c8', whiteSpace: 'nowrap' }}>{r.date}</span>
+          {side(r.homeName, r.homeCrest, r.emphasize === 'home', 'right')}
+          <span
+            style={{
+              width: size === 'story' ? 118 : 96,
+              textAlign: 'center',
+              fontFamily: DISPLAY,
+              fontSize: d.cell,
+              fontWeight: 700,
+              color: r.score ? '#fff' : '#F59E0B',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {r.score ?? r.time}
+          </span>
+          {side(r.awayName, r.awayCrest, r.emphasize === 'away', 'left')}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// A single team's fixtures/results — with the team crest+name headed on top.
 export function fixturesBody(
   size: CardSize,
   team: { name: string; crest: string | null },
   rows: FixtureVM[]
 ): ReactNode {
   const d = S[size];
-  const dateW = size === 'story' ? 130 : 104;
-  const nameFont = d.cell + 2;
-  const teamSide = (name: string, crest: string | null, emphasize: boolean, align: 'left' | 'right') => (
-    <span
-      style={{
-        flex: 1,
-        minWidth: 0,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        justifyContent: align === 'right' ? 'flex-end' : 'flex-start',
-        flexDirection: align === 'right' ? 'row' : 'row',
-      }}
-    >
-      {align === 'right' && (
-        <span style={{ minWidth: 0, fontFamily: DISPLAY, fontSize: nameFont, fontWeight: emphasize ? 700 : 500, textTransform: 'uppercase', color: emphasize ? '#fff' : '#9fb3c8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'right' }}>
-          {name}
-        </span>
-      )}
-      <Circle url={crest} name={name} size={d.crest} />
-      {align === 'left' && (
-        <span style={{ minWidth: 0, fontFamily: DISPLAY, fontSize: nameFont, fontWeight: emphasize ? 700 : 500, textTransform: 'uppercase', color: emphasize ? '#fff' : '#9fb3c8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {name}
-        </span>
-      )}
-    </span>
-  );
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: size === 'story' ? 24 : 16 }}>
-      {/* Team header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
         <Circle url={team.crest} name={team.name} size={d.photo} />
         <span style={{ fontFamily: DISPLAY, fontSize: d.title * 0.62, fontWeight: 700, textTransform: 'uppercase', color: '#fff' }}>
           {team.name}
         </span>
       </div>
-      {/* Home vs away list */}
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
-        {rows.map((r) => (
-          <div
-            key={r.id}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              height: d.rowH,
-              flexShrink: 0,
-              borderTop: '1px solid rgba(255,255,255,0.07)',
-            }}
-          >
-            <span style={{ width: dateW, fontSize: d.colH, color: '#9fb3c8', whiteSpace: 'nowrap' }}>{r.date}</span>
-            {teamSide(r.homeName, r.homeCrest, r.homeIsSelf, 'right')}
-            <span
-              style={{
-                width: size === 'story' ? 118 : 96,
-                textAlign: 'center',
-                fontFamily: DISPLAY,
-                fontSize: d.cell,
-                fontWeight: 700,
-                color: r.score ? '#fff' : '#F59E0B',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {r.score ?? r.time}
-            </span>
-            {teamSide(r.awayName, r.awayCrest, !r.homeIsSelf, 'left')}
-          </div>
-        ))}
-      </div>
+      {fixtureRows(size, rows)}
     </div>
   );
+}
+
+// A whole matchday / stage / knockout round — just the match list (title carries
+// the round name via the card frame).
+export function matchdayBody(size: CardSize, rows: FixtureVM[]): ReactNode {
+  return fixtureRows(size, rows);
 }
 
 /* -------------------------------- captions -------------------------------- */

@@ -310,6 +310,10 @@ export function FixturesTab({ seasonId, season }: { seasonId: string; season: Se
 
   const activeStage = stages.find((s) => s.id === stageId) ?? null;
   const stageGroups = activeStage?.groups ?? [];
+  // A knockout stage IS the round (e.g. "Semi-final"), so a separate round label
+  // isn't required — it defaults to the stage name.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const isKnockoutStage = (activeStage as any)?.type === 'Knockout';
 
   // Only teams in the effective group can play a group fixture.
   const teamsForRow = (row: FixtureRow): Team[] => {
@@ -335,7 +339,7 @@ export function FixturesTab({ seasonId, season }: { seasonId: string; season: Se
       }));
       return createMatchesBulk({
         seasonId,
-        round: round.trim(),
+        round: round.trim() || activeStage?.name || 'Round',
         // Knockout fixtures pass a stage only; group fixtures add the group.
         ...(stageId ? { stageId } : {}),
         ...(groupId ? { groupId } : {}),
@@ -379,11 +383,13 @@ export function FixturesTab({ seasonId, season }: { seasonId: string; season: Se
           <>
             <div className="mb-3 flex flex-wrap gap-3">
               <div className="max-w-xs flex-1 min-w-[10rem]">
-                <label className={labelClass}>Round</label>
+                <label className={labelClass}>
+                  Round {isKnockoutStage && <span className="text-gray-400">(optional)</span>}
+                </label>
                 <input
                   value={round}
                   onChange={(e) => setRound(e.target.value)}
-                  placeholder="e.g. Matchday 1"
+                  placeholder={isKnockoutStage ? activeStage?.name ?? 'e.g. Semi-final' : 'e.g. Matchday 1'}
                   className={inputClass}
                 />
               </div>
@@ -538,7 +544,7 @@ export function FixturesTab({ seasonId, season }: { seasonId: string; season: Se
               </button>
               <button
                 type="button"
-                disabled={!validRows.length || !round.trim() || createMatchesMut.isPending}
+                disabled={!validRows.length || (!round.trim() && !isKnockoutStage) || createMatchesMut.isPending}
                 onClick={() => createMatchesMut.mutate()}
                 className={primaryBtn}
               >

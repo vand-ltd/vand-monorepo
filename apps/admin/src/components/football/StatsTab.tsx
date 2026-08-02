@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import type { Season } from '@org/api';
 import { cardClass } from './styles';
-import { ListOrdered, Goal, Users, ImageDown, CalendarDays } from 'lucide-react';
+import { ListOrdered, Goal, Users, ImageDown, CalendarDays, CalendarRange } from 'lucide-react';
 import { StatsGraphicModal, type StatsGraphicType } from './StatsGraphicModal';
 import { TeamFixturesModal } from './TeamFixturesModal';
+import { MatchdayGraphicModal } from './MatchdayGraphicModal';
 
 const CARDS: { type: StatsGraphicType; title: string; desc: string; icon: typeof ListOrdered }[] = [
   { type: 'standings', title: 'Standings', desc: 'League table or group tables', icon: ListOrdered },
@@ -16,6 +17,7 @@ const CARDS: { type: StatsGraphicType; title: string; desc: string; icon: typeof
 export function StatsTab({ seasonId, season }: { seasonId: string; season: Season | null }) {
   const [open, setOpen] = useState<StatsGraphicType | null>(null);
   const [fixturesOpen, setFixturesOpen] = useState(false);
+  const [matchdayOpen, setMatchdayOpen] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const competitionLabel: string | undefined =
     (season as any)?.competition?.name ?? season?.name ?? undefined;
@@ -71,6 +73,21 @@ export function StatsTab({ seasonId, season }: { seasonId: string; season: Seaso
               <ImageDown className="h-3.5 w-3.5" /> Create graphic
             </span>
           </button>
+          {/* Matchday / stage / knockout round — whole-competition. */}
+          <button
+            type="button"
+            onClick={() => setMatchdayOpen(true)}
+            className="group flex flex-col items-start gap-2 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-left hover:border-[#003153]/40 dark:hover:border-[#F59E0B]/40 hover:shadow-sm transition-all"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#003153]/10 dark:bg-[#F59E0B]/10 text-[#003153] dark:text-[#F59E0B]">
+              <CalendarRange className="h-5 w-5" />
+            </span>
+            <span className="font-semibold text-gray-900 dark:text-white">Matchday</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">A round, group matchday or KO stage</span>
+            <span className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-[#003153] dark:text-[#F59E0B]">
+              <ImageDown className="h-3.5 w-3.5" /> Create graphic
+            </span>
+          </button>
         </div>
       </section>
 
@@ -89,6 +106,14 @@ export function StatsTab({ seasonId, season }: { seasonId: string; season: Seaso
           competitionLabel={competitionLabel}
           seasonName={season?.name}
           onClose={() => setFixturesOpen(false)}
+        />
+      )}
+      {matchdayOpen && (
+        <MatchdayGraphicModal
+          seasonId={seasonId}
+          competitionLabel={competitionLabel}
+          seasonName={season?.name}
+          onClose={() => setMatchdayOpen(false)}
         />
       )}
     </>

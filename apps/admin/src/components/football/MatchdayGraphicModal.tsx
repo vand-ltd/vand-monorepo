@@ -2,13 +2,27 @@
 
 import { useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getSeasonEntries, getMatches, type Team } from '@org/api';
+import { getMatches, type Match } from '@org/api';
 import { X, Download, Copy, Check, Loader2, Square, RectangleVertical } from 'lucide-react';
-import { StatsCard, fixturesBody, buildStatsCaption, type CardSize, type FixtureVM } from './StatsCard';
+import { StatsCard, matchdayBody, buildStatsCaption, type CardSize, type FixtureVM } from './StatsCard';
 import { resolveLogoUrl } from './ResultCard';
 import { urlToDataUrl, downloadCardPng, slugify } from './graphicUtils';
 
-export function TeamFixturesModal({
+type Bucket = { key: string; label: string; matches: Match[]; first: number };
+
+// Group matches into a selectable round: league rounds, cup group-stage
+// matchdays (per stage + round), and each knockout round (per stage).
+function bucketOf(m: Match): { key: string; label: string } {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const st = (m as any).stage as { id?: string; name?: string; type?: string } | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const stageId = (m as any).stageId ?? st?.id ?? '';
+  if (st?.type === 'Knockout') return { key: `ko:${stageId}`, label: st.name ?? 'Knockout' };
+  if (st?.type === 'Group') return { key: `grp:${stageId}:${m.round}`, label: `${st.name ?? 'Group stage'} · ${m.round}` };
+  return { key: `rnd:${m.round}`, label: m.round || 'Matchday' };
+}
+
+export function MatchdayGraphicModal({
   seasonId,
   competitionLabel,
   seasonName,
@@ -19,62 +33,68 @@ export function TeamFixturesModal({
   seasonName?: string;
   onClose: () => void;
 }) {
-  const [size, setSize] = useState<CardSize>('story'); // fixture lists are tall
-  const [mode, setMode] = useState<'fixtures' | 'results' | 'all'>('fixtures');
-  const [teamId, setTeamId] = useState('');
+  const [size, setSize] = useState<CardSize>('story');
+  const [mode, setMode] = useState<'fixtures' | 'results' | 'all'>('all');
+  const [bucketKey, setBucketKey] = useState('');
   const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const teamsQuery = useQuery({
-    queryKey: ['season-entries', seasonId],
-    queryFn: () => getSeasonEntries(seasonId),
-    enabled: !!seasonId,
-  });
-  const teams = teamsQuery.data ?? [];
-  const team = teams.find((t: Team) => t.id === teamId) ?? null;
-
   const matchesQuery = useQuery({
-    queryKey: ['team-fixtures-graphic', teamId, seasonId],
-    queryFn: () => getMatches({ teamId, seasonId, order: 'asc' }),
-    enabled: !!teamId && !!seasonId,
+    queryKey: ['matchday-graphic', seasonId],
+    queryFn: () => getMatches({ seasonId, order: 'asc' }),
+    enabled: !!seasonId,
   });
   const matches = matchesQuery.data ?? [];
 
-  // Team crest + every opponent crest to inline.
+  const buckets = useMemo<Bucket[]>(() => {
+    const map = new Map<string, Bucket>();
+    for (const m of matches) {
+      const { key, label } = bucketOf(m);
+      const kt = m.kickoffAt ? new Date(m.kickoffAt).getTime() : Number.MAX_SAFE_INTEGER;
+      const ex = map.get(key);
+      if (ex) {
+        ex.matches.push(m);
+        ex.first = Math.min(ex.first, kt);
+      } else {
+        map.set(key, { key, label, matches: [m], first: kt });
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => a.first - b.first);
+  }, [matches]);
+
+  const bucket = buckets.find((b) => b.key === bucketKey) ?? null;
+
+  const filtered = useMemo(() => {
+    const bm = bucket?.matches ?? [];
+    return bm.filter((m) => {
+      const done = m.homeScore != null && m.awayScore != null;
+      return mode === 'all' ? true : mode === 'results' ? done : !done;
+    });
+  }, [bucket, mode]);
+
   const imgUrls = useMemo(() => {
     const urls: string[] = [];
-    if (team) {
-      const u = resolveLogoUrl(team);
-      if (u) urls.push(u);
-    }
-    for (const m of matches) {
-      const opp = m.homeTeamId === teamId ? m.awayTeam : m.homeTeam;
-      const u = resolveLogoUrl(opp);
-      if (u) urls.push(u);
+    for (const m of bucket?.matches ?? []) {
+      const h = resolveLogoUrl(m.homeTeam);
+      if (h) urls.push(h);
+      const a = resolveLogoUrl(m.awayTeam);
+      if (a) urls.push(a);
     }
     return Array.from(new Set(urls));
-  }, [team, matches, teamId]);
+  }, [bucket]);
 
   const imgQuery = useQuery({
-    queryKey: ['team-fixtures-imgs', teamId, imgUrls.join(',')],
+    queryKey: ['matchday-imgs', bucketKey, imgUrls.join(',')],
     queryFn: async () => {
       const map: Record<string, string | null> = {};
       await Promise.all(imgUrls.map(async (u) => (map[u] = await urlToDataUrl(u))));
       return map;
     },
-    enabled: !!teamId && matchesQuery.isSuccess,
+    enabled: !!bucketKey && matchesQuery.isSuccess,
   });
 
-  const ready = !!teamId && matchesQuery.isSuccess && imgQuery.isSuccess;
-
-  // Fixtures = not yet played (no score); Results = played (has score).
-  const filtered = useMemo(() => {
-    return matches.filter((m) => {
-      const done = m.homeScore != null && m.awayScore != null;
-      return mode === 'all' ? true : mode === 'results' ? done : !done;
-    });
-  }, [matches, mode]);
+  const ready = !!bucketKey && matchesQuery.isSuccess && imgQuery.isSuccess;
 
   const cap = size === 'story' ? 18 : 9;
   const rows: FixtureVM[] = useMemo(() => {
@@ -82,30 +102,33 @@ export function TeamFixturesModal({
     return filtered.slice(0, cap).map((m) => {
       const done = m.homeScore != null && m.awayScore != null;
       const dt = m.kickoffAt ? new Date(m.kickoffAt) : null;
-      const homeUrl = resolveLogoUrl(m.homeTeam);
-      const awayUrl = resolveLogoUrl(m.awayTeam);
+      const hu = resolveLogoUrl(m.homeTeam);
+      const au = resolveLogoUrl(m.awayTeam);
       return {
         id: m.id,
         date: dt ? dt.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' }) : '',
         homeName: m.homeTeam?.name ?? '—',
-        homeCrest: homeUrl ? imap[homeUrl] ?? null : null,
+        homeCrest: hu ? imap[hu] ?? null : null,
         awayName: m.awayTeam?.name ?? '—',
-        awayCrest: awayUrl ? imap[awayUrl] ?? null : null,
-        emphasize: m.homeTeamId === teamId ? 'home' : 'away',
+        awayCrest: au ? imap[au] ?? null : null,
+        emphasize: null,
         score: done ? `${m.homeScore}–${m.awayScore}` : null,
         time: dt ? dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '',
       } as FixtureVM;
     });
-  }, [filtered, teamId, imgQuery.data, cap]);
+  }, [filtered, imgQuery.data, cap]);
 
-  const teamCrest = team ? imgQuery.data?.[resolveLogoUrl(team) ?? ''] ?? null : null;
-  const modeTitle = mode === 'results' ? 'Results' : mode === 'all' ? 'Fixtures & Results' : 'Fixtures';
+  const title = bucket?.label ?? 'Matchday';
+  const modeTitle = mode === 'results' ? 'Results' : mode === 'fixtures' ? 'Fixtures' : '';
 
   const download = async () => {
     if (!cardRef.current) return;
     setDownloading(true);
     try {
-      await downloadCardPng(cardRef.current, `menyesha-${slugify(team?.name ?? 'team')}-${mode}-${size}.png`);
+      await downloadCardPng(
+        cardRef.current,
+        `menyesha-${slugify(competitionLabel ?? 'football')}-${slugify(title)}-${mode}-${size}.png`
+      );
     } finally {
       setDownloading(false);
     }
@@ -113,7 +136,7 @@ export function TeamFixturesModal({
 
   const copyCaption = async () => {
     const caption = buildStatsCaption({
-      title: `${team?.name ?? ''} — ${modeTitle}`,
+      title: [title, modeTitle].filter(Boolean).join(' · '),
       competitionLabel,
       seasonLabel: seasonName,
     });
@@ -139,28 +162,28 @@ export function TeamFixturesModal({
     >
       <div className="w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-5 py-3">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Team fixtures graphic</h3>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Matchday graphic</h3>
           <button onClick={onClose} className="p-1.5 rounded-md text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="Close">
             <X className="h-4 w-4" />
           </button>
         </div>
 
         <div className="p-5 space-y-4">
-          {/* Team picker */}
+          {/* Round / stage picker */}
           <select
-            value={teamId}
-            onChange={(e) => setTeamId(e.target.value)}
+            value={bucketKey}
+            onChange={(e) => setBucketKey(e.target.value)}
             className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#003153] dark:focus:ring-[#F59E0B]"
           >
-            <option value="">Select a team…</option>
-            {teams.map((tm: Team) => (
-              <option key={tm.id} value={tm.id}>
-                {tm.name}
+            <option value="">Select a round / stage…</option>
+            {buckets.map((b) => (
+              <option key={b.key} value={b.key}>
+                {b.label} ({b.matches.length})
               </option>
             ))}
           </select>
 
-          {/* Fixtures / Results / All filter */}
+          {/* Fixtures / Results / All */}
           <div className="inline-flex w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-600">
             {(
               [
@@ -209,9 +232,9 @@ export function TeamFixturesModal({
 
           {/* Preview */}
           <div className="flex justify-center rounded-xl bg-gray-100 dark:bg-gray-800 p-4">
-            {!teamId ? (
+            {!bucketKey ? (
               <div className="flex h-[320px] items-center justify-center text-center text-sm text-gray-400">
-                Pick a team to preview its fixtures.
+                Pick a round or stage to preview.
               </div>
             ) : !ready ? (
               <div className="flex h-[320px] items-center justify-center text-gray-400">
@@ -219,23 +242,13 @@ export function TeamFixturesModal({
               </div>
             ) : rows.length === 0 ? (
               <div className="flex h-[320px] items-center justify-center text-center text-sm text-gray-400">
-                {mode === 'results'
-                  ? 'No results yet for this team.'
-                  : mode === 'fixtures'
-                    ? 'No upcoming fixtures for this team.'
-                    : 'No matches for this team yet.'}
+                {mode === 'results' ? 'No results in this round yet.' : mode === 'fixtures' ? 'No upcoming fixtures in this round.' : 'No matches in this round.'}
               </div>
             ) : (
               <div style={{ width: cardW * scale, height: cardH * scale, overflow: 'hidden' }} className="rounded-lg shadow-lg">
                 <div style={{ transform: `scale(${scale})`, transformOrigin: '0 0' }}>
-                  <StatsCard
-                    ref={cardRef}
-                    size={size}
-                    competitionLabel={competitionLabel}
-                    title={modeTitle}
-                    seasonLabel={seasonName}
-                  >
-                    {fixturesBody(size, { name: team?.name ?? '', crest: teamCrest }, rows)}
+                  <StatsCard ref={cardRef} size={size} competitionLabel={competitionLabel} title={title} seasonLabel={seasonName}>
+                    {matchdayBody(size, rows)}
                   </StatsCard>
                 </div>
               </div>
@@ -254,7 +267,7 @@ export function TeamFixturesModal({
             </button>
             <button
               onClick={copyCaption}
-              disabled={!teamId}
+              disabled={!bucketKey}
               className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
             >
               {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
