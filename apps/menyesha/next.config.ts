@@ -1,8 +1,11 @@
-import { NextConfig } from 'next';
+import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
-import { composePlugins, withNx } from '@nx/next';
 
-const nextConfig: NextConfig = {
+// Workspace libraries ship as TypeScript source, so Next must transpile them.
+// (@nx/next's withNx wires this up too; we set it explicitly so the build also
+// works on hosts where withNx isn't installed — see the fallback below.)
+const baseConfig: NextConfig = {
+  transpilePackages: ['@org/api', '@org/i18n', '@org/ui'],
   images: {
     remotePatterns: [
       {
@@ -19,6 +22,17 @@ const nextConfig: NextConfig = {
 
 const withNextIntl = createNextIntlPlugin();
 
-const plugins = [withNx, withNextIntl];
+// @nx/next is a dev-only build plugin. On a scoped install (e.g. Vercel building
+// just this app) it may be absent — fall back to a plain Next build so the app
+// still compiles. Local `nx build` keeps the full Nx integration.
+function resolveConfig(): NextConfig | ((phase: string) => NextConfig | Promise<NextConfig>) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { composePlugins, withNx } = require('@nx/next');
+    return composePlugins(withNx, withNextIntl)(baseConfig);
+  } catch {
+    return withNextIntl(baseConfig);
+  }
+}
 
-export default composePlugins(...plugins)(nextConfig);
+export default resolveConfig();
