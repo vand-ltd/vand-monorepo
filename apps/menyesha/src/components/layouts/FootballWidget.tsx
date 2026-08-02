@@ -145,7 +145,9 @@ export function FootballWidget() {
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {rows.map((m) => {
               const isLive = LIVE_STATUSES.includes(m.status);
-              const hasScore = m.homeScore != null && m.awayScore != null;
+              // Live is handled above; only a finished match shows a score here,
+              // so a scheduled 0–0 falls through to the date.
+              const hasScore = m.status === 'FullTime' && m.homeScore != null && m.awayScore != null;
               const center = isLive
                 ? liveMinuteLabel(m, now, { live: t('live'), halfTime: t('halfTime') })
                 : hasScore

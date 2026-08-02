@@ -79,7 +79,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const home = m.homeTeam?.name ?? 'Home';
     const away = m.awayTeam?.name ?? 'Away';
     const comp = m.season?.competition?.name ?? 'Rwanda Football';
-    const scored = m.homeScore != null && m.awayScore != null;
+    const scored =
+      ['FullTime', 'Live', 'HalfTime'].includes(m.status) && m.homeScore != null && m.awayScore != null;
     const tabName = asMatchTab(tab);
     const tabLabel = tabName[0].toUpperCase() + tabName.slice(1);
     const title = `${home} vs ${away}${scored ? ` ${m.homeScore}-${m.awayScore}` : ''} — ${tabLabel} | ${comp} | Rwanda Football`;

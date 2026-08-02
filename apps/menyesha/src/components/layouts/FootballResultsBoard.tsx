@@ -1380,7 +1380,9 @@ function MatchListRow({
       : null;
   const isLive = LIVE_STATUSES.includes(m.status);
   const isFinished = m.status === 'FullTime';
-  const hasScore = m.homeScore != null && m.awayScore != null;
+  // Only a started match shows a score; a scheduled fixture shows its time,
+  // even if the backend seeded it with a default 0–0.
+  const hasScore = (isLive || isFinished) && m.homeScore != null && m.awayScore != null;
   const home = (m as any).homeTeam;
   const away = (m as any).awayTeam;
   const now = useNow(m.status === 'Live');

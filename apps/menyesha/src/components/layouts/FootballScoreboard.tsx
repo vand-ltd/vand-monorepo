@@ -169,7 +169,8 @@ function MatchCard({
 }) {
   const isLive = LIVE_STATUSES.includes(m.status);
   const isFinished = m.status === 'FullTime';
-  const hasScore = m.homeScore != null && m.awayScore != null;
+  // Only a started match shows a score; a scheduled 0–0 shows its time instead.
+  const hasScore = (isLive || isFinished) && m.homeScore != null && m.awayScore != null;
   const now = useNow(m.status === 'Live');
 
   const statusNode = isLive ? (

@@ -65,11 +65,13 @@ export function MatchdayGraphicModal({
 
   const bucket = buckets.find((b) => b.key === bucketKey) ?? null;
 
+  // Results = FullTime; Fixtures = not finished. Keyed on status, not score
+  // (a scheduled match may carry a default 0–0).
   const filtered = useMemo(() => {
     const bm = bucket?.matches ?? [];
     return bm.filter((m) => {
-      const done = m.homeScore != null && m.awayScore != null;
-      return mode === 'all' ? true : mode === 'results' ? done : !done;
+      const finished = m.status === 'FullTime';
+      return mode === 'all' ? true : mode === 'results' ? finished : !finished;
     });
   }, [bucket, mode]);
 
@@ -100,7 +102,7 @@ export function MatchdayGraphicModal({
   const rows: FixtureVM[] = useMemo(() => {
     const imap = imgQuery.data ?? {};
     return filtered.slice(0, cap).map((m) => {
-      const done = m.homeScore != null && m.awayScore != null;
+      const done = m.status === 'FullTime' && m.homeScore != null && m.awayScore != null;
       const dt = m.kickoffAt ? new Date(m.kickoffAt) : null;
       const hu = resolveLogoUrl(m.homeTeam);
       const au = resolveLogoUrl(m.awayTeam);

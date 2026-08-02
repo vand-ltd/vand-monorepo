@@ -162,7 +162,9 @@ function PerspectiveRow({
   const dt = m.kickoffAt ? new Date(m.kickoffAt) : null;
   const date = dt ? dt.toLocaleDateString(dateLocale, { day: '2-digit', month: 'short' }) : '';
   const time = dt ? dt.toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' }) : '';
-  const done = m.homeScore != null && m.awayScore != null;
+  // A played result shows the score in the middle; an upcoming fixture shows the
+  // kickoff time under the date and a "V" between the teams.
+  const showScore = !upcoming && m.homeScore != null && m.awayScore != null;
 
   const nameCls = (emphasize: boolean) =>
     `truncate text-sm ${emphasize ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'}`;
@@ -172,22 +174,25 @@ function PerspectiveRow({
       href={matchHref(m)}
       className="flex items-center gap-2 px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors"
     >
-      <span className="w-10 shrink-0 text-[11px] text-gray-400">{date}</span>
-      {/* Home — right-aligned toward the score */}
+      <span className="w-14 shrink-0 text-[11px] leading-tight text-gray-400">
+        <span className="block">{date}</span>
+        {!showScore && time && <span className="block">{time}</span>}
+      </span>
+      {/* Home — right-aligned toward the middle */}
       <span className="flex-1 min-w-0 flex items-center justify-end gap-2">
         <TeamLink nested slug={home.slug} className={nameCls(m.isHome)}>
           {home.name}
         </TeamLink>
         <Crest url={home.crest} name={home.name} slug={home.slug} size={20} />
       </span>
-      {/* Score / kickoff time */}
-      <span className="shrink-0 w-14 text-center">
-        {done ? (
+      {/* Score for results, "V" for upcoming */}
+      <span className="shrink-0 w-10 text-center">
+        {showScore ? (
           <span className="tabular-nums text-sm font-bold text-gray-900 dark:text-white">
             {m.homeScore}–{m.awayScore}
           </span>
         ) : (
-          <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">{time}</span>
+          <span className="text-xs font-semibold text-gray-400">V</span>
         )}
       </span>
       {/* Away */}
@@ -386,6 +391,11 @@ function CupSeasonRow({
                       <KnockoutRow
                         key={k.match.id}
                         ko={k}
+                        self={{
+                          name: data.team?.name ?? '',
+                          crest: resolveLogo(data.team?.logo),
+                          slug: data.team?.slug,
+                        }}
                         competitionSlug={data.season.competition?.slug}
                       />
                     ))}
@@ -465,46 +475,60 @@ function GroupTable({ rows, teamId }: { rows: StandingRow[]; teamId: string }) {
 // One knockout round from the team's perspective, linking to the match.
 function KnockoutRow({
   ko,
+  self,
   competitionSlug,
 }: {
   ko: TeamJourneyKnockout;
+  self: SelfTeam;
   competitionSlug?: string;
 }) {
   const m = ko.match;
-  const done = m.homeScore != null && m.awayScore != null;
-  const ts = m.isHome ? m.homeScore : m.awayScore;
-  const os = m.isHome ? m.awayScore : m.homeScore;
-  const tp = m.isHome ? m.homePenalties : m.awayPenalties;
-  const op = m.isHome ? m.awayPenalties : m.homePenalties;
+  const done = m.status !== 'Scheduled' && m.homeScore != null && m.awayScore != null;
+  const opp: SelfTeam = {
+    name: m.opponent?.name ?? '—',
+    crest: resolveLogo(m.opponent?.logo),
+    slug: m.opponent?.slug,
+  };
+  const home = m.isHome ? self : opp;
+  const away = m.isHome ? opp : self;
   const hasPens = m.homePenalties != null && m.awayPenalties != null;
+  const nameCls = (emphasize: boolean) =>
+    `truncate text-sm ${emphasize ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'}`;
 
   return (
     <Link
       href={`/football/${competitionSlug ?? 'match'}/${m.slug}`}
       className="flex items-center gap-2 px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors"
     >
-      <span className="w-24 shrink-0 truncate text-[11px] font-medium text-gray-500 dark:text-gray-400">
+      <span className="w-16 sm:w-20 shrink-0 truncate text-[11px] font-medium text-gray-500 dark:text-gray-400">
         {ko.stage?.name}
       </span>
-      <span className="w-6 shrink-0 text-[10px] font-semibold text-gray-400">{m.isHome ? 'H' : 'A'}</span>
-      <Crest url={resolveLogo(m.opponent?.logo)} name={m.opponent?.name} slug={m.opponent?.slug} size={18} />
-      <TeamLink nested slug={m.opponent?.slug} className="flex-1 min-w-0 truncate text-sm text-gray-900 dark:text-white">
-        {m.opponent?.name ?? '—'}
-      </TeamLink>
-      <span className="shrink-0 text-sm font-semibold text-gray-900 dark:text-white">
+      <span className="flex-1 min-w-0 flex items-center justify-end gap-2">
+        <TeamLink nested slug={home.slug} className={nameCls(m.isHome)}>
+          {home.name}
+        </TeamLink>
+        <Crest url={home.crest} name={home.name} slug={home.slug} size={18} />
+      </span>
+      <span className="shrink-0 w-12 text-center">
         {done ? (
-          <span className="tabular-nums">
-            {ts ?? 0}–{os ?? 0}
+          <span className="tabular-nums text-sm font-bold text-gray-900 dark:text-white">
+            {m.homeScore}–{m.awayScore}
           </span>
         ) : (
-          <span className="text-xs font-medium text-gray-400">{m.status}</span>
+          <span className="text-[11px] font-medium text-gray-400">{m.status}</span>
+        )}
+        {hasPens && (
+          <span className="block text-[10px] tabular-nums text-gray-400">
+            ({m.homePenalties}-{m.awayPenalties}p)
+          </span>
         )}
       </span>
-      {hasPens && (
-        <span className="shrink-0 text-[10px] tabular-nums text-gray-400">
-          ({tp}-{op}p)
-        </span>
-      )}
+      <span className="flex-1 min-w-0 flex items-center gap-2">
+        <Crest url={away.crest} name={away.name} slug={away.slug} size={18} />
+        <TeamLink nested slug={away.slug} className={nameCls(!m.isHome)}>
+          {away.name}
+        </TeamLink>
+      </span>
       {done &&
         (m.advanced ? (
           <Check className="h-4 w-4 shrink-0 text-emerald-500" aria-label="Advanced" />
@@ -817,7 +841,7 @@ function MatchesTab({
 
 function FullMatchRow({ m, teamId, dateLocale }: { m: Match; teamId: string; dateLocale: string }) {
   const isHome = m.homeTeamId === teamId;
-  const done = m.homeScore != null && m.awayScore != null;
+  const done = m.status !== 'Scheduled' && m.homeScore != null && m.awayScore != null;
   const dt = m.kickoffAt ? new Date(m.kickoffAt) : null;
   const date = dt ? dt.toLocaleDateString(dateLocale, { day: '2-digit', month: 'short' }) : '';
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

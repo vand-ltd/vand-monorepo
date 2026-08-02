@@ -201,7 +201,8 @@ function MatchCardDetail({
   const isFinished = m.status === 'FullTime';
   // Ticks the live clock forward between data refetches.
   const now = useNow(m.status === 'Live');
-  const hasScore = m.homeScore != null && m.awayScore != null;
+  // Only a started match shows a score; a scheduled 0–0 shows "v".
+  const hasScore = (isLive || isFinished) && m.homeScore != null && m.awayScore != null;
   const hasPens = m.homePenalties != null && m.awayPenalties != null;
   // Server-derived winner of a knockout tie (score → penalties).
   const isKnockout = (m as any).stage?.type === 'Knockout';

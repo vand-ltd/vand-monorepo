@@ -154,7 +154,10 @@ export default async function Image({ params }: Props) {
   const awayName = away?.name ?? 'Away';
   const competitionName = m?.season?.competition?.name ?? 'Rwanda Football';
   const round = m?.round ?? '';
-  const hasScore = m?.homeScore != null && m?.awayScore != null;
+  const hasScore =
+    ['FullTime', 'Live', 'HalfTime'].includes(m?.status ?? '') &&
+    m?.homeScore != null &&
+    m?.awayScore != null;
   const isFinished = m?.status === 'FullTime';
   const date = m?.kickoffAt
     ? new Date(m.kickoffAt).toLocaleDateString('en', {

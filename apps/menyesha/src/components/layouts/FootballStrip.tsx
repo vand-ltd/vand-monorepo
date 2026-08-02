@@ -82,7 +82,8 @@ export function FootballStrip() {
       <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
         {rows.map((m) => {
           const isLive = LIVE_STATUSES.includes(m.status);
-          const hasScore = m.homeScore != null && m.awayScore != null;
+          // Live handled separately; only a finished match shows a score.
+          const hasScore = m.status === 'FullTime' && m.homeScore != null && m.awayScore != null;
           const status = isLive
             ? liveMinuteLabel(m, now, { live: t('live'), halfTime: t('halfTime') })
             : m.status === 'FullTime'

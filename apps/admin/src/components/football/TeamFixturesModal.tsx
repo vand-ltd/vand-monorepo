@@ -68,11 +68,12 @@ export function TeamFixturesModal({
 
   const ready = !!teamId && matchesQuery.isSuccess && imgQuery.isSuccess;
 
-  // Fixtures = not yet played (no score); Results = played (has score).
+  // Results = FullTime; Fixtures = anything not finished (Scheduled, etc.).
+  // Keyed on status, not score, since a scheduled match may carry a default 0–0.
   const filtered = useMemo(() => {
     return matches.filter((m) => {
-      const done = m.homeScore != null && m.awayScore != null;
-      return mode === 'all' ? true : mode === 'results' ? done : !done;
+      const finished = m.status === 'FullTime';
+      return mode === 'all' ? true : mode === 'results' ? finished : !finished;
     });
   }, [matches, mode]);
 
@@ -80,7 +81,8 @@ export function TeamFixturesModal({
   const rows: FixtureVM[] = useMemo(() => {
     const imap = imgQuery.data ?? {};
     return filtered.slice(0, cap).map((m) => {
-      const done = m.homeScore != null && m.awayScore != null;
+      // Only a finished match shows a score; scheduled ones show kickoff time.
+      const done = m.status === 'FullTime' && m.homeScore != null && m.awayScore != null;
       const dt = m.kickoffAt ? new Date(m.kickoffAt) : null;
       const homeUrl = resolveLogoUrl(m.homeTeam);
       const awayUrl = resolveLogoUrl(m.awayTeam);
