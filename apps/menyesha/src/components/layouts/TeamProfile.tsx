@@ -137,33 +137,68 @@ const RESULT_STYLES: Record<string, string> = {
 
 /* ---------------------------- perspective rows ---------------------------- */
 
-function ResultRow({ m, dateLocale }: { m: TeamPerspectiveMatch; dateLocale: string }) {
-  const ts = m.isHome ? m.homeScore : m.awayScore;
-  const os = m.isHome ? m.awayScore : m.homeScore;
-  const date = m.kickoffAt
-    ? new Date(m.kickoffAt).toLocaleDateString(dateLocale, { day: '2-digit', month: 'short' })
-    : '';
+type SelfTeam = { name: string; crest: string | null; slug?: string };
+
+// A results/fixtures row shown as home vs away (both teams), the profile team
+// emphasized, with the score (or kickoff time) in the middle. Links to the match.
+function PerspectiveRow({
+  m,
+  self,
+  dateLocale,
+  upcoming,
+}: {
+  m: TeamPerspectiveMatch;
+  self: SelfTeam;
+  dateLocale: string;
+  upcoming?: boolean;
+}) {
+  const opp: SelfTeam = {
+    name: m.opponent?.name ?? '—',
+    crest: resolveLogo(m.opponent?.logo),
+    slug: m.opponent?.slug,
+  };
+  const home = m.isHome ? self : opp;
+  const away = m.isHome ? opp : self;
+  const dt = m.kickoffAt ? new Date(m.kickoffAt) : null;
+  const date = dt ? dt.toLocaleDateString(dateLocale, { day: '2-digit', month: 'short' }) : '';
+  const time = dt ? dt.toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' }) : '';
+  const done = m.homeScore != null && m.awayScore != null;
+
+  const nameCls = (emphasize: boolean) =>
+    `truncate text-sm ${emphasize ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'}`;
+
   return (
     <Link
       href={matchHref(m)}
       className="flex items-center gap-2 px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors"
     >
-      <span className="w-11 shrink-0 text-[11px] text-gray-400">{date}</span>
-      <span className="w-6 shrink-0 text-[10px] font-semibold text-gray-400">
-        {m.isHome ? 'H' : 'A'}
+      <span className="w-10 shrink-0 text-[11px] text-gray-400">{date}</span>
+      {/* Home — right-aligned toward the score */}
+      <span className="flex-1 min-w-0 flex items-center justify-end gap-2">
+        <TeamLink nested slug={home.slug} className={nameCls(m.isHome)}>
+          {home.name}
+        </TeamLink>
+        <Crest url={home.crest} name={home.name} slug={home.slug} size={20} />
       </span>
-      <Crest url={resolveLogo(m.opponent?.logo)} name={m.opponent?.name} slug={m.opponent?.slug} size={18} />
-      <TeamLink
-        nested
-        slug={m.opponent?.slug}
-        className="flex-1 min-w-0 truncate text-sm text-gray-900 dark:text-white"
-      >
-        {m.opponent?.name ?? '—'}
-      </TeamLink>
-      <span className="shrink-0 tabular-nums text-sm font-semibold text-gray-900 dark:text-white">
-        {ts ?? 0}–{os ?? 0}
+      {/* Score / kickoff time */}
+      <span className="shrink-0 w-14 text-center">
+        {done ? (
+          <span className="tabular-nums text-sm font-bold text-gray-900 dark:text-white">
+            {m.homeScore}–{m.awayScore}
+          </span>
+        ) : (
+          <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">{time}</span>
+        )}
       </span>
-      {m.result && (
+      {/* Away */}
+      <span className="flex-1 min-w-0 flex items-center gap-2">
+        <Crest url={away.crest} name={away.name} slug={away.slug} size={20} />
+        <TeamLink nested slug={away.slug} className={nameCls(!m.isHome)}>
+          {away.name}
+        </TeamLink>
+      </span>
+      {/* Result badge — finished matches only */}
+      {!upcoming && m.result ? (
         <span
           className={`h-5 w-5 shrink-0 rounded text-[10px] font-bold flex items-center justify-center ${
             RESULT_STYLES[m.result] ?? 'bg-gray-200 text-gray-500'
@@ -171,33 +206,7 @@ function ResultRow({ m, dateLocale }: { m: TeamPerspectiveMatch; dateLocale: str
         >
           {m.result}
         </span>
-      )}
-    </Link>
-  );
-}
-
-function FixtureRow({ m, dateLocale }: { m: TeamPerspectiveMatch; dateLocale: string }) {
-  const dt = m.kickoffAt ? new Date(m.kickoffAt) : null;
-  const date = dt ? dt.toLocaleDateString(dateLocale, { day: '2-digit', month: 'short' }) : '';
-  const time = dt ? dt.toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' }) : '';
-  return (
-    <Link
-      href={matchHref(m)}
-      className="flex items-center gap-2 px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors"
-    >
-      <span className="w-11 shrink-0 text-[11px] text-gray-400">{date}</span>
-      <span className="w-6 shrink-0 text-[10px] font-semibold text-gray-400">
-        {m.isHome ? 'H' : 'A'}
-      </span>
-      <Crest url={resolveLogo(m.opponent?.logo)} name={m.opponent?.name} slug={m.opponent?.slug} size={18} />
-      <TeamLink
-        nested
-        slug={m.opponent?.slug}
-        className="flex-1 min-w-0 truncate text-sm text-gray-900 dark:text-white"
-      >
-        {m.opponent?.name ?? '—'}
-      </TeamLink>
-      <span className="shrink-0 text-[11px] font-medium text-gray-500 dark:text-gray-400">{time}</span>
+      ) : null}
     </Link>
   );
 }
@@ -912,6 +921,8 @@ export function TeamProfile({ slug }: { slug: string }) {
 
   const { team, currentSeason, seasons, form, recentResults, upcomingFixtures } = data;
   const logo = resolveLogo(team.logo, team.logoUrl);
+  // The profile team, for the home-vs-away results/fixtures rows.
+  const self: SelfTeam = { name: team.name, crest: logo, slug: team.slug };
   const honours = team.honours ?? [];
 
   const tabBtn = (key: Tab, label: string) => (
@@ -1008,7 +1019,7 @@ export function TeamProfile({ slug }: { slug: string }) {
               ) : (
                 <div className="divide-y divide-gray-100 dark:divide-gray-700">
                   {recentResults.map((m) => (
-                    <ResultRow key={m.slug} m={m} dateLocale={dateLocale} />
+                    <PerspectiveRow key={m.slug} m={m} self={self} dateLocale={dateLocale} />
                   ))}
                 </div>
               )}
@@ -1019,7 +1030,7 @@ export function TeamProfile({ slug }: { slug: string }) {
               ) : (
                 <div className="divide-y divide-gray-100 dark:divide-gray-700">
                   {upcomingFixtures.map((m) => (
-                    <FixtureRow key={m.slug} m={m} dateLocale={dateLocale} />
+                    <PerspectiveRow key={m.slug} m={m} self={self} dateLocale={dateLocale} upcoming />
                   ))}
                 </div>
               )}
