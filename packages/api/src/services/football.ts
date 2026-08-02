@@ -1067,6 +1067,71 @@ export async function getMatch(slug: string): Promise<Match> {
   return unwrap<Match>(data);
 }
 
+/* ------------------------------ Head to head ------------------------------ */
+
+export interface H2HTeamMini {
+  id: string;
+  slug?: string;
+  name: string;
+  shortName?: string;
+  logo?: string | { url?: string } | null;
+}
+
+export interface HeadToHeadSummary {
+  played: number;
+  teamAWins: number;
+  teamBWins: number;
+  draws: number;
+  teamAGoals: number;
+  teamBGoals: number;
+}
+
+export interface HeadToHeadMeeting {
+  id: string;
+  slug: string;
+  kickoffAt: string;
+  competition?: CompetitionRef | null;
+  homeTeam?: H2HTeamMini;
+  awayTeam?: H2HTeamMini;
+  homeScore?: number | null;
+  awayScore?: number | null;
+  winnerTeamId?: string | null;
+  decidedBy?: 'normal' | 'extra_time' | 'penalties' | null;
+}
+
+export interface HeadToHead {
+  teamA: H2HTeamMini;
+  teamB: H2HTeamMini;
+  summary: HeadToHeadSummary; // aggregate record, normalised to A vs B (FullTime only)
+  meetings: HeadToHeadMeeting[]; // recent-first past encounters
+}
+
+// GET /api/menyesha/matches/head-to-head?teamA=&teamB=&limit= -> the all-time
+// record + recent meetings between two teams. Accepts team id or slug.
+export async function getHeadToHead(
+  teamA: string,
+  teamB: string,
+  limit?: number
+): Promise<HeadToHead> {
+  const { data } = await api.get('/api/menyesha/matches/head-to-head', {
+    params: { teamA, teamB, ...(limit ? { limit } : {}) },
+  });
+  const p = unwrap<any>(data);
+  return {
+    teamA: p?.teamA ?? {},
+    teamB: p?.teamB ?? {},
+    summary: p?.summary ?? {
+      played: 0,
+      teamAWins: 0,
+      teamBWins: 0,
+      draws: 0,
+      teamAGoals: 0,
+      teamBGoals: 0,
+    },
+    meetings: p?.meetings ?? [],
+  };
+}
+
 // GET /api/menyesha/matches/:matchId/events -> timeline of goals, cards, subs.
 // Optionally filter by event type and/or team.
 export async function getMatchEvents(

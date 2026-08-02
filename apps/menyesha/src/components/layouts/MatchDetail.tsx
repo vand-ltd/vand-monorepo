@@ -6,11 +6,13 @@ import {
   getMatch,
   getMatchEvents,
   getMatchLineup,
+  getHeadToHead,
   normalizePosition,
   type Match,
   type MatchEvent,
   type MatchLineup,
   type LineupSlot,
+  type HeadToHeadMeeting,
 } from '@org/api';
 import { toPng } from 'html-to-image';
 import { useLocale, useTranslations } from 'next-intl';
@@ -284,6 +286,11 @@ function MatchCardDetail({
           <TeamBlock team={away} through={awayThrough} advancedLabel={t('advanced')} />
         </div>
       </div>
+
+      {/* Head-to-head record + recent meetings */}
+      {home?.id && away?.id && (
+        <HeadToHeadSection home={home} away={away} dateLocale={dateLocale} t={t} />
+      )}
 
       {/* Info / Events / Lineups tabs */}
       <MatchTabs
@@ -1557,5 +1564,137 @@ function TeamBlock({
     </Link>
   ) : (
     <div className={cls}>{inner}</div>
+  );
+}
+
+/* ------------------------------ Head to head ------------------------------ */
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function H2HCrest({ team, size = 24 }: { team: any; size?: number }) {
+  const url = crestUrl(team);
+  const px = `${size}px`;
+  return url ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={url}
+      alt=""
+      style={{ width: px, height: px }}
+      className="rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0"
+    />
+  ) : (
+    <span
+      style={{ width: px, height: px, fontSize: size * 0.36 }}
+      className="rounded-full bg-[#003153] text-white font-bold flex items-center justify-center shrink-0"
+    >
+      {initials(team)}
+    </span>
+  );
+}
+
+function H2HMeetingRow({ m, dateLocale }: { m: HeadToHeadMeeting; dateLocale: string }) {
+  const date = m.kickoffAt
+    ? new Date(m.kickoffAt).toLocaleDateString(dateLocale, {
+        day: '2-digit',
+        month: 'short',
+        year: '2-digit',
+      })
+    : '';
+  const done = m.homeScore != null && m.awayScore != null;
+  const compSlug = m.competition?.slug ?? 'match';
+  return (
+    <Link
+      href={`/football/${compSlug}/${m.slug}`}
+      className="flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+    >
+      <span className="w-16 shrink-0 text-[11px] text-gray-400">{date}</span>
+      <span className="flex-1 min-w-0 flex items-center justify-end gap-2">
+        <span className="truncate text-gray-900 dark:text-white">{teamName(m.homeTeam)}</span>
+        <H2HCrest team={m.homeTeam} size={20} />
+      </span>
+      <span className="shrink-0 w-12 text-center font-bold tabular-nums text-gray-900 dark:text-white">
+        {done ? `${m.homeScore}–${m.awayScore}` : '–'}
+      </span>
+      <span className="flex-1 min-w-0 flex items-center gap-2">
+        <H2HCrest team={m.awayTeam} size={20} />
+        <span className="truncate text-gray-900 dark:text-white">{teamName(m.awayTeam)}</span>
+      </span>
+    </Link>
+  );
+}
+
+function HeadToHeadSection({
+  home,
+  away,
+  dateLocale,
+  t,
+}: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  home: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  away: any;
+  dateLocale: string;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  const { data } = useQuery({
+    queryKey: ['h2h', home?.id, away?.id],
+    queryFn: () => getHeadToHead(home.id, away.id, 5),
+    enabled: !!home?.id && !!away?.id,
+  });
+  if (!data || data.summary.played === 0) return null;
+  const s = data.summary;
+  const total = Math.max(1, s.teamAWins + s.draws + s.teamBWins);
+  const pct = (n: number) => `${(n / total) * 100}%`;
+
+  return (
+    <div className="border-t border-gray-100 dark:border-gray-700 px-4 sm:px-6 py-5">
+      <h3 className="mb-4 text-center text-xs font-semibold uppercase tracking-wide text-gray-400">
+        {t('headToHead')}
+      </h3>
+
+      {/* Wins tally */}
+      <div className="mb-2 flex items-center justify-center gap-4 sm:gap-8">
+        <TeamLink slug={home?.slug} className="flex items-center gap-2 min-w-0">
+          <H2HCrest team={home} size={28} />
+          <span className="hidden sm:inline truncate max-w-[8rem] text-sm font-medium text-gray-900 dark:text-white">
+            {teamName(home)}
+          </span>
+        </TeamLink>
+        <div className="flex items-center gap-3 shrink-0">
+          <span className="text-2xl font-bold tabular-nums text-[#003153] dark:text-[#F59E0B]">{s.teamAWins}</span>
+          <span className="text-sm tabular-nums text-gray-400">{s.draws}</span>
+          <span className="text-2xl font-bold tabular-nums text-[#005F73] dark:text-white">{s.teamBWins}</span>
+        </div>
+        <TeamLink slug={away?.slug} className="flex items-center gap-2 min-w-0 flex-row-reverse">
+          <H2HCrest team={away} size={28} />
+          <span className="hidden sm:inline truncate max-w-[8rem] text-sm font-medium text-gray-900 dark:text-white">
+            {teamName(away)}
+          </span>
+        </TeamLink>
+      </div>
+
+      {/* Win distribution */}
+      <div className="flex h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+        <div style={{ width: pct(s.teamAWins) }} className="bg-[#003153] dark:bg-[#F59E0B]" />
+        <div style={{ width: pct(s.draws) }} className="bg-gray-400" />
+        <div style={{ width: pct(s.teamBWins) }} className="bg-[#005F73]" />
+      </div>
+      <div className="mt-1 flex justify-between text-[11px] text-gray-400">
+        <span>
+          {s.played} {t('played')}
+        </span>
+        <span>
+          {s.teamAGoals}&ndash;{s.teamBGoals} {t('goals')}
+        </span>
+      </div>
+
+      {/* Recent meetings */}
+      {data.meetings.length > 0 && (
+        <div className="mt-4 divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
+          {data.meetings.map((mtg) => (
+            <H2HMeetingRow key={mtg.id} m={mtg} dateLocale={dateLocale} />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
