@@ -272,8 +272,19 @@ export function leaderboardBody(size: CardSize, rows: LeaderVM[]): ReactNode {
 // Shared home-vs-away row list, used by both the team-fixtures and matchday cards.
 function fixtureRows(size: CardSize, rows: FixtureVM[]): ReactNode {
   const d = S[size];
+  const count = Math.max(rows.length, 1);
+  // Grow the rows (and crests/scores) when there are few matches so the card
+  // fills nicely; stay compact when it's full. The list is vertically centred.
+  const listH = size === 'story' ? 1280 : 560;
+  // Story is portrait (same 1080 width as square) so its rows have far more
+  // vertical room but the SAME horizontal room. Keep the crest/font caps close
+  // to square's so names keep width and don't wrap into cramped stacks.
+  const maxRowH = size === 'story' ? 150 : 132;
+  const rowH = Math.max(d.rowH, Math.min(maxRowH, Math.round(listH / count)));
+  const crestSize = Math.round(Math.min(rowH * 0.72, size === 'story' ? 108 : 96));
+  const nameFont = Math.round(Math.min(rowH * 0.38, size === 'story' ? 40 : 36));
+  const scoreFont = Math.round(Math.min(rowH * 0.44, size === 'story' ? 48 : 40));
   const dateW = size === 'story' ? 130 : 104;
-  const nameFont = d.cell + 2;
   const nameStyle = (emphasize: boolean, align: 'left' | 'right') =>
     ({
       minWidth: 0,
@@ -282,33 +293,36 @@ function fixtureRows(size: CardSize, rows: FixtureVM[]): ReactNode {
       fontWeight: emphasize ? 700 : 500,
       textTransform: 'uppercase',
       color: emphasize ? '#fff' : '#9fb3c8',
-      whiteSpace: 'nowrap',
-      overflow: 'hidden',
-      textOverflow: 'ellipsis',
+      // Wrap the full name instead of truncating it.
+      whiteSpace: 'normal',
+      overflowWrap: 'break-word',
+      wordBreak: 'break-word',
+      lineHeight: 1.1,
       textAlign: align,
     }) as const;
   const side = (name: string, crest: string | null, emphasize: boolean, align: 'left' | 'right') => (
-    <span style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 10, justifyContent: align === 'right' ? 'flex-end' : 'flex-start' }}>
+    <span style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 12, justifyContent: align === 'right' ? 'flex-end' : 'flex-start' }}>
       {align === 'right' && <span style={nameStyle(emphasize, 'right')}>{name}</span>}
-      <Circle url={crest} name={name} size={d.crest} />
+      <Circle url={crest} name={name} size={crestSize} />
       {align === 'left' && <span style={nameStyle(emphasize, 'left')}>{name}</span>}
     </span>
   );
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, justifyContent: 'center' }}>
       {rows.map((r) => (
         <div
           key={r.id}
-          style={{ display: 'flex', alignItems: 'center', gap: 10, height: d.rowH, flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.07)' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: rowH, flexShrink: 0, paddingTop: 6, paddingBottom: 6, borderTop: '1px solid rgba(255,255,255,0.07)' }}
         >
           <span style={{ width: dateW, fontSize: d.colH, color: '#9fb3c8', whiteSpace: 'nowrap' }}>{r.date}</span>
           {side(r.homeName, r.homeCrest, r.emphasize === 'home', 'right')}
           <span
             style={{
-              width: size === 'story' ? 118 : 96,
+              width: size === 'story' ? 124 : 112,
               textAlign: 'center',
               fontFamily: DISPLAY,
-              fontSize: d.cell,
+              // Time strings are longer than a score, so render them smaller.
+              fontSize: r.score ? scoreFont : Math.round(scoreFont * 0.6),
               fontWeight: 700,
               color: r.score ? '#fff' : '#F59E0B',
               whiteSpace: 'nowrap',
@@ -331,7 +345,7 @@ export function fixturesBody(
 ): ReactNode {
   const d = S[size];
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: size === 'story' ? 24 : 16 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, gap: size === 'story' ? 24 : 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
         <Circle url={team.crest} name={team.name} size={d.photo} />
         <span style={{ fontFamily: DISPLAY, fontSize: d.title * 0.62, fontWeight: 700, textTransform: 'uppercase', color: '#fff' }}>

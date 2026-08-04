@@ -27,7 +27,7 @@ const RW_KEYWORDS = [
 
 // Match slugs are "home-vs-away-date"; season slugs (e.g. "2026-2027") are not.
 const isMatchSlug = (s: string) => s.includes('-vs-');
-const MATCH_TABS = ['info', 'events', 'lineups'] as const;
+const MATCH_TABS = ['info', 'events', 'lineups', 'h2h'] as const;
 type MatchTab = (typeof MATCH_TABS)[number];
 const asMatchTab = (t: string): MatchTab => (MATCH_TABS as readonly string[]).includes(t) ? (t as MatchTab) : 'info';
 
@@ -82,7 +82,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const scored =
       ['FullTime', 'Live', 'HalfTime'].includes(m.status) && m.homeScore != null && m.awayScore != null;
     const tabName = asMatchTab(tab);
-    const tabLabel = tabName[0].toUpperCase() + tabName.slice(1);
+    const tabLabel =
+      tabName === 'h2h' ? 'Head to Head' : tabName[0].toUpperCase() + tabName.slice(1);
     const title = `${home} vs ${away}${scored ? ` ${m.homeScore}-${m.awayScore}` : ''} — ${tabLabel} | ${comp} | Rwanda Football`;
     const description = `${home} vs ${away} ${tabName} — ${comp} in Rwanda. Lineups, match events, scores and stats on Menyesha.`;
     return {

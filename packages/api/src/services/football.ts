@@ -1128,7 +1128,12 @@ export async function getHeadToHead(
       teamAGoals: 0,
       teamBGoals: 0,
     },
-    meetings: p?.meetings ?? [],
+    // The competition arrives nested under season.competition — lift it to a
+    // top-level `competition` so consumers (grouping, match links) can use it.
+    meetings: (p?.meetings ?? []).map((mtg: any) => ({
+      ...mtg,
+      competition: mtg?.competition ?? mtg?.season?.competition ?? null,
+    })),
   };
 }
 

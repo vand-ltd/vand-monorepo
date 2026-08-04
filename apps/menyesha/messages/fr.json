@@ -503,7 +503,9 @@
     "allRounds": "Toutes les journées",
     "knockout": "Phase à élimination",
     "headToHead": "Face à face",
-    "played": "Joués"
+    "played": "Joués",
+    "h2h": "Face à face",
+    "noMeetings": "Aucune rencontre précédente entre ces équipes."
   },
   "advertisePage": {
     "title": "Faire de la publicité sur Menyesha",

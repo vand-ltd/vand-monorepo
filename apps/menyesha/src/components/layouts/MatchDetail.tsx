@@ -92,7 +92,7 @@ function WhistleIcon({ className }: { className?: string }) {
   );
 }
 
-type MatchTab = 'info' | 'events' | 'lineups';
+type MatchTab = 'info' | 'h2h' | 'events' | 'lineups';
 
 export function MatchDetail({
   slug,
@@ -288,12 +288,7 @@ function MatchCardDetail({
         </div>
       </div>
 
-      {/* Head-to-head record + recent meetings */}
-      {home?.id && away?.id && (
-        <HeadToHeadSection home={home} away={away} dateLocale={dateLocale} t={t} />
-      )}
-
-      {/* Info / Events / Lineups tabs */}
+      {/* Info / Events / Lineups / H2H tabs */}
       <MatchTabs
         m={m}
         home={home}
@@ -345,7 +340,7 @@ function MatchTabs({
   initialAwayLineup?: MatchLineup | null;
 }) {
   const tab = activeTab;
-  const tabs: MatchTab[] = ['info', 'events', 'lineups'];
+  const tabs: MatchTab[] = ['info', 'events', 'lineups', 'h2h'];
 
   return (
     <div className="border-t border-gray-100 dark:border-gray-700">
@@ -393,6 +388,7 @@ function MatchTabs({
             initialEvents={initialEvents}
           />
         )}
+        {tab === 'h2h' && <HeadToHeadSection home={home} away={away} dateLocale={dateLocale} t={t} />}
       </div>
     </div>
   );
@@ -1636,22 +1632,43 @@ function HeadToHeadSection({
   dateLocale: string;
   t: ReturnType<typeof useTranslations>;
 }) {
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['h2h', home?.id, away?.id],
     queryFn: () => getHeadToHead(home.id, away.id, 5),
     enabled: !!home?.id && !!away?.id,
   });
-  if (!data || data.summary.played === 0) return null;
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-8">
+        <Loader2 className="h-6 w-6 animate-spin text-[#003153] dark:text-[#F59E0B]" />
+      </div>
+    );
+  }
+  if (!data || data.summary.played === 0) {
+    return (
+      <p className="py-6 text-center text-sm text-gray-500 dark:text-gray-400">{t('noMeetings')}</p>
+    );
+  }
   const s = data.summary;
   const total = Math.max(1, s.teamAWins + s.draws + s.teamBWins);
   const pct = (n: number) => `${(n / total) * 100}%`;
 
-  return (
-    <div className="border-t border-gray-100 dark:border-gray-700 px-4 sm:px-6 py-5">
-      <h3 className="mb-4 text-center text-xs font-semibold uppercase tracking-wide text-gray-400">
-        {t('headToHead')}
-      </h3>
+  // Group the past meetings by competition.
+  const compGroups: { name: string; meetings: typeof data.meetings }[] = [];
+  const compIndex = new Map<string, number>();
+  for (const mtg of data.meetings) {
+    const key = mtg.competition?.slug ?? mtg.competition?.name ?? 'other';
+    const name = mtg.competition?.name ?? 'Other';
+    const at = compIndex.get(key);
+    if (at != null) compGroups[at].meetings.push(mtg);
+    else {
+      compIndex.set(key, compGroups.length);
+      compGroups.push({ name, meetings: [mtg] });
+    }
+  }
 
+  return (
+    <div>
       {/* Wins tally */}
       <div className="mb-2 flex items-center justify-center gap-4 sm:gap-8">
         <TeamLink slug={home?.slug} className="flex items-center gap-2 min-w-0">
@@ -1688,11 +1705,20 @@ function HeadToHeadSection({
         </span>
       </div>
 
-      {/* Recent meetings */}
-      {data.meetings.length > 0 && (
-        <div className="mt-4 divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
-          {data.meetings.map((mtg) => (
-            <H2HMeetingRow key={mtg.id} m={mtg} dateLocale={dateLocale} />
+      {/* Past meetings, grouped by competition */}
+      {compGroups.length > 0 && (
+        <div className="mt-4 space-y-4">
+          {compGroups.map((g, i) => (
+            <div key={i}>
+              <h4 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                {g.name}
+              </h4>
+              <div className="divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
+                {g.meetings.map((mtg) => (
+                  <H2HMeetingRow key={mtg.id} m={mtg} dateLocale={dateLocale} />
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       )}

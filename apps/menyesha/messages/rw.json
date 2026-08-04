@@ -503,7 +503,9 @@
     "allRounds": "All matchdays",
     "knockout": "Knockout",
     "headToHead": "Head to head",
-    "played": "Played"
+    "played": "Played",
+    "h2h": "H2H",
+    "noMeetings": "No previous meetings between these teams."
   },
   "advertisePage": {
     "title": "Kwamamaza kuri Menyesha",
