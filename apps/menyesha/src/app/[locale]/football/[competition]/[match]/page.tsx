@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react';
 import { MatchDetail } from '@/components/layouts/MatchDetail';
 import { FootballResultsBoard } from '@/components/layouts/FootballResultsBoard';
 import { ssrMatchBundle } from '@/lib/matchSSR';
+import { localeAlternates } from '@/lib/seo';
 
 // /football/<competition>/<match-slug>  -> match detail  (slug contains "-vs-")
 // /football/<competition>/<season-slug> -> that competition's season
@@ -66,7 +67,8 @@ async function fetchCompetitionName(slug: string): Promise<string | null> {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { competition, match } = await params;
+  const { locale, competition, match } = await params;
+  const alternates = localeAlternates(locale, `football/${competition}/${match}`);
 
   // Competition season overview
   if (!isMatchSlug(match)) {
@@ -77,6 +79,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       keywords: RW_KEYWORDS,
+      alternates,
       openGraph: { title, description, type: 'website' },
       twitter: { card: 'summary_large_image', title, description },
     };
@@ -84,7 +87,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   // Match detail
   const m = await fetchMatch(match);
-  if (!m) return { title: 'Match — Rwanda Football' };
+  if (!m) return { title: 'Match — Rwanda Football', alternates };
   const home = m.homeTeam?.name ?? 'Home';
   const away = m.awayTeam?.name ?? 'Away';
   const comp = m.season?.competition?.name ?? 'Rwanda Football';
@@ -102,6 +105,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     description,
     keywords: RW_KEYWORDS,
+    alternates,
     openGraph: { title, description, type: 'article' },
     twitter: { card: 'summary_large_image', title, description },
   };

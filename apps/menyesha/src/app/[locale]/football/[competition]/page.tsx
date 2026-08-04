@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { FootballResultsBoard } from '@/components/layouts/FootballResultsBoard';
+import { localeAlternates } from '@/lib/seo';
 
 // First segment after /football:
 //   YYYY-MM-DD    -> all competitions on that day
@@ -56,7 +57,8 @@ async function fetchCompetitionName(slug: string): Promise<string | null> {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { competition } = await params;
+  const { locale, competition } = await params;
+  const alternates = localeAlternates(locale, `football/${competition}`);
 
   // All-competitions view for a day
   if (DATE_RE.test(competition)) {
@@ -71,6 +73,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       keywords: RW_KEYWORDS,
+      alternates,
       openGraph: { title, description, type: 'website' },
       twitter: { card: 'summary_large_image', title, description },
     };
@@ -84,6 +87,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     description,
     keywords: RW_KEYWORDS,
+    alternates,
     openGraph: { title, description, type: 'website' },
     twitter: { card: 'summary_large_image', title, description },
   };

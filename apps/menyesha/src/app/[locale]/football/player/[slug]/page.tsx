@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { PlayerProfile } from '@/components/layouts/PlayerProfile';
+import { localeAlternates } from '@/lib/seo';
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
 
@@ -37,7 +38,8 @@ async function fetchPlayer(slug: string): Promise<any | null> {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
+  const { locale, slug } = await params;
+  const alternates = localeAlternates(locale, `football/player/${slug}`);
   const data = await fetchPlayer(slug);
   const p = data?.player;
   const name = p?.fullName ?? pretty(slug);
@@ -58,6 +60,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     description,
     keywords: RW_KEYWORDS,
+    alternates,
     openGraph: {
       title,
       description,

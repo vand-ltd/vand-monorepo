@@ -202,6 +202,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
               lastModified: new Date(s.updatedAt || now),
               changeFrequency: 'daily',
               priority: 0.7,
+              alternates: alternatesFor(`football/${compSlug}/${seasonSlug}`),
             });
           }
         }
@@ -223,6 +224,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 lastModified: new Date(m.updatedAt || m.kickoffAt || now),
                 changeFrequency: 'daily',
                 priority: 0.6,
+                alternates: alternatesFor(`football/${compSlug}/${matchSlug}`),
               });
             }
           }
@@ -236,6 +238,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             lastModified: now,
             changeFrequency: 'weekly',
             priority: 0.5,
+            alternates: alternatesFor(`football/${date}`),
           });
         }
       }
@@ -273,6 +276,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             lastModified: new Date(p.updatedAt || now),
             changeFrequency: 'weekly',
             priority: 0.5,
+            alternates: alternatesFor(`football/player/${p.slug}`),
           });
         }
       }
@@ -280,6 +284,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     } while (page <= totalPages && page <= 50); // hard stop: 50 pages = 10k players
   } catch {
     // ignore
+  }
+
+  // Team profiles: /football/team/<slug> — one list call, slugs are locale-independent.
+  try {
+    const res = await fetch(`${API_URL}/api/menyesha/teams`, {
+      headers: { 'Content-Type': 'application/json', Origin: SITE_URL },
+      next: { revalidate: 3600 },
+    });
+    if (res.ok) {
+      const json = await res.json();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const teams: any[] = json.data?.data ?? json.data ?? [];
+      for (const team of teams) {
+        if (!team.slug) continue;
+        for (const locale of locales) {
+          entries.push({
+            url: `${SITE_URL}/${locale}/football/team/${team.slug}`,
+            lastModified: new Date(team.updatedAt || now),
+            changeFrequency: 'weekly',
+            priority: 0.5,
+            alternates: alternatesFor(`football/team/${team.slug}`),
+          });
+        }
+      }
+    }
+  } catch {
+    // ignore — team pages just won't be listed this build
   }
 
   return entries;

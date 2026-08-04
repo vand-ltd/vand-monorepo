@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react';
 import { MatchDetail } from '@/components/layouts/MatchDetail';
 import { FootballResultsBoard } from '@/components/layouts/FootballResultsBoard';
 import { ssrMatchBundle } from '@/lib/matchSSR';
+import { localeAlternates } from '@/lib/seo';
 
 // /football/<competition>/<match-slug>/<tab>  -> match detail tab (info|events|lineups)
 // /football/<competition>/<season-slug>/<tab> -> that competition's season (fixtures|results|…)
@@ -70,12 +71,15 @@ async function fetchCompetitionName(slug: string): Promise<string | null> {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { competition, match, tab } = await params;
+  const { locale, competition, match, tab } = await params;
+  // Canonical drops the tab segment: the info/events/lineups/h2h tabs are near-
+  // duplicates of one page, so they all collapse onto the base match/season URL.
+  const alternates = localeAlternates(locale, `football/${competition}/${match}`);
 
   // Match detail tab
   if (isMatchSlug(match)) {
     const m = await fetchMatch(match);
-    if (!m) return { title: 'Match — Rwanda Football' };
+    if (!m) return { title: 'Match — Rwanda Football', alternates };
     const home = m.homeTeam?.name ?? 'Home';
     const away = m.awayTeam?.name ?? 'Away';
     const comp = m.season?.competition?.name ?? 'Rwanda Football';
@@ -90,6 +94,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       keywords: RW_KEYWORDS,
+      alternates,
       openGraph: { title, description, type: 'article' },
       twitter: { card: 'summary_large_image', title, description },
     };
@@ -104,6 +109,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     description,
     keywords: RW_KEYWORDS,
+    alternates,
     openGraph: { title, description, type: 'website' },
     twitter: { card: 'summary_large_image', title, description },
   };
