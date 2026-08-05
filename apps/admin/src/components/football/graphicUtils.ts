@@ -42,16 +42,24 @@ export async function downloadCardPng(node: HTMLElement, filename: string): Prom
     canShare?: (data: ShareData) => boolean;
     share?: (data: ShareData) => Promise<void>;
   };
-  try {
-    const file = new File([blob], filename, { type: 'image/png' });
-    if (nav.share && nav.canShare?.({ files: [file] })) {
-      await nav.share({ files: [file] });
-      return;
+  // Only route through the share sheet on touch devices (phones/tablets), where
+  // the <a download> click is unreliable. Desktop — even Chrome, which supports
+  // file sharing — should just download the file, not pop a share dialog.
+  const isTouch =
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(pointer: coarse)').matches === true;
+  if (isTouch) {
+    try {
+      const file = new File([blob], filename, { type: 'image/png' });
+      if (nav.share && nav.canShare?.({ files: [file] })) {
+        await nav.share({ files: [file] });
+        return;
+      }
+    } catch (err) {
+      // User dismissing the share sheet is not an error worth falling back on.
+      if ((err as Error | null)?.name === 'AbortError') return;
+      // Any other share failure → fall through to the download path below.
     }
-  } catch (err) {
-    // User dismissing the share sheet is not an error worth falling back on.
-    if ((err as Error | null)?.name === 'AbortError') return;
-    // Any other share failure → fall through to the download path below.
   }
 
   const objectUrl = URL.createObjectURL(blob);
