@@ -232,7 +232,7 @@ export function standingsBody(size: CardSize, groups: StandingGroupVM[]): ReactN
     if (!g.rows.some((r) => r.qualified === true)) return null;
     const label = g.advancesCount
       ? g.bestLosersCount
-        ? `Top ${g.advancesCount} + ${g.bestLosersCount} best 3rd advance`
+        ? 'Next Stage'
         : `Top ${g.advancesCount} advance`
       : 'Qualifies for knockout stage';
     const anyBestLoser = g.rows.some((r) => r.qualifiedAs === 'bestLoser');
@@ -248,7 +248,7 @@ export function standingsBody(size: CardSize, groups: StandingGroupVM[]): ReactN
         {anyBestLoser && (
           <span style={{ display: 'flex', alignItems: 'center', gap: 8, textTransform: 'uppercase', letterSpacing: 1 }}>
             {swatch('#86efac')}
-            Best 3rd-placed
+            Best Loser
           </span>
         )}
       </div>
