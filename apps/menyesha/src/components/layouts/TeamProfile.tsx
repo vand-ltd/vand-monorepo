@@ -19,6 +19,7 @@ import {
 import { useLocale, useTranslations } from 'next-intl';
 import { Link, useRouter } from '@/i18n/navigation';
 import { TeamLink } from '@/components/football/TeamLink';
+import { useTeamSlugMap } from '@/lib/teamSlugs';
 import {
   Loader2,
   ArrowLeft,
@@ -311,9 +312,20 @@ function outcomeStyle(outcome: string): string {
   const o = outcome.toLowerCase();
   if (o.startsWith('winner')) return 'bg-[#F59E0B] text-gray-900';
   if (o.startsWith('runner')) return 'bg-gray-300 text-gray-800 dark:bg-gray-500 dark:text-white';
-  if (o.startsWith('in progress')) return 'bg-blue-500 text-white';
   if (o.startsWith('eliminated')) return 'bg-red-500/90 text-white';
+  if (o.startsWith('advanced')) return 'bg-green-500 text-white';
+  if (o.includes('in progress')) return 'bg-blue-500 text-white';
   return 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-200';
+}
+
+// Accent-bar + position colours for a qualifying standings row, by HOW the team
+// qualified: direct top-N = solid green, best 3rd-placed = a lighter green.
+// Falls back to the direct look for older payloads without `qualifiedAs`.
+function qualifyClasses(r: StandingRow): { bar: string; text: string } | null {
+  const how = r.qualifiedAs ?? (r.qualified === true ? 'group' : null);
+  if (how === 'group') return { bar: 'border-l-green-500', text: 'text-green-600 dark:text-green-400' };
+  if (how === 'bestLoser') return { bar: 'border-l-green-300', text: 'text-green-500 dark:text-green-300' };
+  return null;
 }
 
 // One expandable cup season → lazy-loads and renders the group + knockout run.
@@ -378,7 +390,13 @@ function CupSeasonRow({
                   <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-400">
                     {data.group.group?.name}
                   </h4>
-                  <GroupTable rows={data.group.table} teamId={teamId} />
+                  <GroupTable
+                    rows={data.group.table}
+                    teamId={teamId}
+                    advancesCount={data.group.advancesCount}
+                    bestLosersCount={data.group.bestLosersCount}
+                    t={t}
+                  />
                 </div>
               )}
               {data.knockout.length > 0 && (
@@ -420,37 +438,63 @@ function CupSeasonRow({
   );
 }
 
-// Compact group standings, the team's row highlighted.
-function GroupTable({ rows, teamId }: { rows: StandingRow[]; teamId: string }) {
+// Compact group standings, the team's row highlighted, with a green band on the
+// positions that advance to the knockout stage.
+function GroupTable({
+  rows,
+  teamId,
+  advancesCount,
+  bestLosersCount,
+  t,
+}: {
+  rows: StandingRow[];
+  teamId: string;
+  advancesCount?: number | null;
+  bestLosersCount?: number | null;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  const { resolveSlug } = useTeamSlugMap();
   const td = 'px-2 py-2 text-center tabular-nums text-gray-600 dark:text-gray-300';
+  const anyQualified = rows.some((r) => r.qualified === true);
+  const anyBestLoser = rows.some((r) => r.qualifiedAs === 'bestLoser');
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-[10px] uppercase tracking-wide text-gray-400 border-b border-gray-100 dark:border-gray-700">
-            <th className="px-2 py-2 text-center font-medium w-8">#</th>
-            <th className="px-2 py-2 text-left font-medium">Team</th>
-            <th className="px-2 py-2 text-center font-medium">P</th>
-            <th className="px-2 py-2 text-center font-medium">GD</th>
-            <th className="px-2 py-2 text-center font-medium">Pts</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => {
-            const isTeam = r.team?.id === teamId;
-            return (
-              <tr
-                key={r.team?.id ?? r.position}
-                className={`border-b border-gray-100 dark:border-gray-700 last:border-0 ${
-                  isTeam ? 'bg-[#003153]/5 dark:bg-[#F59E0B]/10' : ''
-                }`}
-              >
-                <td className="px-2 py-2 text-center text-gray-400">{r.position}</td>
-                <td className="px-2 py-2">
+    <div className="space-y-1.5">
+      <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-[10px] uppercase tracking-wide text-gray-400 border-b border-gray-100 dark:border-gray-700">
+              <th className="px-2 py-2 text-center font-medium w-8">#</th>
+              <th className="px-2 py-2 text-left font-medium">Team</th>
+              <th className="px-2 py-2 text-center font-medium">P</th>
+              <th className="px-2 py-2 text-center font-medium">GD</th>
+              <th className="px-2 py-2 text-center font-medium">Pts</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => {
+              const isTeam = r.team?.id === teamId;
+              // A left accent bar marks the qualifying positions; it composes with
+              // the team-row highlight instead of replacing it.
+              const q = qualifyClasses(r);
+              return (
+                <tr
+                  key={r.team?.id ?? r.position}
+                  className={`border-b border-l-[3px] border-gray-100 dark:border-gray-700 last:border-b-0 ${
+                    q ? q.bar : 'border-l-transparent'
+                  } ${isTeam ? 'bg-[#003153]/5 dark:bg-[#F59E0B]/10' : ''}`}
+                >
+                  <td
+                    className={`px-2 py-2 text-center ${
+                      q ? `font-semibold ${q.text}` : 'text-gray-400'
+                    }`}
+                  >
+                    {r.position}
+                  </td>
+                  <td className="px-2 py-2">
                   <span className="flex items-center gap-2 min-w-0">
-                    <Crest url={resolveLogo(r.team?.logo, r.team?.logoUrl)} name={r.team?.name} slug={r.team?.slug} size={18} />
+                    <Crest url={resolveLogo(r.team?.logo, r.team?.logoUrl)} name={r.team?.name} slug={resolveSlug(r.team)} size={18} />
                     <TeamLink
-                      slug={r.team?.slug}
+                      slug={resolveSlug(r.team)}
                       className={`min-w-0 flex-1 truncate ${
                         isTeam
                           ? 'font-bold text-[#003153] dark:text-[#F59E0B]'
@@ -461,13 +505,32 @@ function GroupTable({ rows, teamId }: { rows: StandingRow[]; teamId: string }) {
                     </TeamLink>
                   </span>
                 </td>
-                <td className={td}>{r.goalDifference > 0 ? `+${r.goalDifference}` : r.goalDifference}</td>
-                <td className="px-2 py-2 text-center font-bold text-gray-900 dark:text-white">{r.points}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                  <td className={td}>{r.goalDifference > 0 ? `+${r.goalDifference}` : r.goalDifference}</td>
+                  <td className="px-2 py-2 text-center font-bold text-gray-900 dark:text-white">{r.points}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      {anyQualified && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-gray-400">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-2.5 w-1 rounded-sm bg-green-500" />
+            {advancesCount
+              ? bestLosersCount
+                ? t('topNPlusBestLosers', { count: advancesCount, best: bestLosersCount })
+                : t('topNAdvance', { count: advancesCount })
+              : t('qualifiesForKnockout')}
+          </span>
+          {anyBestLoser && (
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-2.5 w-1 rounded-sm bg-green-300" />
+              {t('bestThirdPlaced')}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -628,6 +691,7 @@ function StandingsWidget({
   teamId: string;
   t: ReturnType<typeof useTranslations>;
 }) {
+  const { resolveSlug } = useTeamSlugMap();
   const { data, isLoading } = useQuery({
     queryKey: ['team-standings', seasonId],
     queryFn: () => getStandings(seasonId, { live: true }),
@@ -691,9 +755,9 @@ function StandingsWidget({
                   <td className="px-2 py-2 text-center text-gray-400">{r.position}</td>
                   <td className="px-2 py-2">
                     <span className="flex items-center gap-2 min-w-0">
-                      <Crest url={resolveLogo(r.team?.logo, r.team?.logoUrl)} name={r.team?.name} slug={r.team?.slug} size={18} />
+                      <Crest url={resolveLogo(r.team?.logo, r.team?.logoUrl)} name={r.team?.name} slug={resolveSlug(r.team)} size={18} />
                       <TeamLink
-                        slug={r.team?.slug}
+                        slug={resolveSlug(r.team)}
                         className={`truncate ${
                           isTeam
                             ? 'font-bold text-[#003153] dark:text-[#F59E0B]'

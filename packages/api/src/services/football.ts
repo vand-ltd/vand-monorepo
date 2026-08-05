@@ -414,6 +414,7 @@ export interface StageGroup {
   stageId?: string;
   name: string;
   order?: number;
+  advancesCount?: number | null; // how many teams advance from this group
   teams?: Team[];
 }
 
@@ -423,6 +424,11 @@ export interface Stage {
   name: string;
   type: StageType;
   order?: number;
+  // Group-stage qualification rule (set once per stage). advancesPerGroup =
+  // auto-qualifiers per group; bestLosersCount = extra best 3rd-placed across
+  // all groups. Per-group advancesCount is an override for uneven groups.
+  advancesPerGroup?: number | null;
+  bestLosersCount?: number | null;
   groups?: StageGroup[];
 }
 
@@ -430,18 +436,28 @@ export interface StageInput {
   name: string;
   type: StageType;
   order?: number;
+  advancesPerGroup?: number;
+  bestLosersCount?: number;
 }
 
 export interface GroupInput {
   name: string;
   order?: number;
+  advancesCount?: number; // how many teams qualify from this group
   teamIds?: string[];
 }
 
 // Group rows may wrap the team ({ team: {...} }) like season entries do.
 function normalizeGroup(g: any): StageGroup {
   const teams = (g?.teams ?? []).map((r: any) => (r && r.team ? r.team : r)).filter((t: any) => t?.id);
-  return { id: g?.id, stageId: g?.stageId, name: g?.name, order: g?.order, teams };
+  return {
+    id: g?.id,
+    stageId: g?.stageId,
+    name: g?.name,
+    order: g?.order,
+    advancesCount: g?.advancesCount ?? null,
+    teams,
+  };
 }
 
 function normalizeStage(s: any): Stage {
@@ -451,6 +467,8 @@ function normalizeStage(s: any): Stage {
     name: s?.name,
     type: s?.type,
     order: s?.order,
+    advancesPerGroup: s?.advancesPerGroup ?? null,
+    bestLosersCount: s?.bestLosersCount ?? null,
     groups: (s?.groups ?? []).map(normalizeGroup),
   };
 }
@@ -473,10 +491,17 @@ export async function createGroupsBulk(
   return (unwrap<any[]>(data) ?? []).map(normalizeGroup);
 }
 
-// PATCH /api/menyesha/stages/:stageId -> rename / retype / reorder a stage.
+// PATCH /api/menyesha/stages/:stageId -> rename / retype / reorder a stage,
+// or set the group-stage qualification rule (advancesPerGroup / bestLosersCount).
 export async function updateStage(
   stageId: string,
-  payload: { name?: string; type?: StageType; order?: number }
+  payload: {
+    name?: string;
+    type?: StageType;
+    order?: number;
+    advancesPerGroup?: number | null;
+    bestLosersCount?: number | null;
+  }
 ): Promise<Stage> {
   const { data } = await api.patch(`/api/menyesha/stages/${stageId}`, payload);
   return normalizeStage(unwrap<any>(data));
@@ -498,6 +523,15 @@ export async function getSeasonStages(seasonId: string): Promise<Stage[]> {
 export async function getStageGroups(stageId: string): Promise<StageGroup[]> {
   const { data } = await api.get(`/api/menyesha/stages/${stageId}/groups`);
   return (unwrap<any[]>(data) ?? []).map(normalizeGroup);
+}
+
+// PATCH /api/menyesha/groups/:groupId -> rename / reorder / set how many advance.
+export async function updateGroup(
+  groupId: string,
+  payload: { name?: string; order?: number; advancesCount?: number | null }
+): Promise<StageGroup> {
+  const { data } = await api.patch(`/api/menyesha/groups/${groupId}`, payload);
+  return normalizeGroup(unwrap<any>(data));
 }
 
 export interface VenueInput {
@@ -620,6 +654,12 @@ export interface StandingRow {
   points: number;
   form?: string[]; // recent results, e.g. ['W','D','L']
   isLive?: boolean; // true (live=true only) when an in-progress match is moving this row
+  // Cup group rows: true when this position advances, false when it doesn't,
+  // null when the rule is unset. League rows leave this undefined.
+  qualified?: boolean | null;
+  // How the team qualified: 'group' = direct top-N (solid green), 'bestLoser' =
+  // best 3rd-placed (lighter shade), null = not qualified / rule unset.
+  qualifiedAs?: 'group' | 'bestLoser' | null;
 }
 
 export interface StandingsGroup {
@@ -628,6 +668,9 @@ export interface StandingsGroup {
     name: string;
     order?: number;
     stage?: { id: string; name: string; order?: number };
+    // Effective per-group cutoff, plus the extra best-3rd-placed slots (global).
+    advancesCount?: number | null;
+    bestLosersCount?: number | null;
   };
   standings: StandingRow[];
 }
@@ -806,9 +849,15 @@ export interface TeamSeasonJourney {
     position: number;
     row: StandingRow;
     table: StandingRow[];
+    advancesCount?: number | null; // effective per-group cutoff
+    bestLosersCount?: number | null; // extra best-3rd-placed slots (global)
+    qualified?: boolean | null; // did THIS team make the cut (null when rule unset)
+    qualifiedAs?: 'group' | 'bestLoser' | null; // how it qualified
+    complete?: boolean; // are all this group's matches played
   } | null;
   knockout: TeamJourneyKnockout[];
-  outcome: string; // e.g. "Winner", "Runner-up", "Eliminated in the Semi-final", "In progress", "Group stage"
+  outcome: string; // display label, e.g. "Winner", "Runner-up", "Eliminated in the Semi-final", "Advanced from group stage", "Eliminated in the group stage", "Group stage (in progress)"
+  eliminated?: boolean | null; // machine-readable: true=out, false=still in/won, null=unknown
 }
 
 // GET /api/menyesha/teams/:id/seasons/:seasonId/journey -> a cup-season drill-down
@@ -825,6 +874,7 @@ export async function getTeamSeasonJourney(
     group: p?.group ?? null,
     knockout: p?.knockout ?? [],
     outcome: p?.outcome ?? '',
+    eliminated: p?.eliminated ?? null,
   };
 }
 

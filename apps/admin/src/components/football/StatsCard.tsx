@@ -26,10 +26,14 @@ export interface StandingVM {
   lost: number;
   gd: number;
   points: number;
+  qualified?: boolean | null; // true → this position advances (green band)
+  qualifiedAs?: 'group' | 'bestLoser' | null; // direct vs best 3rd-placed shade
 }
 export interface StandingGroupVM {
   title?: string;
   rows: StandingVM[];
+  advancesCount?: number | null; // effective per-group cutoff (legend)
+  bestLosersCount?: number | null; // extra best-3rd-placed slots (legend)
 }
 export interface LeaderVM {
   rank: number;
@@ -183,20 +187,28 @@ export function standingsBody(size: CardSize, groups: StandingGroupVM[]): ReactN
   const table = (rows: StandingVM[]) => (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {head}
-      {rows.map((r) => (
+      {rows.map((r) => {
+        // How the team qualified → bar colour: direct = solid green, best
+        // 3rd-placed = a lighter green. Falls back to direct for older payloads.
+        const how = r.qualifiedAs ?? (r.qualified === true ? 'group' : null);
+        const qColor = how === 'group' ? '#22c55e' : how === 'bestLoser' ? '#86efac' : null;
+        return (
         <div
           key={r.position}
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: 12,
-            padding: '0 4px',
+            padding: '0 4px 0 0',
             height: d.rowH,
             flexShrink: 0,
             borderTop: '1px solid rgba(255,255,255,0.07)',
+            // Green accent bar on positions that advance to the knockout stage.
+            borderLeft: `4px solid ${qColor ?? 'transparent'}`,
+            paddingLeft: 8,
           }}
         >
-          <div style={{ width: 44, textAlign: 'center', color: '#9fb3c8', fontFamily: DISPLAY, fontWeight: 600, fontSize: d.cell }}>
+          <div style={{ width: 44, textAlign: 'center', color: qColor ?? '#9fb3c8', fontFamily: DISPLAY, fontWeight: qColor ? 700 : 600, fontSize: d.cell }}>
             {r.position}
           </div>
           <Circle url={r.crest} name={r.name} size={d.crest} />
@@ -210,9 +222,38 @@ export function standingsBody(size: CardSize, groups: StandingGroupVM[]): ReactN
           {statCol(r.gd > 0 ? `+${r.gd}` : r.gd)}
           {statCol(r.points, true)}
         </div>
-      ))}
+        );
+      })}
     </div>
   );
+
+  // Qualification legend, shown when a group marks qualifying positions.
+  const legend = (g: StandingGroupVM) => {
+    if (!g.rows.some((r) => r.qualified === true)) return null;
+    const label = g.advancesCount
+      ? g.bestLosersCount
+        ? `Top ${g.advancesCount} + ${g.bestLosersCount} best 3rd advance`
+        : `Top ${g.advancesCount} advance`
+      : 'Qualifies for knockout stage';
+    const anyBestLoser = g.rows.some((r) => r.qualifiedAs === 'bestLoser');
+    const swatch = (color: string) => (
+      <span style={{ display: 'inline-block', width: 4, height: 14, borderRadius: 2, background: color }} />
+    );
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, color: '#8aa0b4', fontSize: d.colH }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8, textTransform: 'uppercase', letterSpacing: 1 }}>
+          {swatch('#22c55e')}
+          {label}
+        </span>
+        {anyBestLoser && (
+          <span style={{ display: 'flex', alignItems: 'center', gap: 8, textTransform: 'uppercase', letterSpacing: 1 }}>
+            {swatch('#86efac')}
+            Best 3rd-placed
+          </span>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: size === 'story' ? 22 : 14 }}>
@@ -224,6 +265,7 @@ export function standingsBody(size: CardSize, groups: StandingGroupVM[]): ReactN
             </div>
           )}
           {table(g.rows)}
+          {legend(g)}
         </div>
       ))}
     </div>

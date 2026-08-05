@@ -46,15 +46,17 @@ function errMessage(error: any, fallback: string) {
   return Array.isArray(m) ? m.join(', ') : m;
 }
 
-type StageRow = { name: string; type: StageType; order: string };
-const emptyStage: StageRow = { name: '', type: 'Knockout', order: '' };
+// Group stages carry the qualification rule: advancesPerGroup = auto-qualifiers
+// per group, bestLosers = extra best 3rd-placed across all groups.
+type StageRow = { name: string; type: StageType; order: string; advancesPerGroup: string; bestLosers: string };
+const emptyStage: StageRow = { name: '', type: 'Knockout', order: '', advancesPerGroup: '', bestLosers: '' };
 
 // A typical cup structure — one click instead of typing four rows.
 const CUP_PRESET: StageRow[] = [
-  { name: 'Group Stage', type: 'Group', order: '' },
-  { name: 'Quarter-final', type: 'Knockout', order: '' },
-  { name: 'Semi-final', type: 'Knockout', order: '' },
-  { name: 'Final', type: 'Knockout', order: '' },
+  { name: 'Group Stage', type: 'Group', order: '', advancesPerGroup: '2', bestLosers: '' },
+  { name: 'Quarter-final', type: 'Knockout', order: '', advancesPerGroup: '', bestLosers: '' },
+  { name: 'Semi-final', type: 'Knockout', order: '', advancesPerGroup: '', bestLosers: '' },
+  { name: 'Final', type: 'Knockout', order: '', advancesPerGroup: '', bestLosers: '' },
 ];
 
 type GroupRow = { name: string; teamIds: string[] };
@@ -89,6 +91,13 @@ export function StagesTab({ seasonId, season }: { seasonId: string; season: Seas
         name: r.name.trim(),
         type: r.type,
         ...(r.order.trim() ? { order: Number(r.order) } : {}),
+        // The qualification rule only applies to group stages.
+        ...(r.type === 'Group' && r.advancesPerGroup.trim()
+          ? { advancesPerGroup: Number(r.advancesPerGroup) }
+          : {}),
+        ...(r.type === 'Group' && r.bestLosers.trim()
+          ? { bestLosersCount: Number(r.bestLosers) }
+          : {}),
       }));
       return createStagesBulk(seasonId, { stages: payload });
     },
@@ -112,7 +121,7 @@ export function StagesTab({ seasonId, season }: { seasonId: string; season: Seas
   const [editRow, setEditRow] = useState<StageRow>({ ...emptyStage });
 
   const updateStageMut = useMutation({
-    mutationFn: (vars: { id: string; payload: { name?: string; type?: StageType; order?: number } }) =>
+    mutationFn: (vars: { id: string; payload: Parameters<typeof updateStage>[1] }) =>
       updateStage(vars.id, vars.payload),
     onSuccess: () => {
       toast.success('Stage updated');
@@ -237,15 +246,48 @@ export function StagesTab({ seasonId, season }: { seasonId: string; season: Seas
                       </option>
                     ))}
                   </select>
-                  <input
-                    type="number"
-                    min="1"
-                    value={editRow.order}
-                    onChange={(e) => setEditRow((r) => ({ ...r, order: e.target.value }))}
-                    placeholder="Order"
-                    title="Order (leave blank to keep)"
-                    className={`${inputClass} w-20 py-1 text-center`}
-                  />
+                  <label className="flex items-center gap-1 text-[11px] text-gray-400">
+                    <span>Order</span>
+                    <input
+                      type="number"
+                      min="1"
+                      value={editRow.order}
+                      onChange={(e) => setEditRow((r) => ({ ...r, order: e.target.value }))}
+                      placeholder="Auto"
+                      title="Order (leave blank to keep)"
+                      className={`${inputClass} w-16 py-1 text-center`}
+                    />
+                  </label>
+                  {editRow.type === 'Group' && (
+                    <>
+                      <label
+                        className="flex items-center gap-1 text-[11px] text-gray-400"
+                        title="How many teams advance from each group"
+                      >
+                        <span>Adv</span>
+                        <input
+                          type="number"
+                          min="1"
+                          value={editRow.advancesPerGroup}
+                          onChange={(e) => setEditRow((r) => ({ ...r, advancesPerGroup: e.target.value }))}
+                          className={`${inputClass} w-16 py-1 text-center`}
+                        />
+                      </label>
+                      <label
+                        className="flex items-center gap-1 text-[11px] text-gray-400"
+                        title="Extra best 3rd-placed teams that advance across all groups"
+                      >
+                        <span>+3rd</span>
+                        <input
+                          type="number"
+                          min="0"
+                          value={editRow.bestLosers}
+                          onChange={(e) => setEditRow((r) => ({ ...r, bestLosers: e.target.value }))}
+                          className={`${inputClass} w-16 py-1 text-center`}
+                        />
+                      </label>
+                    </>
+                  )}
                   <button
                     type="button"
                     disabled={!editRow.name.trim() || updateStageMut.isPending}
@@ -256,6 +298,17 @@ export function StagesTab({ seasonId, season }: { seasonId: string; season: Seas
                           name: editRow.name.trim(),
                           type: editRow.type,
                           ...(editRow.order.trim() ? { order: Number(editRow.order) } : {}),
+                          // Clear the rule when blanked; only send for group stages.
+                          ...(editRow.type === 'Group'
+                            ? {
+                                advancesPerGroup: editRow.advancesPerGroup.trim()
+                                  ? Number(editRow.advancesPerGroup)
+                                  : null,
+                                bestLosersCount: editRow.bestLosers.trim()
+                                  ? Number(editRow.bestLosers)
+                                  : null,
+                              }
+                            : {}),
                         },
                       })
                     }
@@ -291,9 +344,50 @@ export function StagesTab({ seasonId, season }: { seasonId: string; season: Seas
                     {s.type}
                   </span>
                   {s.type === 'Group' && (
-                    <span className="shrink-0 text-[11px] text-gray-400">
-                      {(s.groups ?? []).length} groups
-                    </span>
+                    <div className="flex shrink-0 items-center gap-1.5 text-[11px] text-gray-400">
+                      <span>{(s.groups ?? []).length} groups</span>
+                      <span className="text-gray-300 dark:text-gray-600">·</span>
+                      <label
+                        className="flex items-center gap-1"
+                        title="How many teams advance from each group"
+                      >
+                        <span>Adv</span>
+                        <input
+                          key={`adv-${s.id}-${s.advancesPerGroup ?? ''}`}
+                          type="number"
+                          min={1}
+                          defaultValue={s.advancesPerGroup ?? ''}
+                          onBlur={(e) => {
+                            const raw = e.target.value.trim();
+                            const next = raw === '' ? null : Number(raw);
+                            if (next !== (s.advancesPerGroup ?? null)) {
+                              updateStageMut.mutate({ id: s.id, payload: { advancesPerGroup: next } });
+                            }
+                          }}
+                          className={`${inputClass} w-12 py-0.5 text-center`}
+                        />
+                      </label>
+                      <label
+                        className="flex items-center gap-1"
+                        title="Extra best 3rd-placed teams that advance across all groups"
+                      >
+                        <span>+3rd</span>
+                        <input
+                          key={`bl-${s.id}-${s.bestLosersCount ?? ''}`}
+                          type="number"
+                          min={0}
+                          defaultValue={s.bestLosersCount ?? ''}
+                          onBlur={(e) => {
+                            const raw = e.target.value.trim();
+                            const next = raw === '' ? null : Number(raw);
+                            if (next !== (s.bestLosersCount ?? null)) {
+                              updateStageMut.mutate({ id: s.id, payload: { bestLosersCount: next } });
+                            }
+                          }}
+                          className={`${inputClass} w-12 py-0.5 text-center`}
+                        />
+                      </label>
+                    </div>
                   )}
                   {/* Reorder without thinking about numbers */}
                   <button
@@ -322,6 +416,8 @@ export function StagesTab({ seasonId, season }: { seasonId: string; season: Seas
                         name: s.name,
                         type: s.type,
                         order: s.order != null ? String(s.order) : '',
+                        advancesPerGroup: s.advancesPerGroup != null ? String(s.advancesPerGroup) : '',
+                        bestLosers: s.bestLosersCount != null ? String(s.bestLosersCount) : '',
                       });
                     }}
                     title="Edit stage"
@@ -386,6 +482,36 @@ export function StagesTab({ seasonId, season }: { seasonId: string; season: Seas
                 title="Order — leave blank to append after existing stages"
                 className={`${inputClass} w-20 text-center`}
               />
+              {row.type === 'Group' && (
+                <>
+                  <input
+                    type="number"
+                    min="1"
+                    value={row.advancesPerGroup}
+                    onChange={(e) =>
+                      setStageRows((rs) =>
+                        rs.map((r, j) => (j === i ? { ...r, advancesPerGroup: e.target.value } : r))
+                      )
+                    }
+                    placeholder="Adv."
+                    title="How many teams advance from each group"
+                    className={`${inputClass} w-20 text-center`}
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    value={row.bestLosers}
+                    onChange={(e) =>
+                      setStageRows((rs) =>
+                        rs.map((r, j) => (j === i ? { ...r, bestLosers: e.target.value } : r))
+                      )
+                    }
+                    placeholder="Best 3rd"
+                    title="Extra best 3rd-placed teams that advance across all groups"
+                    className={`${inputClass} w-24 text-center`}
+                  />
+                </>
+              )}
               <button
                 type="button"
                 onClick={() => setStageRows((rs) => (rs.length === 1 ? rs : rs.filter((_, j) => j !== i)))}

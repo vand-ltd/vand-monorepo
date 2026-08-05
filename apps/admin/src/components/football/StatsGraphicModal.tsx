@@ -106,10 +106,17 @@ export function StatsGraphicModal({
           lost: r.lost,
           gd: r.goalDifference,
           points: r.points,
+          qualified: r.qualified,
+          qualifiedAs: r.qualifiedAs,
         };
       };
       const groups: StandingGroupVM[] = res.groups.length
-        ? res.groups.map((g) => ({ title: g.group?.name, rows: g.standings.map(toVM) }))
+        ? res.groups.map((g) => ({
+            title: g.group?.name,
+            advancesCount: g.group?.advancesCount,
+            bestLosersCount: g.group?.bestLosersCount,
+            rows: g.standings.map(toVM),
+          }))
         : [{ rows: res.standings.map(toVM) }];
       return { kind: 'standings' as const, groups };
     }

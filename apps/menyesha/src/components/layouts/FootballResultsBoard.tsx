@@ -24,10 +24,12 @@ import {
   ChevronUp,
   ArrowLeft,
   Calendar,
+  CalendarOff,
   RotateCcw,
 } from 'lucide-react';
 import { Link, useRouter } from '@/i18n/navigation';
 import { TeamLink } from '@/components/football/TeamLink';
+import { useTeamSlugMap } from '@/lib/teamSlugs';
 
 function teamName(t?: { name?: string; shortName?: string }): string {
   return t?.name ?? t?.shortName ?? 'TBD';
@@ -855,7 +857,15 @@ export function FootballResultsBoard({
       ) : groups.length === 0 ? (
         !competitionId && fallback.hasAny ? (
           <div className="space-y-8">
-            <p className="text-sm text-gray-500 dark:text-gray-400">{t('noMatchesToday')}</p>
+            <div className="flex items-center gap-4 rounded-2xl bg-gradient-to-br from-[#003153] to-[#005F73] px-5 py-5 text-white shadow-sm">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/10">
+                <CalendarOff className="h-6 w-6 text-[#F59E0B]" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-base font-bold sm:text-lg">{t('noMatchesTodayTitle')}</p>
+                <p className="mt-0.5 text-sm text-white/70">{t('noMatchesTodaySubtitle')}</p>
+              </div>
+            </div>
             <FallbackSection
               title={t('latestResults')}
               groups={fallback.results}
@@ -1038,6 +1048,27 @@ function StandingsTable({
               )}
             </div>
             <StandingsGrid rows={g.standings ?? []} t={t} />
+            {(g.standings ?? []).some((r) => r.qualified === true) && (
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-gray-400">
+                <span className="flex items-center gap-1.5">
+                  <span className="inline-block h-2.5 w-1 rounded-sm bg-green-500" />
+                  {g.group?.advancesCount
+                    ? g.group?.bestLosersCount
+                      ? t('topNPlusBestLosers', {
+                          count: g.group.advancesCount,
+                          best: g.group.bestLosersCount,
+                        })
+                      : t('topNAdvance', { count: g.group.advancesCount })
+                    : t('qualifiesForKnockout')}
+                </span>
+                {(g.standings ?? []).some((r) => r.qualifiedAs === 'bestLoser') && (
+                  <span className="flex items-center gap-1.5">
+                    <span className="inline-block h-2.5 w-1 rounded-sm bg-green-300" />
+                    {t('bestThirdPlaced')}
+                  </span>
+                )}
+              </div>
+            )}
           </section>
         ))}
       </div>
@@ -1052,6 +1083,17 @@ function StandingsTable({
   );
 }
 
+// Position-cell classes for a qualifying standings row, by HOW the team
+// qualified: direct top-N = solid green, best 3rd-placed = a lighter green.
+function qualifyPosClasses(r: StandingRow): string {
+  const how = r.qualifiedAs ?? (r.qualified === true ? 'group' : null);
+  if (how === 'group')
+    return 'border-l-[3px] border-l-green-500 font-semibold text-green-600 dark:text-green-400';
+  if (how === 'bestLoser')
+    return 'border-l-[3px] border-l-green-300 font-semibold text-green-500 dark:text-green-300';
+  return 'text-gray-400';
+}
+
 function StandingsGrid({
   rows,
   t,
@@ -1059,6 +1101,8 @@ function StandingsGrid({
   rows: StandingRow[];
   t: ReturnType<typeof useTranslations>;
 }) {
+  // Standings rows may omit team.slug — resolve it from the cached teams list.
+  const { resolveSlug } = useTeamSlugMap();
   const th = 'px-2 py-2 text-center font-medium';
   const td = 'px-2 py-2.5 text-center tabular-nums text-gray-600 dark:text-gray-300';
   // Pinned (sticky) first columns keep team visible while the stats scroll.
@@ -1095,11 +1139,13 @@ function StandingsGrid({
                 r.isLive ? 'bg-amber-50 dark:bg-amber-950/40' : ''
               }`}
             >
-              <td className={`${posSticky(!!r.isLive)} py-2.5 text-center text-gray-400`}>{r.position}</td>
+              <td className={`${posSticky(!!r.isLive)} py-2.5 text-center ${qualifyPosClasses(r)}`}>
+                {r.position}
+              </td>
               <td className={`${teamSticky(!!r.isLive)} py-2.5`}>
                 <span className="flex items-center gap-2 min-w-0">
                   <Crest team={r.team} />
-                  <TeamLink slug={r.team?.slug} className="min-w-0 flex-1 truncate font-medium text-gray-900 dark:text-white">
+                  <TeamLink slug={resolveSlug(r.team)} className="min-w-0 flex-1 truncate font-medium text-gray-900 dark:text-white">
                     {teamName(r.team)}
                   </TeamLink>
                   {r.isLive && (
@@ -1173,6 +1219,14 @@ function StagesView({
             >
               {s.type}
             </span>
+            {s.type === 'Group' && s.advancesPerGroup ? (
+              <span className="flex items-center gap-1 text-[10px] font-medium text-green-600 dark:text-green-400">
+                <span className="inline-block h-2 w-1 rounded-sm bg-green-500" />
+                {s.bestLosersCount
+                  ? t('topNPlusBestLosers', { count: s.advancesPerGroup, best: s.bestLosersCount })
+                  : t('topNAdvance', { count: s.advancesPerGroup })}
+              </span>
+            ) : null}
           </div>
 
           {(s.groups ?? []).length > 0 ? (
@@ -1184,8 +1238,16 @@ function StagesView({
                     key={g.id}
                     className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden"
                   >
-                    <div className="border-b border-gray-100 dark:border-gray-700 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                      {g.name}
+                    <div className="flex items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-700 px-3 py-2">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        {g.name}
+                      </span>
+                      {g.advancesCount ? (
+                        <span className="flex items-center gap-1 text-[10px] font-medium text-green-600 dark:text-green-400">
+                          <span className="inline-block h-2 w-1 rounded-sm bg-green-500" />
+                          {t('topNAdvance', { count: g.advancesCount })}
+                        </span>
+                      ) : null}
                     </div>
                     {(g.teams ?? []).length === 0 ? (
                       <p className="px-3 py-3 text-xs text-gray-400">{t('noTeams')}</p>
