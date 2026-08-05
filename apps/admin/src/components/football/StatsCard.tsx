@@ -170,58 +170,100 @@ function Circle({ url, name, size }: { url: string | null; name: string; size: n
 
 export function standingsBody(size: CardSize, groups: StandingGroupVM[]): ReactNode {
   const d = S[size];
-  const statCol = (v: number | string, bold = false) => (
-    <div style={{ width: size === 'story' ? 62 : 52, textAlign: 'center', fontVariantNumeric: 'tabular-nums', fontWeight: bold ? 700 : 400, color: bold ? '#fff' : '#cdd9e5', fontSize: d.cell }}>
-      {v}
-    </div>
-  );
-  const head = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0 4px', height: d.rowH * 0.72, color: '#7f93a8', fontSize: d.colH, textTransform: 'uppercase', letterSpacing: 1 }}>
-      <div style={{ width: 44, textAlign: 'center' }}>#</div>
-      <div style={{ flex: 1 }}>Team</div>
-      {['P', 'W', 'D', 'L', 'GD', 'Pts'].map((h) => (
-        <div key={h} style={{ width: size === 'story' ? 62 : 52, textAlign: 'center' }}>{h}</div>
+
+  // A single league table stays one wide column; multiple groups tile into two
+  // columns (row-major) so many groups still fit on one card.
+  const cols = groups.length <= 1 ? 1 : 2;
+  const compact = cols > 1; // narrower columns → show fewer stat columns
+  const statCols: { key: 'P' | 'W' | 'D' | 'L' | 'GD' | 'Pts'; get: (r: StandingVM) => number | string; bold?: boolean }[] =
+    compact
+      ? [
+          { key: 'P', get: (r) => r.played },
+          { key: 'GD', get: (r) => (r.gd > 0 ? `+${r.gd}` : r.gd) },
+          { key: 'Pts', get: (r) => r.points, bold: true },
+        ]
+      : [
+          { key: 'P', get: (r) => r.played },
+          { key: 'W', get: (r) => r.won },
+          { key: 'D', get: (r) => r.drawn },
+          { key: 'L', get: (r) => r.lost },
+          { key: 'GD', get: (r) => (r.gd > 0 ? `+${r.gd}` : r.gd) },
+          { key: 'Pts', get: (r) => r.points, bold: true },
+        ];
+
+  // Vertical fit: scale every metric down so the tallest grid row of tables fits
+  // the body height. Estimated analytically since html-to-image can't measure.
+  const hasLegend = (g: StandingGroupVM) => g.rows.some((r) => r.qualified === true);
+  const groupBase = (g: StandingGroupVM) =>
+    (g.title ? d.sec + 6 : 0) + d.rowH * 0.72 + g.rows.length * d.rowH + (hasLegend(g) ? d.colH + 6 : 0) + 12;
+  const gridRows = Math.ceil(groups.length / cols);
+  const rowGap = size === 'story' ? 18 : 14;
+  let base = rowGap * Math.max(0, gridRows - 1);
+  for (let r = 0; r < gridRows; r++) {
+    let rowMax = 0;
+    for (let c = 0; c < cols; c++) {
+      const g = groups[r * cols + c];
+      if (g) rowMax = Math.max(rowMax, groupBase(g));
+    }
+    base += rowMax;
+  }
+  const targetH = size === 'story' ? 1400 : 660;
+  const s = Math.max(0.5, Math.min(1, base > 0 ? targetH / base : 1));
+
+  const rowH = Math.round(d.rowH * s);
+  const crest = Math.round(d.crest * s);
+  const nameF = Math.round(d.name * s);
+  const cellF = Math.round(d.cell * s);
+  const colHF = Math.round(d.colH * s);
+  const secF = Math.round(d.sec * s);
+  const posW = Math.round(44 * s);
+  const statW = Math.round((size === 'story' ? 58 : 48) * s);
+
+  const statHead = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 4px', height: rowH * 0.72, color: '#7f93a8', fontSize: colHF, textTransform: 'uppercase', letterSpacing: 1 }}>
+      <div style={{ width: posW, textAlign: 'center' }}>#</div>
+      <div style={{ flex: 1, minWidth: 0 }}>Team</div>
+      {statCols.map((c) => (
+        <div key={c.key} style={{ width: statW, textAlign: 'center' }}>{c.key}</div>
       ))}
     </div>
   );
   const table = (rows: StandingVM[]) => (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
-      {head}
+      {statHead}
       {rows.map((r) => {
         // How the team qualified → bar colour: direct = solid green, best
-        // 3rd-placed = a lighter green. Falls back to direct for older payloads.
+        // loser = a lighter green. Falls back to direct for older payloads.
         const how = r.qualifiedAs ?? (r.qualified === true ? 'group' : null);
         const qColor = how === 'group' ? '#22c55e' : how === 'bestLoser' ? '#86efac' : null;
         return (
-        <div
-          key={r.position}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            padding: '0 4px 0 0',
-            height: d.rowH,
-            flexShrink: 0,
-            borderTop: '1px solid rgba(255,255,255,0.07)',
-            // Green accent bar on positions that advance to the knockout stage.
-            borderLeft: `4px solid ${qColor ?? 'transparent'}`,
-            paddingLeft: 8,
-          }}
-        >
-          <div style={{ width: 44, textAlign: 'center', color: qColor ?? '#9fb3c8', fontFamily: DISPLAY, fontWeight: qColor ? 700 : 600, fontSize: d.cell }}>
-            {r.position}
+          <div
+            key={r.position}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '0 4px 0 0',
+              height: rowH,
+              flexShrink: 0,
+              borderTop: '1px solid rgba(255,255,255,0.07)',
+              borderLeft: `4px solid ${qColor ?? 'transparent'}`,
+              paddingLeft: 8,
+            }}
+          >
+            <div style={{ width: posW, textAlign: 'center', color: qColor ?? '#9fb3c8', fontFamily: DISPLAY, fontWeight: qColor ? 700 : 600, fontSize: cellF }}>
+              {r.position}
+            </div>
+            <Circle url={r.crest} name={r.name} size={crest} />
+            <div style={{ flex: 1, minWidth: 0, fontFamily: DISPLAY, fontSize: nameF, fontWeight: 600, textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {r.name}
+            </div>
+            {statCols.map((c) => (
+              <div key={c.key} style={{ width: statW, textAlign: 'center', fontVariantNumeric: 'tabular-nums', fontWeight: c.bold ? 700 : 400, color: c.bold ? '#fff' : '#cdd9e5', fontSize: cellF }}>
+                {c.get(r)}
+              </div>
+            ))}
           </div>
-          <Circle url={r.crest} name={r.name} size={d.crest} />
-          <div style={{ flex: 1, minWidth: 0, fontFamily: DISPLAY, fontSize: d.name, fontWeight: 600, textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {r.name}
-          </div>
-          {statCol(r.played)}
-          {statCol(r.won)}
-          {statCol(r.drawn)}
-          {statCol(r.lost)}
-          {statCol(r.gd > 0 ? `+${r.gd}` : r.gd)}
-          {statCol(r.points, true)}
-        </div>
         );
       })}
     </div>
@@ -229,7 +271,7 @@ export function standingsBody(size: CardSize, groups: StandingGroupVM[]): ReactN
 
   // Qualification legend, shown when a group marks qualifying positions.
   const legend = (g: StandingGroupVM) => {
-    if (!g.rows.some((r) => r.qualified === true)) return null;
+    if (!hasLegend(g)) return null;
     const label = g.advancesCount
       ? g.bestLosersCount
         ? 'Next Stage'
@@ -237,16 +279,16 @@ export function standingsBody(size: CardSize, groups: StandingGroupVM[]): ReactN
       : 'Qualifies for knockout stage';
     const anyBestLoser = g.rows.some((r) => r.qualifiedAs === 'bestLoser');
     const swatch = (color: string) => (
-      <span style={{ display: 'inline-block', width: 4, height: 14, borderRadius: 2, background: color }} />
+      <span style={{ display: 'inline-block', width: 4, height: 12, borderRadius: 2, background: color }} />
     );
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, color: '#8aa0b4', fontSize: d.colH }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 8, textTransform: 'uppercase', letterSpacing: 1 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 14, color: '#8aa0b4', fontSize: colHF }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 7, textTransform: 'uppercase', letterSpacing: 1 }}>
           {swatch('#22c55e')}
           {label}
         </span>
         {anyBestLoser && (
-          <span style={{ display: 'flex', alignItems: 'center', gap: 8, textTransform: 'uppercase', letterSpacing: 1 }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 7, textTransform: 'uppercase', letterSpacing: 1 }}>
             {swatch('#86efac')}
             Best Loser
           </span>
@@ -256,11 +298,19 @@ export function standingsBody(size: CardSize, groups: StandingGroupVM[]): ReactN
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: size === 'story' ? 22 : 14 }}>
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+        columnGap: 28,
+        rowGap,
+        alignContent: 'start',
+      }}
+    >
       {groups.map((g, i) => (
-        <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
           {g.title && (
-            <div style={{ fontFamily: DISPLAY, fontSize: d.sec, fontWeight: 700, color: '#F59E0B', textTransform: 'uppercase' }}>
+            <div style={{ fontFamily: DISPLAY, fontSize: secF, fontWeight: 700, color: '#F59E0B', textTransform: 'uppercase' }}>
               {g.title}
             </div>
           )}
