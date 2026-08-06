@@ -95,7 +95,7 @@ export function TeamFixturesModal({
         awayCrest: awayUrl ? imap[awayUrl] ?? null : null,
         emphasize: m.homeTeamId === teamId ? 'home' : 'away',
         score: done ? `${m.homeScore}–${m.awayScore}` : null,
-        time: dt ? dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '',
+        time: dt ? dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '',
       } as FixtureVM;
     });
   }, [filtered, teamId, imgQuery.data, cap]);

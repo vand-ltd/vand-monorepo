@@ -217,6 +217,7 @@ function MatchCardDetail({
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    hour12: false,
   });
 
   const status = isLive ? (
@@ -412,6 +413,7 @@ function MatchInfo({
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    hour12: false,
   });
   const referee = ((m as any).referee ?? (m as any).refereeName) as string | undefined;
   // Venue may arrive as the prop, nested on the match, or by id — show whatever we have.

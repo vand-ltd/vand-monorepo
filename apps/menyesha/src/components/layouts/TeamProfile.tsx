@@ -162,7 +162,7 @@ function PerspectiveRow({
   const away = m.isHome ? opp : self;
   const dt = m.kickoffAt ? new Date(m.kickoffAt) : null;
   const date = dt ? dt.toLocaleDateString(dateLocale, { day: '2-digit', month: 'short' }) : '';
-  const time = dt ? dt.toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' }) : '';
+  const time = dt ? dt.toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
   // A played result shows the score in the middle; an upcoming fixture shows the
   // kickoff time under the date and a "V" between the teams.
   const showScore = !upcoming && m.homeScore != null && m.awayScore != null;
@@ -860,17 +860,25 @@ function SquadTab({
 
 /* -------------------------------- matches --------------------------------- */
 
-function MatchesTab({
+// A match is "played" once it's live or finished; anything else is a fixture.
+const PLAYED_STATUSES = ['FullTime', 'Live', 'HalfTime'];
+
+// Fixtures or Results list for the profile team, one season at a time. Both
+// modes share the same cached query (same key) — one fetch, split client-side:
+// fixtures = upcoming (soonest first), results = played (most recent first).
+function MatchListTab({
   teamId,
   seasons,
   initialSeasonId,
   dateLocale,
+  mode,
   t,
 }: {
   teamId: string;
   seasons: { id: string; name: string }[];
   initialSeasonId?: string;
   dateLocale: string;
+  mode: 'fixtures' | 'results';
   t: ReturnType<typeof useTranslations>;
 }) {
   const [seasonId, setSeasonId] = useState(initialSeasonId ?? seasons[0]?.id ?? '');
@@ -879,7 +887,14 @@ function MatchesTab({
     queryFn: () => getMatches({ teamId, seasonId: seasonId || undefined, order: 'asc' }),
     enabled: !!teamId,
   });
-  const matches = data ?? [];
+
+  const list = useMemo(() => {
+    const all = data ?? [];
+    if (mode === 'results') {
+      return all.filter((m) => PLAYED_STATUSES.includes(m.status)).reverse(); // most recent first
+    }
+    return all.filter((m) => !PLAYED_STATUSES.includes(m.status)); // upcoming, soonest first
+  }, [data, mode]);
 
   return (
     <div className="space-y-3">
@@ -890,16 +905,81 @@ function MatchesTab({
         <div className="flex justify-center py-12">
           <Loader2 className="h-6 w-6 animate-spin text-[#003153] dark:text-[#F59E0B]" />
         </div>
-      ) : matches.length === 0 ? (
-        <EmptyBox text={t('noMatches')} />
+      ) : list.length === 0 ? (
+        <EmptyBox text={mode === 'results' ? t('noResults') : t('noFixtures')} />
       ) : (
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700">
-          {matches.map((m: Match) => (
+          {list.map((m: Match) => (
             <FullMatchRow key={m.id} m={m} teamId={teamId} dateLocale={dateLocale} />
           ))}
         </div>
       )}
     </div>
+  );
+}
+
+// The team's single next fixture, as a prominent hero above the tabs.
+function TeamSideMini({ team, align }: { team: SelfTeam; align: 'left' | 'right' }) {
+  return (
+    <div
+      className={`flex min-w-0 flex-1 items-center gap-2 sm:gap-3 ${
+        align === 'right' ? 'flex-row-reverse text-right' : ''
+      }`}
+    >
+      <Crest url={team.crest} name={team.name} slug={team.slug} size={44} />
+      <span className="min-w-0 truncate text-sm font-semibold sm:text-base">{team.name}</span>
+    </div>
+  );
+}
+
+function NextMatchCard({
+  m,
+  self,
+  dateLocale,
+  t,
+}: {
+  m: TeamPerspectiveMatch;
+  self: SelfTeam;
+  dateLocale: string;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  const opp: SelfTeam = {
+    name: m.opponent?.name ?? '—',
+    crest: resolveLogo(m.opponent?.logo),
+    slug: m.opponent?.slug,
+  };
+  const home = m.isHome ? self : opp;
+  const away = m.isHome ? opp : self;
+  const dt = m.kickoffAt ? new Date(m.kickoffAt) : null;
+  const dateStr = dt
+    ? dt.toLocaleDateString(dateLocale, { weekday: 'short', day: 'numeric', month: 'short' })
+    : '';
+  const timeStr = dt ? dt.toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
+
+  return (
+    <Link
+      href={matchHref(m)}
+      className="block rounded-2xl bg-gradient-to-br from-[#003153] to-[#005F73] p-4 text-white shadow-sm transition hover:brightness-110 sm:p-5"
+    >
+      <div className="flex items-center justify-between gap-2 text-[11px] font-medium uppercase tracking-wide text-white/70">
+        <span className="inline-flex items-center gap-1.5">
+          <CalendarDays className="h-3.5 w-3.5" />
+          {t('nextMatch')}
+        </span>
+        {m.competition?.name && <span className="min-w-0 truncate">{m.competition.name}</span>}
+      </div>
+      <div className="mt-3 flex items-center gap-2 sm:gap-4">
+        <TeamSideMini team={home} align="right" />
+        <div className="shrink-0 px-1 text-center">
+          <div className="text-xs font-semibold text-white/80">{dateStr}</div>
+          <div className="text-xl font-extrabold leading-tight tabular-nums">{timeStr}</div>
+          <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#F59E0B]">
+            {m.isHome ? t('homeGame') : t('awayGame')}
+          </div>
+        </div>
+        <TeamSideMini team={away} align="left" />
+      </div>
+    </Link>
   );
 }
 
@@ -927,7 +1007,7 @@ function FullMatchRow({ m, teamId, dateLocale }: { m: Match; teamId: string; dat
         <Crest url={resolveLogo(home?.logo, home?.logoUrl)} name={home?.name} slug={home?.slug} size={18} />
       </span>
       <span className="shrink-0 w-14 text-center tabular-nums text-sm font-semibold text-gray-900 dark:text-white">
-        {done ? `${m.homeScore}–${m.awayScore}` : dt?.toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' })}
+        {done ? `${m.homeScore}–${m.awayScore}` : dt?.toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit', hour12: false })}
       </span>
       <span className={`flex-1 min-w-0 flex items-center gap-2 ${!isHome ? 'font-semibold' : ''}`}>
         <Crest url={resolveLogo(away?.logo, away?.logoUrl)} name={away?.name} slug={away?.slug} size={18} />
@@ -975,7 +1055,7 @@ function EmptyBox({ text }: { text: string }) {
 
 /* -------------------------------- page ------------------------------------ */
 
-type Tab = 'overview' | 'squad' | 'matches';
+type Tab = 'overview' | 'squad' | 'fixtures' | 'results';
 
 export function TeamProfile({ slug }: { slug: string }) {
   const locale = useLocale();
@@ -1091,11 +1171,17 @@ export function TeamProfile({ slug }: { slug: string }) {
         </Panel>
       )}
 
+      {/* Next match — the team's single upcoming fixture, highlighted */}
+      {upcomingFixtures.length > 0 && (
+        <NextMatchCard m={upcomingFixtures[0]} self={self} dateLocale={dateLocale} t={t} />
+      )}
+
       {/* Tabs */}
       <div className="border-b border-gray-200 dark:border-gray-700 flex gap-1 overflow-x-auto">
         {tabBtn('overview', t('overview'))}
         {tabBtn('squad', t('squadTab'))}
-        {tabBtn('matches', t('matchesTab'))}
+        {tabBtn('fixtures', t('fixturesTab'))}
+        {tabBtn('results', t('resultsTab'))}
       </div>
 
       {tab === 'overview' && (
@@ -1149,12 +1235,24 @@ export function TeamProfile({ slug }: { slug: string }) {
         />
       )}
 
-      {tab === 'matches' && (
-        <MatchesTab
+      {tab === 'fixtures' && (
+        <MatchListTab
           teamId={team.id}
           seasons={seasonOptions}
           initialSeasonId={currentSeason?.id}
           dateLocale={dateLocale}
+          mode="fixtures"
+          t={t}
+        />
+      )}
+
+      {tab === 'results' && (
+        <MatchListTab
+          teamId={team.id}
+          seasons={seasonOptions}
+          initialSeasonId={currentSeason?.id}
+          dateLocale={dateLocale}
+          mode="results"
           t={t}
         />
       )}

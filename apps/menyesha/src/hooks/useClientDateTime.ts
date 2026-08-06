@@ -13,7 +13,7 @@ export function useClientDateTime() {
     const updateDateTime = () => {
       const now = new Date()
       setCurrentDate(now.toLocaleDateString())
-      setCurrentTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
+      setCurrentTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }))
     }
     
     updateDateTime()

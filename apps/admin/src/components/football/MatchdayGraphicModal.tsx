@@ -115,7 +115,7 @@ export function MatchdayGraphicModal({
         awayCrest: au ? imap[au] ?? null : null,
         emphasize: null,
         score: done ? `${m.homeScore}–${m.awayScore}` : null,
-        time: dt ? dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '',
+        time: dt ? dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '',
       } as FixtureVM;
     });
   }, [filtered, imgQuery.data, cap]);

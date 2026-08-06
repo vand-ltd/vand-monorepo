@@ -1462,7 +1462,7 @@ function MatchListRow({
     <span className="text-gray-400">{m.afterExtraTime ? t('aetShort') : t('ft')}</span>
   ) : (
     <span className="text-gray-400">
-      {new Date(m.kickoffAt).toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' })}
+      {new Date(m.kickoffAt).toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit', hour12: false })}
     </span>
   );
 
