@@ -1071,7 +1071,10 @@ export function TeamProfile({ slug }: { slug: string }) {
   const seasonOptions = useMemo(() => {
     const seen = new Map<string, string>();
     for (const r of data?.seasons ?? []) {
-      if (r.season?.id) seen.set(r.season.id, r.season.name);
+      if (!r.season?.id || seen.has(r.season.id)) continue;
+      // Prefix the competition so seasons of the same year are distinguishable.
+      const label = [r.competition?.name, r.season.name].filter(Boolean).join(' · ');
+      seen.set(r.season.id, label || r.season.name);
     }
     return Array.from(seen, ([id, name]) => ({ id, name }));
   }, [data?.seasons]);

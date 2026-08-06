@@ -918,7 +918,7 @@ export function FootballResultsBoard({
                 // All-competitions view: header links to the competition, tagged with its type
                 <Link
                   href={`/football/${group.slug || group.key}`}
-                  className="inline-flex items-center gap-1.5 mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 hover:text-[#003153] dark:hover:text-[#F59E0B] transition-colors"
+                  className="inline-flex items-center gap-1.5 mb-2 text-xs font-bold uppercase tracking-wide text-gray-700 dark:text-gray-200 hover:text-[#003153] dark:hover:text-[#F59E0B] transition-colors"
                 >
                   {group.name}
                   {showCompType(group.name, group.type) && (
@@ -1461,7 +1461,7 @@ function MatchListRow({
     // A tie decided in extra time shows AET instead of FT.
     <span className="text-gray-400">{m.afterExtraTime ? t('aetShort') : t('ft')}</span>
   ) : (
-    <span className="text-gray-400">
+    <span className="font-bold text-gray-600 dark:text-gray-300">
       {new Date(m.kickoffAt).toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit', hour12: false })}
     </span>
   );
