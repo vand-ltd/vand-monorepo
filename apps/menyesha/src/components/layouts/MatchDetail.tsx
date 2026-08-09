@@ -21,6 +21,7 @@ import { TeamLink } from '@/components/football/TeamLink';
 import { Loader2, ArrowLeft, MapPin, ArrowUp, ArrowDown, ChevronUp, Download, CheckCircle2 } from 'lucide-react';
 import { ShareButton } from '@/components/article/ShareButton';
 import { LIVE_STATUSES, useNow, liveMinuteLabel } from '@/lib/matchClock';
+import { LocalDateTime } from '@/components/LocalDateTime';
 
 function teamName(t?: { name?: string; shortName?: string }): string {
   return t?.name ?? t?.shortName ?? 'TBD';
@@ -210,16 +211,6 @@ function MatchCardDetail({
   const homeThrough = isKnockout && !!winnerId && winnerId === home?.id;
   const awayThrough = isKnockout && !!winnerId && winnerId === away?.id;
 
-  const kickoff = new Date(m.kickoffAt).toLocaleString(dateLocale, {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-
   const status = isLive ? (
     <span className="inline-flex items-center gap-1.5 text-red-600 dark:text-red-400 font-semibold">
       <span className="relative flex h-2 w-2">
@@ -262,7 +253,12 @@ function MatchCardDetail({
               {m.round}
             </span>
           )}
-          <span className="text-xs text-gray-400">{kickoff}</span>
+          <LocalDateTime
+            iso={m.kickoffAt}
+            locale={dateLocale}
+            options={{ weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }}
+            className="text-xs text-gray-400"
+          />
         </div>
       </div>
 
@@ -406,15 +402,6 @@ function MatchInfo({
   dateLocale: string;
   t: ReturnType<typeof useTranslations>;
 }) {
-  const dateStr = new Date(m.kickoffAt).toLocaleString(dateLocale, {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
   const referee = ((m as any).referee ?? (m as any).refereeName) as string | undefined;
   // Venue may arrive as the prop, nested on the match, or by id — show whatever we have.
   const v = venue ?? (m as any).venue;
@@ -424,11 +411,20 @@ function MatchInfo({
 
   const stage = (m as any).stage;
   const group = (m as any).group;
-  const rows: { label: string; value?: string | null; icon?: React.ReactNode }[] = [
+  const rows: { label: string; value?: React.ReactNode; icon?: React.ReactNode }[] = [
     { label: t('stage'), value: stage?.name },
     { label: t('group'), value: group?.name },
     { label: t('matchday'), value: m.round },
-    { label: t('dateLabel'), value: dateStr },
+    {
+      label: t('dateLabel'),
+      value: (
+        <LocalDateTime
+          iso={m.kickoffAt}
+          locale={dateLocale}
+          options={{ weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }}
+        />
+      ),
+    },
     {
       label: t('venueLabel'),
       value: venueStr,

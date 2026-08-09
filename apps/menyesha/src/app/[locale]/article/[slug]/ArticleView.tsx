@@ -22,6 +22,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { CommentSection } from '@/components/article/CommentSection';
 import { ShareButton } from '@/components/article/ShareButton';
 import { AdSlot } from '@/components/ads/AdSlot';
+import { LocalDateTime } from '@/components/LocalDateTime';
 
 // Category color map keyed by slug
 const categoryColorMap: Record<string, { lightBg: string; darkBg: string; lightText: string; darkText: string }> = {
@@ -283,7 +284,8 @@ function ArticleSkeleton() {
   );
 }
 
-export default function ArticleView({ slug }: { slug: string }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export default function ArticleView({ slug, initialArticle }: { slug: string; initialArticle?: any }) {
   const locale = useLocale();
   const t = useTranslations('article');
   const tSidebar = useTranslations('sidebar');
@@ -311,6 +313,9 @@ export default function ArticleView({ slug }: { slug: string }) {
   const { data: article, isLoading, error } = useQuery({
     queryKey: ['article', slug, locale],
     queryFn: () => getArticleBySlug(slug, locale),
+    // Seeded from the server so the article renders in the initial HTML
+    // (crawlable) instead of a skeleton; the client still refetches for freshness.
+    initialData: initialArticle ?? undefined,
   });
 
   const { data: relatedArticles = [] } = useQuery({
@@ -508,7 +513,11 @@ export default function ArticleView({ slug }: { slug: string }) {
               <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
                 <span className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
-                  {formatDate(article.createdAt)}
+                  <LocalDateTime
+                    iso={article.createdAt}
+                    locale={locale}
+                    options={{ year: 'numeric', month: 'long', day: 'numeric' }}
+                  />
                 </span>
                 {article.readMin && (
                   <>

@@ -8,9 +8,14 @@ type Props = {
   params: Promise<{ locale: string; slug: string }>;
 };
 
-async function fetchArticle(slug: string) {
+// Fetch the article server-side. `language` mirrors the client's
+// getArticleBySlug(slug, locale) so the shape and translations match the value
+// we seed into ArticleView's query. Next dedupes this across generateMetadata
+// and the page (same URL) into a single request.
+async function fetchArticle(slug: string, language?: string) {
   try {
-    const res = await fetch(`${API_URL}/api/menyesha/articles/slug/${slug}`, {
+    const qs = language ? `?language=${encodeURIComponent(language)}` : '';
+    const res = await fetch(`${API_URL}/api/menyesha/articles/slug/${slug}${qs}`, {
       headers: {
         'Content-Type': 'application/json',
         Origin: SITE_URL,
@@ -27,7 +32,7 @@ async function fetchArticle(slug: string) {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
-  const article = await fetchArticle(slug);
+  const article = await fetchArticle(slug, locale);
 
   if (!article) {
     return {
@@ -91,6 +96,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ArticlePage({ params }: Props) {
-  const { slug } = await params;
-  return <ArticleView slug={slug} />;
+  const { locale, slug } = await params;
+  // Server-fetch the article so its full text is in the initial HTML (crawlable
+  // on Google's first pass), instead of a client-rendered skeleton. The client
+  // still refetches for freshness.
+  const initialArticle = await fetchArticle(slug, locale);
+  return <ArticleView slug={slug} initialArticle={initialArticle} />;
 }
