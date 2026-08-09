@@ -1306,3 +1306,36 @@ export async function getTopAssists(seasonId: string): Promise<StatLeaderRow[]> 
   const payload = unwrap<any>(data);
   return (payload?.assisters ?? payload ?? []) as StatLeaderRow[];
 }
+
+/* ------------------------------- insights --------------------------------- */
+
+// Every insights endpoint returns the same envelope: machine-readable fields for
+// public stat pages, plus a copy-paste-ready `briefing` for the admin article
+// workflow. The structured fields differ per endpoint and are kept loose here —
+// the admin lane only needs `season` + `briefing`; public pages read the rest.
+export interface InsightResponse {
+  season: { id: string; name: string; competition?: CompetitionRef };
+  briefing: string;
+  // Structured payload varies by endpoint (records, rows, streaks…).
+  [key: string]: unknown;
+}
+
+export type InsightKind = 'numbers' | 'records' | 'streaks';
+
+// GET /api/menyesha/seasons/:id/{numbers|records|streaks}
+// `numbers` accepts an optional round label (leagues only) for one matchday.
+export async function getSeasonInsight(
+  seasonId: string,
+  kind: InsightKind,
+  opts?: { round?: string }
+): Promise<InsightResponse> {
+  const { data } = await api.get(`/api/menyesha/seasons/${seasonId}/${kind}`, {
+    params: kind === 'numbers' && opts?.round?.trim() ? { round: opts.round.trim() } : undefined,
+  });
+  const p = unwrap<any>(data);
+  return {
+    ...p,
+    season: p?.season ?? { id: seasonId, name: '' },
+    briefing: typeof p?.briefing === 'string' ? p.briefing : '',
+  };
+}
