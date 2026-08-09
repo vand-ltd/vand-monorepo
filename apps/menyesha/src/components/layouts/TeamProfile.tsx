@@ -1057,7 +1057,15 @@ function EmptyBox({ text }: { text: string }) {
 
 type Tab = 'overview' | 'squad' | 'fixtures' | 'results';
 
-export function TeamProfile({ slug }: { slug: string }) {
+export function TeamProfile({
+  slug,
+  initialData,
+}: {
+  slug: string;
+  // Server-fetched so the profile is in the initial HTML (crawlable) instead of
+  // a loading state; the client still refetches for freshness.
+  initialData?: Awaited<ReturnType<typeof getTeamProfile>>;
+}) {
   const locale = useLocale();
   const t = useTranslations('football');
   const dateLocale = locale === 'rw' ? 'en' : locale;
@@ -1066,6 +1074,7 @@ export function TeamProfile({ slug }: { slug: string }) {
   const { data, isLoading } = useQuery({
     queryKey: ['team-profile', slug],
     queryFn: () => getTeamProfile(slug),
+    initialData,
   });
 
   const seasonOptions = useMemo(() => {

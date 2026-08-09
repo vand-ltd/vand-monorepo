@@ -37,6 +37,29 @@ async function fetchPlayer(slug: string): Promise<any | null> {
   }
 }
 
+// Shape the server payload to the same defaults getPlayerProfile applies, so the
+// seeded initialData never has undefined fields the component reads.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function normalizePlayerProfile(p: any) {
+  return {
+    player: p?.player ?? {},
+    currentTeam: p?.currentTeam ?? null,
+    transfers: p?.transfers ?? [],
+    career: p?.career ?? [],
+    stats: {
+      totals: p?.stats?.totals ?? {
+        goals: 0,
+        assists: 0,
+        appearances: 0,
+        yellowCards: 0,
+        redCards: 0,
+      },
+      byTeam: p?.stats?.byTeam ?? [],
+      bySeason: p?.stats?.bySeason ?? [],
+    },
+  };
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   const alternates = localeAlternates(locale, `football/player/${slug}`);
@@ -112,7 +135,7 @@ export default async function Page({ params }: Props) {
       )}
       <section className="py-8">
         <div className="max-w-4xl mx-auto px-4">
-          <PlayerProfile slug={slug} />
+          <PlayerProfile slug={slug} initialData={data ? normalizePlayerProfile(data) : undefined} />
         </div>
       </section>
     </div>

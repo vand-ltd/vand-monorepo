@@ -1,4 +1,5 @@
 import Article from "@/components/layouts/Article";
+import { HomeDiscover } from "@/components/layouts/HomeDiscover";
 
 export default function HomePage() {
   return (
@@ -10,6 +11,9 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Server-rendered internal links (matches, competitions, latest news) —
+          crawlable discovery paths into the deep archive from the homepage. */}
+      <HomeDiscover />
     </div>
   );
 }

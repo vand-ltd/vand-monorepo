@@ -64,7 +64,15 @@ function StatTile({ label, value, accent }: { label: string; value: number; acce
   );
 }
 
-export function PlayerProfile({ slug }: { slug: string }) {
+export function PlayerProfile({
+  slug,
+  initialData,
+}: {
+  slug: string;
+  // Server-fetched so the profile is in the initial HTML (crawlable) instead of
+  // a loading state; the client still refetches for freshness.
+  initialData?: Awaited<ReturnType<typeof getPlayerProfile>>;
+}) {
   const locale = useLocale();
   const t = useTranslations('football');
   const dateLocale = locale === 'rw' ? 'en' : locale;
@@ -72,6 +80,7 @@ export function PlayerProfile({ slug }: { slug: string }) {
   const { data, isLoading } = useQuery({
     queryKey: ['player-profile', slug],
     queryFn: () => getPlayerProfile(slug),
+    initialData,
   });
 
   if (isLoading) {
