@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getMatches, getSeasons, type Match } from '@org/api';
+import { getMatches, getSeasons, getCompetitions, type Match } from '@org/api';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Card, CardContent } from '@/components/ui/card';
@@ -76,22 +76,44 @@ export function FootballWidget() {
     queryFn: () => getSeasons(),
   });
 
+  // Full competitions carry the logo; the nested season/match `competition` is a
+  // minimal ref that often omits it, so resolve logos from here by id.
+  const { data: allCompetitions = [] } = useQuery({
+    queryKey: ['competitions'],
+    queryFn: () => getCompetitions(),
+  });
+  const logoByCompId = useMemo(() => {
+    const m: Record<string, string | null> = {};
+    for (const c of allCompetitions) if (c.id) m[c.id] = crestUrl(c);
+    return m;
+  }, [allCompetitions]);
+
   const competitions = useMemo(() => {
-    const map = new Map<string, { id: string; name: string; slug?: string; date: string }>();
+    const map = new Map<
+      string,
+      { id: string; name: string; slug?: string; date: string; logo: string | null }
+    >();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     for (const s of allSeasons as any[]) {
       const c = s.competition;
-      if (c?.id && !map.has(c.id)) map.set(c.id, { id: c.id, name: c.name, slug: c.slug, date: '' });
+      if (c?.id && !map.has(c.id))
+        map.set(c.id, { id: c.id, name: c.name, slug: c.slug, date: '', logo: crestUrl(c) ?? logoByCompId[c.id] ?? null });
     }
     for (const m of matches) {
       const c = (m as any).season?.competition;
       if (!c?.id) continue;
       if (!map.has(c.id)) {
-        map.set(c.id, { id: c.id, name: c.name, slug: c.slug, date: dateKey(m.kickoffAt) });
+        map.set(c.id, {
+          id: c.id,
+          name: c.name,
+          slug: c.slug,
+          date: dateKey(m.kickoffAt),
+          logo: crestUrl(c) ?? logoByCompId[c.id] ?? null,
+        });
       }
     }
     return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
-  }, [allSeasons, matches]);
+  }, [allSeasons, matches, logoByCompId]);
 
   if (!isLoading && matches.length === 0) return null;
 
@@ -213,9 +235,18 @@ export function FootballWidget() {
                 href={`/football/${c.slug ?? c.id}`}
                 className="flex items-center gap-2.5 px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-900/40 transition-colors"
               >
-                <span className="h-6 w-6 rounded-full bg-[#003153] text-white text-[9px] font-bold flex items-center justify-center shrink-0">
-                  {initials(c.name)}
-                </span>
+                {c.logo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={c.logo}
+                    alt=""
+                    className="h-6 w-6 rounded-full object-contain bg-gray-100 dark:bg-gray-700 p-0.5 shrink-0"
+                  />
+                ) : (
+                  <span className="h-6 w-6 rounded-full bg-[#003153] text-white text-[9px] font-bold flex items-center justify-center shrink-0">
+                    {initials(c.name)}
+                  </span>
+                )}
                 <span className="flex-1 truncate font-medium text-gray-800 dark:text-gray-200">
                   {c.name}
                 </span>

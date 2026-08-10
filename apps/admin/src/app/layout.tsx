@@ -6,7 +6,7 @@ import { QueryProvider } from "@org/api";
 export const metadata: Metadata = {
   title: "Vand Admin",
   description: "Admin dashboard for Vand.",
-  icons: { icon: '/favicon.svg' },
+  icons: { icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }] },
 };
 export default function RootLayout({
   children,
