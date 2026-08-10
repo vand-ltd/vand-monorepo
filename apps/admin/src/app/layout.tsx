@@ -6,7 +6,9 @@ import { QueryProvider } from "@org/api";
 export const metadata: Metadata = {
   title: "Vand Admin",
   description: "Admin dashboard for Vand.",
-  icons: { icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }] },
+  // ?v=2 busts browser + CDN favicon caches (favicons are cached per-URL and
+  // survive incognito). Bump the number whenever the icon changes.
+  icons: { icon: [{ url: '/favicon.svg?v=2', type: 'image/svg+xml' }] },
 };
 export default function RootLayout({
   children,
