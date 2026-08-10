@@ -36,9 +36,8 @@ export function AdminHeader() {
           {/* Logo - only on mobile or login page */}
           <div className={`flex items-center ${isLoginPage ? '' : 'md:invisible'}`}>
             <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-brand rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">V</span>
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/favicon.svg" alt="" className="w-8 h-8 rounded-lg" />
               <span className="text-lg font-bold text-gray-900 dark:text-white">
                 {t('admin')}
               </span>

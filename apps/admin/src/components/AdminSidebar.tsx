@@ -35,9 +35,8 @@ export function AdminSidebar() {
       {/* Logo */}
       <div className="flex items-center h-16 px-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
         <Link href="/" className="flex items-center space-x-2 overflow-hidden">
-          <div className="w-8 h-8 bg-gradient-brand rounded-lg flex items-center justify-center shrink-0">
-            <span className="text-white font-bold text-sm">V</span>
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/favicon.svg" alt="" className="w-8 h-8 rounded-lg shrink-0" />
           {!collapsed && (
             <span className="text-lg font-bold text-gray-900 dark:text-white whitespace-nowrap">
               {t('admin')}

@@ -131,10 +131,20 @@ const Footer = () => {
 
       {/* Bottom Bar */}
       <div className="border-t border-gray-800">
-        <div className="max-w-screen-xl mx-auto px-4 py-4">
-          <p className="text-center text-xs text-gray-500">
-            &copy; {yearDisplay} Menyesha. {t('allRightsReserved')}
-          </p>
+        <div className="max-w-screen-xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-center gap-x-3 gap-y-1.5 text-xs text-gray-500">
+          <p>&copy; {yearDisplay} Menyesha. {t('allRightsReserved')}</p>
+          <span className="hidden sm:inline text-gray-700" aria-hidden>&middot;</span>
+          <a
+            href="https://vand.rw"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 transition-colors hover:text-brand-accent"
+          >
+            {t('vandProduct')}
+            <span className="inline-flex h-4 w-4 items-center justify-center rounded bg-gradient-to-br from-[#003153] to-[#005F73] text-[9px] font-bold text-white">
+              V
+            </span>
+          </a>
         </div>
       </div>
     </footer>
