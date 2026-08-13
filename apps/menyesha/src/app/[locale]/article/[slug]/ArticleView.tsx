@@ -68,7 +68,12 @@ function InArticleAd({ label }: { label: string }) {
         pageType="article"
         fallback={
           <div className="mx-auto w-full max-w-[300px]">
-            <EmptyAdSlot label={label} sizeLabel="300 × 250 · Medium Rectangle" aspectRatio="300 / 250" />
+            <EmptyAdSlot
+              label={label}
+              sizeLabel="300 × 250 · Medium Rectangle"
+              aspectRatio="300 / 250"
+              animatedSrc="/advertise-box.svg"
+            />
           </div>
         }
       />

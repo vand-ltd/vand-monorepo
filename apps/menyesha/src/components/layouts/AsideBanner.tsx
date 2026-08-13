@@ -1,7 +1,7 @@
 'use client'
 
 import React, { ReactNode, useEffect, useState } from "react";
-import { TrendingUp, Clock, Eye, ArrowUp, Flame } from "lucide-react";
+import { TrendingUp, Clock, Eye, ArrowUp, Flame, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { getTrendingArticles, getRelatedArticles, getArticles } from "@org/api";
@@ -49,32 +49,49 @@ function StickyBottomBanner({
   pageType: AdPageType;
 }) {
   const locale = useLocale();
-  // Gate the whole bar on there being a real ad. Same query key as the inner
-  // AdSlot, so this shares the cache (no extra request). When nothing is sold
-  // for this footer slot, render nothing at all — no empty chrome, no placeholder.
+  const [closed, setClosed] = useState(false);
+  // Same query key as the inner AdSlot, so this shares the cache (no extra
+  // request). When an ad is sold we show it; otherwise the bar shows the
+  // animated "advertise here" mobile banner (a self-serve sales prompt).
   const { data } = useQuery({
     queryKey: ['ads', 'Footer', section ?? '', pageType ?? '', locale],
     queryFn: () => serveAds({ placement: 'Footer', section, pageType, locale }),
     staleTime: 60_000,
     refetchOnWindowFocus: false,
   });
-  if (!data || data.length === 0) return null;
+  if (closed) return null;
+
+  const hasAd = !!data && data.length > 0;
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-gray-200 dark:border-gray-700 px-2 py-1 shadow-lg">
-      <div className="mx-auto flex max-w-screen-xl items-center justify-center">
-        <AdSlot
-          placement="Footer"
-          section={section}
-          pageType={pageType}
-          // Mobile-only sticky banner — full width, but a FIXED height (the 50px
-          // base) so the bar never changes height between ads or across screen
-          // widths; the creative just fits inside it.
-          fill
-          lockHeight
-          className="w-full"
-        />
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center gap-1 bg-background border-t border-gray-200 dark:border-gray-700 px-2 py-1 shadow-lg">
+      <div className="mx-auto flex min-w-0 flex-1 items-center justify-center">
+        {hasAd ? (
+          <AdSlot
+            placement="Footer"
+            section={section}
+            pageType={pageType}
+            // Full width, FIXED height (the 50px base) so the bar never changes
+            // height between ads; the creative just fits inside it.
+            fill
+            lockHeight
+            className="w-full"
+          />
+        ) : (
+          <Link href={`/${locale}/advertise`} aria-label="Advertise here" className="block">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/advertise-mobile.svg" alt="Advertise here" className="h-[46px] w-auto" />
+          </Link>
+        )}
       </div>
+      <button
+        type="button"
+        onClick={() => setClosed(true)}
+        aria-label="Close"
+        className="shrink-0 rounded p-1 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+      >
+        <X className="h-4 w-4" />
+      </button>
     </div>
   );
 }
