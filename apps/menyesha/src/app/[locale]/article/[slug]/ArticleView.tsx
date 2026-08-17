@@ -17,10 +17,12 @@ import {
   Tag,
   User,
   Zap,
+  ImageDown,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { CommentSection } from '@/components/article/CommentSection';
 import { ShareButton } from '@/components/article/ShareButton';
+import { ArticleShareModal } from '@/components/article/ArticleShareModal';
 import { AdSlot } from '@/components/ads/AdSlot';
 import { LocalDateTime } from '@/components/LocalDateTime';
 
@@ -296,6 +298,7 @@ export default function ArticleView({ slug, initialArticle }: { slug: string; in
   const tSidebar = useTranslations('sidebar');
   const router = useRouter();
   const [lightbox, setLightbox] = useState<{ src: string; caption?: string } | null>(null);
+  const [shareImageOpen, setShareImageOpen] = useState(false);
 
   const openLightbox = useCallback((src: string, caption?: string) => {
     setLightbox({ src, caption });
@@ -554,7 +557,17 @@ export default function ArticleView({ slug, initialArticle }: { slug: string; in
 
         {/* Share & Follow — before content */}
         <div className="px-6 pt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <ShareButton title={article.title} excerpt={article.excerpt} slug={slug} />
+          <div className="flex items-center gap-2">
+            <ShareButton title={article.title} excerpt={article.excerpt} slug={slug} />
+            <button
+              type="button"
+              onClick={() => setShareImageOpen(true)}
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <ImageDown className="h-4 w-4" />
+              <span>Image</span>
+            </button>
+          </div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{t('followUs')}</span>
             <div className="flex items-center space-x-1.5">
@@ -738,6 +751,18 @@ export default function ArticleView({ slug, initialArticle }: { slug: string; in
       <div id="comments" className="scroll-mt-24">
         <CommentSection articleId={article.id} />
       </div>
+
+      {/* Share as social image */}
+      <ArticleShareModal
+        open={shareImageOpen}
+        onClose={() => setShareImageOpen(false)}
+        title={article.title}
+        excerpt={article.excerpt}
+        thumbnailUrl={article.thumbnail?.url}
+        categoryName={categoryName}
+        createdAt={article.createdAt}
+        url={typeof window !== 'undefined' ? `${window.location.origin}/${locale}/article/${slug}` : ''}
+      />
 
       {/* Image Lightbox */}
       {lightbox && (

@@ -18,8 +18,9 @@ import { toPng } from 'html-to-image';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { TeamLink } from '@/components/football/TeamLink';
-import { Loader2, ArrowLeft, MapPin, ArrowUp, ArrowDown, ChevronUp, Download, CheckCircle2 } from 'lucide-react';
+import { Loader2, ArrowLeft, MapPin, ArrowUp, ArrowDown, ChevronUp, Download, CheckCircle2, ImageDown } from 'lucide-react';
 import { ShareButton } from '@/components/article/ShareButton';
+import { MatchShareModal } from '@/components/football/MatchShareModal';
 import { LIVE_STATUSES, useNow, liveMinuteLabel } from '@/lib/matchClock';
 import { LocalDateTime } from '@/components/LocalDateTime';
 
@@ -31,6 +32,46 @@ function crestUrl(t: any): string | null {
   const l = t?.logo;
   if (typeof l === 'string') return l.startsWith('http') ? l : null;
   return l?.url ?? null;
+}
+
+// Goalscorers per side for the share graphic. An own goal counts for (and is
+// listed under) the opposing team, tagged (OG). Names are shortened to a last
+// name to fit the card.
+const GOAL_TYPES = ['Goal', 'Penalty', 'OwnGoal'];
+function lastName(n?: string): string {
+  const parts = (n ?? '').trim().split(/\s+/).filter(Boolean);
+  return parts.length > 1 ? parts[parts.length - 1] : parts[0] ?? '?';
+}
+function buildScorers(events: MatchEvent[], side: 'home' | 'away', homeId?: string, awayId?: string) {
+  // One goal → one { key, name, label ("68'" / "45' (P)") }.
+  const goals = events
+    .filter((e) => GOAL_TYPES.includes(e.type as unknown as string))
+    .map((e) => {
+      const scoring = e.teamId === homeId ? 'home' : e.teamId === awayId ? 'away' : null;
+      if (!scoring) return null;
+      const countsFor = e.type === 'OwnGoal' ? (scoring === 'home' ? 'away' : 'home') : scoring;
+      if (countsFor !== side) return null;
+      const tag = e.type === 'Penalty' ? ' (P)' : e.type === 'OwnGoal' ? ' (OG)' : '';
+      return {
+        key: e.playerId || e.player?.id || lastName(e.player?.fullName),
+        name: lastName(e.player?.fullName),
+        label: `${e.minute}${e.extraMinute ? `+${e.extraMinute}` : ''}'${tag}`,
+        sort: e.minute * 100 + (e.extraMinute ?? 0),
+      };
+    })
+    .filter((x): x is NonNullable<typeof x> => !!x)
+    .sort((a, b) => a.sort - b.sort);
+
+  // Group by player, keeping first-goal order → "Fall Ngagne 68', 73'".
+  const map = new Map<string, { name: string; minutes: string[]; first: number }>();
+  for (const g of goals) {
+    const cur = map.get(g.key);
+    if (cur) cur.minutes.push(g.label);
+    else map.set(g.key, { name: g.name, minutes: [g.label], first: g.sort });
+  }
+  return Array.from(map.values())
+    .sort((a, b) => a.first - b.first)
+    .map((v) => ({ name: v.name, minutes: v.minutes.join(', ') }));
 }
 function initials(t?: { name?: string; shortName?: string }): string {
   return (t?.shortName || (t?.name ?? '').replace(/[^a-zA-Z]/g, '').slice(0, 3)).toUpperCase() || '?';
@@ -125,11 +166,26 @@ export function MatchDetail({
     initialData: initialMatch ?? undefined,
   });
 
+  const [shareImageOpen, setShareImageOpen] = useState(false);
+
+  // Shared cache key with the events tab — no extra request.
+  const { data: events = [] } = useQuery({
+    queryKey: ['match-events', (m as any)?.id],
+    queryFn: () => getMatchEvents((m as any).id),
+    initialData: initialEvents,
+    enabled: !!(m as any)?.id,
+  });
+
   const home = (m as any)?.homeTeam;
   const away = (m as any)?.awayTeam;
   const shareTitle = m
     ? `${teamName(home)} vs ${teamName(away)} — ${(m as any).season?.competition?.name ?? 'Rwanda Football'}`
     : '';
+  const mHasScore =
+    !!m &&
+    (LIVE_STATUSES.includes(m.status) || m.status === 'FullTime') &&
+    m.homeScore != null &&
+    m.awayScore != null;
 
   return (
     <div>
@@ -141,8 +197,39 @@ export function MatchDetail({
           <ArrowLeft className="h-4 w-4" />
           {t('backToFootball')}
         </Link>
-        {m && <ShareButton title={shareTitle} path={`/football/${competition}/${slug}`} />}
+        {m && (
+          <div className="flex items-center gap-2">
+            <ShareButton title={shareTitle} path={`/football/${competition}/${slug}`} />
+            <button
+              type="button"
+              onClick={() => setShareImageOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <ImageDown className="h-4 w-4" />
+              <span>Image</span>
+            </button>
+          </div>
+        )}
       </div>
+
+      {m && (
+        <MatchShareModal
+          open={shareImageOpen}
+          onClose={() => setShareImageOpen(false)}
+          homeName={teamName(home)}
+          awayName={teamName(away)}
+          homeCrestUrl={crestUrl(home)}
+          awayCrestUrl={crestUrl(away)}
+          homeScore={m.homeScore}
+          awayScore={m.awayScore}
+          hasScore={mHasScore}
+          competition={(m as any).season?.competition?.name}
+          kickoffAt={m.kickoffAt}
+          url={typeof window !== 'undefined' ? window.location.href : ''}
+          homeScorers={buildScorers(events, 'home', home?.id, away?.id)}
+          awayScorers={buildScorers(events, 'away', home?.id, away?.id)}
+        />
+      )}
 
       {isLoading ? (
         <div className="flex items-center justify-center py-24">

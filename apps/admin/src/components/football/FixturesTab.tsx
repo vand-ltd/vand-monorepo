@@ -37,6 +37,7 @@ import { cardClass, inputClass, labelClass, primaryBtn, ghostBtn } from './style
 import { MatchEventsPanel } from './MatchEventsPanel';
 import { MatchLineupsPanel } from './MatchLineupsPanel';
 import { MatchGraphicModal } from './MatchGraphicModal';
+import { BulkFixtureUpload } from './BulkFixtureUpload';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -559,6 +560,15 @@ export function FixturesTab({ seasonId, season }: { seasonId: string; season: Se
           </>
         )}
       </section>
+
+      {/* Bulk create from an Excel spreadsheet */}
+      <BulkFixtureUpload
+        seasonId={seasonId}
+        teams={teams}
+        venues={venues}
+        stages={stages}
+        onCreated={() => qc.invalidateQueries({ queryKey: ['football', 'matches', seasonId] })}
+      />
 
       {/* Matches list + score updater */}
       <section className={`${cardClass} p-5`}>

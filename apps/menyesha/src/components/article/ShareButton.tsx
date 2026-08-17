@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Share2, Link2, Check, X } from 'lucide-react';
 
 type ShareButtonProps = {
@@ -17,11 +17,15 @@ const SHARE_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://menyesha.van
 
 export function ShareButton({ title, excerpt, slug, path }: ShareButtonProps) {
   const t = useTranslations('share');
+  const locale = useLocale();
   const [showDropdown, setShowDropdown] = useState(false);
   const [copied, setCopied] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const url = `${SHARE_BASE_URL}${path ?? `/article/${slug}`}`;
+  // Share the locale-prefixed (canonical) URL. Without the /<locale> prefix the
+  // link redirects (307) to add it — which spreads non-canonical URLs and shows
+  // up in Search Console as redirect churn.
+  const url = `${SHARE_BASE_URL}/${locale}${path ?? `/article/${slug}`}`;
 
   useEffect(() => {
     if (!showDropdown) return;
