@@ -10,6 +10,8 @@ import {
   createMatchesBulk,
   updateMatch,
   deleteMatch,
+  isTbdKickoff,
+  TBD_KICKOFF,
   MATCH_STATUSES,
   type Team,
   type Venue,
@@ -31,6 +33,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Calendar,
+  Clock,
   ImageDown,
 } from 'lucide-react';
 import { cardClass, inputClass, labelClass, primaryBtn, ghostBtn } from './styles';
@@ -58,6 +61,11 @@ function errMessage(error: any, fallback: string) {
 // Local-time YYYY-MM-DD (matches how a match's kickoff day reads to the admin).
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const dateKey = (d: Date) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+// ISO -> value for <input type="datetime-local"> in the admin's local time.
+const toDatetimeLocal = (iso: string) => {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+};
 const todayKey = () => dateKey(new Date());
 const shiftKey = (key: string, days: number) => {
   const [y, m, d] = key.split('-').map(Number);
@@ -259,16 +267,26 @@ export function FixturesTab({ seasonId, season }: { seasonId: string; season: Se
   // "All dates" (showAll) drops the filter to show every game.
   const [dateFilter, setDateFilter] = useState<string>(() => todayKey());
   const [showAll, setShowAll] = useState(false);
+  // TBD-only view: surfaces unscheduled fixtures (sentinel kickoff) so they can be
+  // given a real date — they'd otherwise hide under a far-future day.
+  const [tbdOnly, setTbdOnly] = useState(false);
   const pickDate = (d: string) => {
     setDateFilter(d);
     setShowAll(false);
+    setTbdOnly(false);
   };
+  const tbdCount = useMemo(
+    () => allMatches.filter((m) => isTbdKickoff(m.kickoffAt)).length,
+    [allMatches]
+  );
   const matchesForDate = useMemo(
     () =>
-      showAll
-        ? allMatches
-        : allMatches.filter((m) => m.kickoffAt && dateKey(new Date(m.kickoffAt)) === dateFilter),
-    [allMatches, dateFilter, showAll]
+      tbdOnly
+        ? allMatches.filter((m) => isTbdKickoff(m.kickoffAt))
+        : showAll
+          ? allMatches
+          : allMatches.filter((m) => m.kickoffAt && dateKey(new Date(m.kickoffAt)) === dateFilter),
+    [allMatches, dateFilter, showAll, tbdOnly]
   );
 
   // Competition/season name for the shareable result graphic's header.
@@ -600,7 +618,7 @@ export function FixturesTab({ seasonId, season }: { seasonId: string; season: Se
                 onClick={() => pickDate(todayKey())}
                 title="Return to today"
                 className={`px-2.5 py-2 rounded-lg text-xs font-medium min-w-[64px] whitespace-nowrap text-center transition-colors ${
-                  navIsToday && !showAll
+                  navIsToday && !showAll && !tbdOnly
                     ? 'bg-[#003153] text-white dark:bg-[#F59E0B] dark:text-gray-900'
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700'
                 }`}
@@ -624,7 +642,10 @@ export function FixturesTab({ seasonId, season }: { seasonId: string; season: Se
               />
               <button
                 type="button"
-                onClick={() => setShowAll(true)}
+                onClick={() => {
+                  setShowAll(true);
+                  setTbdOnly(false);
+                }}
                 className={`px-2.5 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
                   showAll
                     ? 'bg-[#003153] text-white dark:bg-[#F59E0B] dark:text-gray-900'
@@ -633,10 +654,28 @@ export function FixturesTab({ seasonId, season }: { seasonId: string; season: Se
               >
                 All dates
               </button>
+              {tbdCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTbdOnly(true);
+                    setShowAll(false);
+                  }}
+                  className={`px-2.5 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+                    tbdOnly
+                      ? 'bg-[#F59E0B] text-gray-900'
+                      : 'bg-[#F59E0B]/10 text-[#F59E0B] hover:bg-[#F59E0B]/20'
+                  }`}
+                >
+                  TBD ({tbdCount})
+                </button>
+              )}
               <span className="ml-auto text-xs text-gray-400">
-                {showAll
-                  ? `${allMatches.length} total`
-                  : `${matchesForDate.length} on ${prettyKey(dateFilter)}`}
+                {tbdOnly
+                  ? `${matchesForDate.length} TBD`
+                  : showAll
+                    ? `${allMatches.length} total`
+                    : `${matchesForDate.length} on ${prettyKey(dateFilter)}`}
               </span>
             </div>
 
@@ -697,6 +736,11 @@ function MatchRow({
     match.venueId ?? (match.venue as any)?.id ?? ''
   );
   const [referee, setReferee] = useState<string>(match.referee ?? '');
+  // Kickoff editor. A TBD fixture starts blank so the admin picks a real date;
+  // a blank value on save re-marks the fixture as TBD (the sentinel kickoff).
+  const [kickoff, setKickoff] = useState<string>(
+    match.kickoffAt && !isTbdKickoff(match.kickoffAt) ? toDatetimeLocal(match.kickoffAt) : ''
+  );
   const [homePens, setHomePens] = useState<string>(
     match.homePenalties != null ? String(match.homePenalties) : ''
   );
@@ -717,6 +761,8 @@ function MatchRow({
     mutationFn: () =>
       updateMatch(match.id, {
         status,
+        // Blank kickoff = still TBD (sentinel); otherwise the picked local time.
+        kickoffAt: kickoff.trim() ? new Date(kickoff).toISOString() : TBD_KICKOFF,
         ...(home.trim() ? { homeScore: Number(home) } : {}),
         ...(away.trim() ? { awayScore: Number(away) } : {}),
         // Deliberately NOT sending `minute`: the backend sets the half base
@@ -750,15 +796,17 @@ function MatchRow({
     onError: (e) => toast.error(errMessage(e, 'Failed to delete match')),
   });
 
-  const kickoff = match.kickoffAt
-    ? new Date(match.kickoffAt).toLocaleString('en', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-      })
-    : '';
+  const kickoffLabel = isTbdKickoff(match.kickoffAt)
+    ? 'TBD'
+    : match.kickoffAt
+      ? new Date(match.kickoffAt).toLocaleString('en', {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false,
+        })
+      : '';
 
   const scoreInput =
     'w-12 px-2 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-center text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-[#003153] outline-none';
@@ -770,7 +818,7 @@ function MatchRow({
         from sm up, so the desktop layout is unchanged. */}
     <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 px-3 py-2.5">
       <div className="flex items-center gap-2 min-w-0 sm:contents">
-        <span className="text-xs text-gray-400 sm:w-24 shrink-0">{kickoff}</span>
+        <span className={`text-xs sm:w-24 shrink-0 ${isTbdKickoff(match.kickoffAt) ? 'font-semibold text-[#F59E0B]' : 'text-gray-400'}`}>{kickoffLabel}</span>
         {(match.stage?.name || match.group?.name) && (
           <span className="shrink-0 truncate rounded bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 dark:text-gray-300">
             {[match.stage?.name, match.group?.name].filter(Boolean).join(' · ')}
@@ -906,6 +954,29 @@ function MatchRow({
 
       {/* Venue */}
       <div className="flex flex-wrap items-center gap-2 px-3 pb-2.5 -mt-1">
+        {/* Kickoff editor — set/reschedule the date & time, or clear to mark TBD. */}
+        <Clock className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+        <input
+          type="datetime-local"
+          value={kickoff}
+          onChange={(e) => setKickoff(e.target.value)}
+          title="Kickoff (clear to mark TBD)"
+          className="min-w-0 flex-1 sm:flex-none sm:max-w-[13rem] px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-[#003153] outline-none"
+        />
+        {kickoff.trim() ? (
+          <button
+            type="button"
+            onClick={() => setKickoff('')}
+            title="Mark kickoff as TBD"
+            className="shrink-0 rounded-md px-2 py-1 text-[11px] font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            TBD
+          </button>
+        ) : (
+          <span className="shrink-0 rounded-md bg-[#F59E0B]/10 px-2 py-1 text-[11px] font-semibold text-[#F59E0B]">
+            TBD
+          </span>
+        )}
         <MapPin className="h-3.5 w-3.5 text-gray-400 shrink-0" />
         <select
           value={venueId}

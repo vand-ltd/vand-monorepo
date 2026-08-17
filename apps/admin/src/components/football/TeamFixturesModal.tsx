@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getSeasonEntries, getMatches, type Team } from '@org/api';
+import { getSeasonEntries, getMatches, isTbdKickoff, type Team } from '@org/api';
 import { X, Download, Copy, Check, Loader2, Square, RectangleVertical } from 'lucide-react';
 import { StatsCard, fixturesBody, buildStatsCaption, type CardSize, type FixtureVM } from './StatsCard';
 import { resolveLogoUrl } from './ResultCard';
@@ -83,19 +83,20 @@ export function TeamFixturesModal({
     return filtered.slice(0, cap).map((m) => {
       // Only a finished match shows a score; scheduled ones show kickoff time.
       const done = m.status === 'FullTime' && m.homeScore != null && m.awayScore != null;
-      const dt = m.kickoffAt ? new Date(m.kickoffAt) : null;
+      const tbd = isTbdKickoff(m.kickoffAt);
+      const dt = m.kickoffAt && !tbd ? new Date(m.kickoffAt) : null;
       const homeUrl = resolveLogoUrl(m.homeTeam);
       const awayUrl = resolveLogoUrl(m.awayTeam);
       return {
         id: m.id,
-        date: dt ? dt.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' }) : '',
+        date: tbd ? 'TBD' : dt ? dt.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' }) : '',
         homeName: m.homeTeam?.name ?? '—',
         homeCrest: homeUrl ? imap[homeUrl] ?? null : null,
         awayName: m.awayTeam?.name ?? '—',
         awayCrest: awayUrl ? imap[awayUrl] ?? null : null,
         emphasize: m.homeTeamId === teamId ? 'home' : 'away',
         score: done ? `${m.homeScore}–${m.awayScore}` : null,
-        time: dt ? dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '',
+        time: tbd ? '' : dt ? dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '',
       } as FixtureVM;
     });
   }, [filtered, teamId, imgQuery.data, cap]);

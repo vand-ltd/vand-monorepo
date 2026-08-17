@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getMatches, type Match } from '@org/api';
+import { getMatches, isTbdKickoff, type Match } from '@org/api';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Trophy, ChevronRight } from 'lucide-react';
@@ -88,7 +88,9 @@ export function FootballStrip() {
             ? liveMinuteLabel(m, now, { live: t('live'), halfTime: t('halfTime') })
             : m.status === 'FullTime'
               ? t('ft')
-              : new Date(m.kickoffAt).toLocaleDateString(dateLocale, { month: 'short', day: 'numeric' });
+              : isTbdKickoff(m.kickoffAt)
+                ? 'TBD'
+                : new Date(m.kickoffAt).toLocaleDateString(dateLocale, { month: 'short', day: 'numeric' });
           const comp = (m as any).season?.competition?.name ?? '';
           const sides: [string, any, number | null | undefined][] = [
             ['home', (m as any).homeTeam, m.homeScore],

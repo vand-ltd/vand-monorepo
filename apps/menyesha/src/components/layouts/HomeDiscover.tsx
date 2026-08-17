@@ -1,4 +1,5 @@
 import { getLocale, getTranslations } from 'next-intl/server';
+import { isTbdKickoff } from '@org/api';
 import { Link } from '@/i18n/navigation';
 import { ChevronRight, CalendarDays, Newspaper } from 'lucide-react';
 
@@ -77,6 +78,7 @@ export async function HomeDiscover() {
   const scoreOrDate = (m: any) => {
     const done = PLAYED.includes(m.status) && m.homeScore != null && m.awayScore != null;
     if (done) return `${m.homeScore}–${m.awayScore}`;
+    if (isTbdKickoff(m.kickoffAt)) return 'TBD';
     // Server component (no hydration), so a fixed Kigali date is safe and stable.
     return new Date(m.kickoffAt).toLocaleDateString('en', {
       day: 'numeric',

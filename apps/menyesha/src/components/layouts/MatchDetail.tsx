@@ -8,6 +8,7 @@ import {
   getMatchLineup,
   getHeadToHead,
   normalizePosition,
+  isTbdKickoff,
   type Match,
   type MatchEvent,
   type MatchLineup,
@@ -1674,13 +1675,15 @@ function H2HCrest({ team, size = 24 }: { team: any; size?: number }) {
 }
 
 function H2HMeetingRow({ m, dateLocale }: { m: HeadToHeadMeeting; dateLocale: string }) {
-  const date = m.kickoffAt
-    ? new Date(m.kickoffAt).toLocaleDateString(dateLocale, {
-        day: '2-digit',
-        month: 'short',
-        year: '2-digit',
-      })
-    : '';
+  const date = isTbdKickoff(m.kickoffAt)
+    ? 'TBD'
+    : m.kickoffAt
+      ? new Date(m.kickoffAt).toLocaleDateString(dateLocale, {
+          day: '2-digit',
+          month: 'short',
+          year: '2-digit',
+        })
+      : '';
   const done = m.homeScore != null && m.awayScore != null;
   const compSlug = m.competition?.slug ?? 'match';
   return (

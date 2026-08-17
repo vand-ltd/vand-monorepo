@@ -8,6 +8,7 @@ import {
   getMatches,
   getStandings,
   getTeamSeasonJourney,
+  isTbdKickoff,
   type TeamPerspectiveMatch,
   type TeamSeasonRow,
   type TeamHonour,
@@ -160,8 +161,9 @@ function PerspectiveRow({
   };
   const home = m.isHome ? self : opp;
   const away = m.isHome ? opp : self;
-  const dt = m.kickoffAt ? new Date(m.kickoffAt) : null;
-  const date = dt ? dt.toLocaleDateString(dateLocale, { day: '2-digit', month: 'short' }) : '';
+  const tbd = isTbdKickoff(m.kickoffAt);
+  const dt = m.kickoffAt && !tbd ? new Date(m.kickoffAt) : null;
+  const date = tbd ? 'TBD' : dt ? dt.toLocaleDateString(dateLocale, { day: '2-digit', month: 'short' }) : '';
   const time = dt ? dt.toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
   // A played result shows the score in the middle; an upcoming fixture shows the
   // kickoff time under the date and a "V" between the teams.
@@ -950,11 +952,19 @@ function NextMatchCard({
   };
   const home = m.isHome ? self : opp;
   const away = m.isHome ? opp : self;
-  const dt = m.kickoffAt ? new Date(m.kickoffAt) : null;
-  const dateStr = dt
-    ? dt.toLocaleDateString(dateLocale, { weekday: 'short', day: 'numeric', month: 'short' })
-    : '';
-  const timeStr = dt ? dt.toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
+  const tbd = isTbdKickoff(m.kickoffAt);
+  const dt = m.kickoffAt && !tbd ? new Date(m.kickoffAt) : null;
+  const dateStr = tbd
+    ? ''
+    : dt
+      ? dt.toLocaleDateString(dateLocale, { weekday: 'short', day: 'numeric', month: 'short' })
+      : '';
+  // For a TBD fixture show "TBD" in the prominent kickoff slot.
+  const timeStr = tbd
+    ? 'TBD'
+    : dt
+      ? dt.toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit', hour12: false })
+      : '';
 
   return (
     <Link
@@ -986,8 +996,9 @@ function NextMatchCard({
 function FullMatchRow({ m, teamId, dateLocale }: { m: Match; teamId: string; dateLocale: string }) {
   const isHome = m.homeTeamId === teamId;
   const done = m.status !== 'Scheduled' && m.homeScore != null && m.awayScore != null;
-  const dt = m.kickoffAt ? new Date(m.kickoffAt) : null;
-  const date = dt ? dt.toLocaleDateString(dateLocale, { day: '2-digit', month: 'short' }) : '';
+  const tbd = isTbdKickoff(m.kickoffAt);
+  const dt = m.kickoffAt && !tbd ? new Date(m.kickoffAt) : null;
+  const date = tbd ? 'TBD' : dt ? dt.toLocaleDateString(dateLocale, { day: '2-digit', month: 'short' }) : '';
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const compSlug = (m as any).season?.competition?.slug ?? 'match';
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

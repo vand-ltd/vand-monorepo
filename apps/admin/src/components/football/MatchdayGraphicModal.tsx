@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getMatches, type Match } from '@org/api';
+import { getMatches, isTbdKickoff, type Match } from '@org/api';
 import { X, Download, Copy, Check, Loader2, Square, RectangleVertical } from 'lucide-react';
 import { StatsCard, matchdayBody, buildStatsCaption, type CardSize, type FixtureVM } from './StatsCard';
 import { resolveLogoUrl } from './ResultCard';
@@ -103,19 +103,20 @@ export function MatchdayGraphicModal({
     const imap = imgQuery.data ?? {};
     return filtered.slice(0, cap).map((m) => {
       const done = m.status === 'FullTime' && m.homeScore != null && m.awayScore != null;
-      const dt = m.kickoffAt ? new Date(m.kickoffAt) : null;
+      const tbd = isTbdKickoff(m.kickoffAt);
+      const dt = m.kickoffAt && !tbd ? new Date(m.kickoffAt) : null;
       const hu = resolveLogoUrl(m.homeTeam);
       const au = resolveLogoUrl(m.awayTeam);
       return {
         id: m.id,
-        date: dt ? dt.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' }) : '',
+        date: tbd ? 'TBD' : dt ? dt.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' }) : '',
         homeName: m.homeTeam?.name ?? '—',
         homeCrest: hu ? imap[hu] ?? null : null,
         awayName: m.awayTeam?.name ?? '—',
         awayCrest: au ? imap[au] ?? null : null,
         emphasize: null,
         score: done ? `${m.homeScore}–${m.awayScore}` : null,
-        time: dt ? dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '',
+        time: tbd ? '' : dt ? dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : '',
       } as FixtureVM;
     });
   }, [filtered, imgQuery.data, cap]);

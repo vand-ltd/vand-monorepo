@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 import { Oswald } from 'next/font/google';
-import type { Match, MatchEvent, Team } from '@org/api';
+import { isTbdKickoff, type Match, type MatchEvent, type Team } from '@org/api';
 import { MENYESHA_LOGO } from './brand';
 
 // Condensed, broadcast-style display font for the scoreline / names / labels.
@@ -111,9 +111,11 @@ export const ResultCard = forwardRef<HTMLDivElement, Props>(function ResultCard(
   const as = match.awayScore ?? 0;
   const hasPens = match.homePenalties != null && match.awayPenalties != null;
   const subtitle = [match.stage?.name, match.group?.name, match.round].filter(Boolean).join(' · ');
-  const kickoff = match.kickoffAt
-    ? new Date(match.kickoffAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-    : '';
+  const kickoff = isTbdKickoff(match.kickoffAt)
+    ? 'TBD'
+    : match.kickoffAt
+      ? new Date(match.kickoffAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+      : '';
 
   const note = hasPens
     ? `Won ${match.homePenalties}–${match.awayPenalties} on penalties`

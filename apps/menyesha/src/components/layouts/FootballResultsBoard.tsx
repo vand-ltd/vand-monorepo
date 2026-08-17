@@ -10,6 +10,7 @@ import {
   getTopScorers,
   getTopAssists,
   getSeasonStages,
+  isTbdKickoff,
   type Match,
   type StandingRow,
   type StandingsResult,
@@ -897,12 +898,14 @@ export function FootballResultsBoard({
               {group.date ? (
                 // League season: one section per matchday date
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">
-                  {new Date(`${group.date}T00:00:00`).toLocaleDateString(dateLocale, {
-                    weekday: 'long',
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                  })}
+                  {isTbdKickoff(group.list[0]?.kickoffAt)
+                    ? 'TBD'
+                    : new Date(`${group.date}T00:00:00`).toLocaleDateString(dateLocale, {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      })}
                 </h3>
               ) : competitionId ? (
                 // Cup season: one section per stage / group
@@ -973,11 +976,13 @@ function FallbackSection({
         {groups.map(([date, list]) => (
           <div key={date}>
             <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">
-              {new Date(`${date}T00:00:00`).toLocaleDateString(dateLocale, {
-                weekday: 'short',
-                day: 'numeric',
-                month: 'short',
-              })}
+              {isTbdKickoff(list[0]?.kickoffAt)
+                ? 'TBD'
+                : new Date(`${date}T00:00:00`).toLocaleDateString(dateLocale, {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
+                  })}
             </h4>
             <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700">
               {list.map((m) => (
@@ -1460,6 +1465,8 @@ function MatchListRow({
   ) : isFinished ? (
     // A tie decided in extra time shows AET instead of FT.
     <span className="text-gray-400">{m.afterExtraTime ? t('aetShort') : t('ft')}</span>
+  ) : isTbdKickoff(m.kickoffAt) ? (
+    <span className="font-bold text-gray-500 dark:text-gray-400">TBD</span>
   ) : (
     <span className="font-bold text-gray-600 dark:text-gray-300">
       {new Date(m.kickoffAt).toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit', hour12: false })}
@@ -1467,8 +1474,8 @@ function MatchListRow({
   );
 
   // In cup stage sections there's no date header, so prefix the row's status
-  // with its own date.
-  const statusCol = showDate ? (
+  // with its own date — unless it's TBD, where the status already reads "TBD".
+  const statusCol = showDate && !isTbdKickoff(m.kickoffAt) ? (
     <>
       <span className="block text-[10px] font-medium text-gray-400">
         {new Date(m.kickoffAt).toLocaleDateString(dateLocale, { day: 'numeric', month: 'short' })}

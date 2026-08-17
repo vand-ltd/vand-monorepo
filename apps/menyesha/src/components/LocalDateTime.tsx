@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { isTbdKickoff } from '@org/api';
 
 // Renders a date/time in the VIEWER's own timezone (like livescore.com).
 //
@@ -16,26 +17,31 @@ export function LocalDateTime({
   locale = 'en',
   options,
   className,
+  tbdLabel = 'TBD',
 }: {
   iso?: string | null;
   locale?: string;
   options: Intl.DateTimeFormatOptions;
   className?: string;
+  tbdLabel?: string;
 }) {
-  const [text, setText] = useState('');
+  const tbd = isTbdKickoff(iso);
+  // "TBD" is constant text, so it can render on the server too (no timezone-driven
+  // hydration mismatch) — unlike a formatted local time.
+  const [text, setText] = useState(tbd ? tbdLabel : '');
 
   useEffect(() => {
-    if (!iso) {
-      setText('');
+    if (!iso || tbd) {
+      setText(tbd ? tbdLabel : '');
       return;
     }
     setText(new Date(iso).toLocaleString(locale, { hour12: false, ...options }));
     // options is a fresh object each render; re-running is cheap and idempotent.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [iso, locale]);
+  }, [iso, locale, tbd, tbdLabel]);
 
   return (
-    <time dateTime={iso ?? undefined} className={className} suppressHydrationWarning>
+    <time dateTime={tbd ? undefined : iso ?? undefined} className={className} suppressHydrationWarning>
       {text}
     </time>
   );

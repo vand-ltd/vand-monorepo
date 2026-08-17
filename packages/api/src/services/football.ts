@@ -120,6 +120,21 @@ export interface Player {
   photo?: string | { url?: string } | null;
 }
 
+// Sentinel kickoff for fixtures whose date/time isn't announced yet ("TBD").
+// `kickoffAt` is a required timestamp end-to-end, so instead of a nullable field
+// we store this recognizable far-future instant and map it to a "TBD" label on
+// display. Far-future also sorts TBD fixtures to the end of upcoming lists.
+export const TBD_KICKOFF = '2099-12-31T00:00:00.000Z';
+const TBD_KICKOFF_MS = new Date(TBD_KICKOFF).getTime();
+
+// True when a kickoff is the TBD sentinel. Compares by instant so it's immune to
+// timezone/format differences ("Z" vs "+00:00", ms precision, etc.).
+export function isTbdKickoff(iso?: string | null): boolean {
+  if (!iso) return false;
+  const t = new Date(iso).getTime();
+  return !Number.isNaN(t) && t === TBD_KICKOFF_MS;
+}
+
 export interface Match {
   id: string;
   seasonId: string;

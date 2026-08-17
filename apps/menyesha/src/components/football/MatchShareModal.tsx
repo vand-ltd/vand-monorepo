@@ -1,6 +1,7 @@
 'use client';
 
 import { forwardRef, useEffect, useRef, useState } from 'react';
+import { isTbdKickoff } from '@org/api';
 import { urlToDataUrl, downloadCardPng, slugify } from '@/lib/shareImage';
 import { X, Download, Copy, Check, Loader2, Square, RectangleVertical } from 'lucide-react';
 
@@ -276,10 +277,13 @@ export function MatchShareModal({
 
   if (!open) return null;
 
-  const dt = kickoffAt ? new Date(kickoffAt) : null;
-  const kickoffLabel = dt
-    ? dt.toLocaleString('en', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Africa/Kigali' })
-    : '';
+  const tbd = isTbdKickoff(kickoffAt);
+  const dt = kickoffAt && !tbd ? new Date(kickoffAt) : null;
+  const kickoffLabel = tbd
+    ? 'TBD'
+    : dt
+      ? dt.toLocaleString('en', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Africa/Kigali' })
+      : '';
   const statusLabel = hasScore ? 'Full time' : kickoffLabel || 'Upcoming';
 
   const scoreText = hasScore ? `${homeScore}–${awayScore}` : 'vs';

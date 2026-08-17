@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { locales } from '@org/i18n';
+import { isTbdKickoff } from '@org/api';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 // Always emit absolute production URLs — ignore a localhost NEXT_PUBLIC_SITE_URL.
@@ -212,8 +213,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         for (const m of matches) {
           const compSlug = m.season?.competition?.slug;
           const matchSlug = m.slug;
+          // A TBD fixture carries the far-future sentinel kickoff — don't let it
+          // seed a junk /football/2099-12-31 board URL or a future lastmod.
+          const tbd = isTbdKickoff(m.kickoffAt);
           const dateStr =
-            typeof m.kickoffAt === 'string' && /^\d{4}-\d{2}-\d{2}/.test(m.kickoffAt)
+            !tbd && typeof m.kickoffAt === 'string' && /^\d{4}-\d{2}-\d{2}/.test(m.kickoffAt)
               ? m.kickoffAt.slice(0, 10)
               : null;
           if (dateStr) dates.add(dateStr);
@@ -221,7 +225,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             for (const locale of locales) {
               entries.push({
                 url: `${SITE_URL}/${locale}/football/${compSlug}/${matchSlug}`,
-                lastModified: new Date(m.updatedAt || m.kickoffAt || now),
+                lastModified: new Date(m.updatedAt || (tbd ? now : m.kickoffAt) || now),
                 changeFrequency: 'daily',
                 priority: 0.6,
                 alternates: alternatesFor(`football/${compSlug}/${matchSlug}`),

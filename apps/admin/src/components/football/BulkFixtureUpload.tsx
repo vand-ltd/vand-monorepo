@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { createMatchesBulk, type MatchInput, type Team, type Venue, type Stage } from '@org/api';
+import { createMatchesBulk, TBD_KICKOFF, type MatchInput, type Team, type Venue, type Stage } from '@org/api';
 import { toast } from 'sonner';
 import { cardClass, primaryBtn, ghostBtn } from './styles';
 import { FileDown, Upload, Loader2, CheckCircle2, AlertCircle, X } from 'lucide-react';
@@ -12,6 +12,11 @@ const COLS = ['Home Team', 'Away Team', 'Date', 'Time', 'Round', 'Venue', 'Refer
 
 const norm = (v: unknown) => String(v ?? '').trim().toLowerCase();
 const pad = (n: number) => String(n).padStart(2, '0');
+
+// Placeholder kickoff time for fixtures whose time isn't announced yet. Blank or
+// "TBD"/"TBA" in the Time column falls back to this — edit the exact time later.
+const DEFAULT_TIME = { H: 15, M: 0 };
+const isTbd = (s: string) => s === '' || /^(tbd|tba|n\/?a)$/i.test(s);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function errMessage(e: any, fallback: string): string {
@@ -114,6 +119,10 @@ export function BulkFixtureUpload({
     ws.addRow(COLS);
     ws.getRow(1).font = { bold: true };
     ws.addRow(['APR FC', 'Rayon Sports FC', '2026-08-22', '18:00', 'Matchday 1', venues[0]?.name ?? 'Amahoro Stadium', '', '', '']);
+    // Time blank / TBD → known day, placeholder 15:00 time you edit later.
+    ws.addRow(['Police FC', 'AS Kigali', '2026-08-23', 'TBD', 'Matchday 1', '', '', '', '']);
+    // Date blank / TBD → whole fixture shows "TBD" on the site until scheduled.
+    ws.addRow(['Musanze FC', 'Gasogi United', 'TBD', 'TBD', 'Matchday 1', '', '', '', '']);
     ws.columns = COLS.map(() => ({ width: 18 }));
 
     // Reference sheet: exact team / venue / stage names to copy from.
@@ -183,21 +192,31 @@ export function BulkFixtureUpload({
         else if (!at) errors.push(`Away team "${away}" not enrolled`);
         if (ht && at && ht.id === at.id) errors.push('Home and away are the same team');
 
-        const dp = dateParts(get(row, 'Date'));
-        const tp = timeParts(get(row, 'Time'));
-        if (!dp) errors.push('Invalid/missing Date (use YYYY-MM-DD)');
-        if (!tp) errors.push('Invalid/missing Time (use HH:MM)');
+        // Date/time are optional. A blank/"TBD" Date makes the whole fixture TBD —
+        // stored as the sentinel kickoff and shown as "TBD" everywhere. A known
+        // date with a blank/"TBD" Time defaults to a placeholder time (15:00).
+        const rawDate = String(get(row, 'Date')).trim();
+        const rawTime = String(get(row, 'Time')).trim();
+        const dateTbd = isTbd(rawDate);
+        const timeTbd = isTbd(rawTime);
+        const dp = dateTbd ? null : dateParts(get(row, 'Date'));
+        const tp = timeTbd ? DEFAULT_TIME : timeParts(get(row, 'Time'));
+        if (!dateTbd && !dp) errors.push('Invalid Date (use YYYY-MM-DD, or leave blank for TBD)');
+        if (!dateTbd && !timeTbd && !tp) errors.push('Invalid Time (use HH:MM, or leave blank for TBD)');
 
         let kickoffAt: string | undefined;
         let when = '';
-        if (dp && tp) {
+        if (dateTbd) {
+          kickoffAt = TBD_KICKOFF;
+          when = 'TBD';
+        } else if (dp && tp) {
           // Kigali is UTC+2 (no DST) — fixed offset makes this deterministic.
           const iso = `${dp.y}-${pad(dp.mo)}-${pad(dp.da)}T${pad(tp.H)}:${pad(tp.M)}:00+02:00`;
           const d = new Date(iso);
           if (isNaN(d.getTime())) errors.push('Invalid date/time');
           else {
             kickoffAt = d.toISOString();
-            when = `${dp.y}-${pad(dp.mo)}-${pad(dp.da)} ${pad(tp.H)}:${pad(tp.M)}`;
+            when = `${dp.y}-${pad(dp.mo)}-${pad(dp.da)} ${pad(tp.H)}:${pad(tp.M)}${timeTbd ? ' · time TBD' : ''}`;
           }
         }
 
@@ -321,8 +340,11 @@ export function BulkFixtureUpload({
           <p className="text-xs text-gray-400">
             Columns: <span className="font-medium">{COLS.join(' · ')}</span>. Date as{' '}
             <span className="font-mono">YYYY-MM-DD</span>, Time as{' '}
-            <span className="font-mono">HH:MM</span> (24h, Kigali). Team &amp; venue names must match
-            those enrolled — the template&apos;s “Reference” sheet lists them.
+            <span className="font-mono">HH:MM</span> (24h, Kigali). Leave <span className="font-mono">Date</span>{' '}
+            blank or <span className="font-mono">TBD</span> for a fully unscheduled fixture (shows{' '}
+            <span className="font-mono">TBD</span> on the site); leave only <span className="font-mono">Time</span>{' '}
+            blank to use a placeholder <span className="font-mono">15:00</span>. Team &amp; venue names
+            must match those enrolled — the template&apos;s “Reference” sheet lists them.
           </p>
 
           {rows && rows.length > 0 && (

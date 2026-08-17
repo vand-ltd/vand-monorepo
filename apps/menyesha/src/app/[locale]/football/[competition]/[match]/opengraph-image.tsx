@@ -159,14 +159,19 @@ export default async function Image({ params }: Props) {
     m?.homeScore != null &&
     m?.awayScore != null;
   const isFinished = m?.status === 'FullTime';
-  const date = m?.kickoffAt
-    ? new Date(m.kickoffAt).toLocaleDateString('en', {
-        weekday: 'short',
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      })
-    : '';
+  // Edge runtime — inline the TBD sentinel check rather than importing the
+  // axios-backed @org/api. Keep this value in sync with TBD_KICKOFF in @org/api.
+  const isTbd = !!m?.kickoffAt && new Date(m.kickoffAt).getTime() === new Date('2099-12-31T00:00:00.000Z').getTime();
+  const date = isTbd
+    ? 'TBD'
+    : m?.kickoffAt
+      ? new Date(m.kickoffAt).toLocaleDateString('en', {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        })
+      : '';
   const centerLabel = hasScore ? `${m.homeScore} - ${m.awayScore}` : 'VS';
   const statusLabel = hasScore ? (isFinished ? 'Full time' : 'Live') : date;
 

@@ -4,6 +4,7 @@ import { Link } from '@/i18n/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { MatchDetail } from '@/components/layouts/MatchDetail';
 import { FootballResultsBoard } from '@/components/layouts/FootballResultsBoard';
+import { isTbdKickoff } from '@org/api';
 import { ssrMatchBundle } from '@/lib/matchSSR';
 import { localeAlternates } from '@/lib/seo';
 
@@ -144,7 +145,9 @@ export default async function Page({ params }: Props) {
         '@type': 'SportsEvent',
         name: `${m.homeTeam?.name ?? 'Home'} vs ${m.awayTeam?.name ?? 'Away'}`,
         sport: 'Soccer',
-        startDate: m.kickoffAt,
+        // Omit startDate for a TBD fixture — emitting the far-future sentinel would
+        // tell Google the event is in 2099. No startDate = no misleading rich result.
+        ...(isTbdKickoff(m.kickoffAt) ? {} : { startDate: m.kickoffAt }),
         eventStatus:
           m.status === 'FullTime'
             ? 'https://schema.org/EventCompleted'

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getMatches, getSeasons, getCompetitions, type Match } from '@org/api';
+import { getMatches, getSeasons, getCompetitions, isTbdKickoff, type Match } from '@org/api';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Card, CardContent } from '@/components/ui/card';
@@ -174,10 +174,12 @@ export function FootballWidget() {
                 ? liveMinuteLabel(m, now, { live: t('live'), halfTime: t('halfTime') })
                 : hasScore
                   ? `${m.homeScore}-${m.awayScore}`
-                  : new Date(m.kickoffAt).toLocaleDateString(dateLocale, {
-                      month: 'short',
-                      day: 'numeric',
-                    });
+                  : isTbdKickoff(m.kickoffAt)
+                    ? 'TBD'
+                    : new Date(m.kickoffAt).toLocaleDateString(dateLocale, {
+                        month: 'short',
+                        day: 'numeric',
+                      });
               const comp = (m as any).season?.competition?.name ?? '';
               return (
                 <Link

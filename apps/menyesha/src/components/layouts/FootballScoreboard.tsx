@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getMatches, type Match } from '@org/api';
+import { getMatches, isTbdKickoff, type Match } from '@org/api';
 import { useLocale, useTranslations } from 'next-intl';
 import { Loader2, Trophy, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
@@ -183,6 +183,8 @@ function MatchCard({
     </span>
   ) : isFinished ? (
     <span className="font-medium text-gray-400">{t('ft')}</span>
+  ) : isTbdKickoff(m.kickoffAt) ? (
+    <span className="text-gray-400">TBD</span>
   ) : (
     <span className="text-gray-400">
       {new Date(m.kickoffAt).toLocaleString(dateLocale, {
