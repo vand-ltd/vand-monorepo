@@ -1,6 +1,7 @@
 'use client';
 
 import { forwardRef, useEffect, useRef, useState } from 'react';
+import { SocialIcons } from '@org/ui';
 import { urlToDataUrl, coverDataUrl, downloadCardPng, slugify } from '@/lib/shareImage';
 import { X, Download, Copy, Check, Loader2, Square, RectangleVertical } from 'lucide-react';
 
@@ -70,6 +71,9 @@ const ShareCard = forwardRef<
           )}
           <span style={{ color: 'rgba(255,255,255,0.72)', fontSize: d.foot }}>menyesha.vand.rw</span>
           {date && <span style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.6)', fontSize: d.foot }}>{date}</span>}
+        </div>
+        <div style={{ marginTop: d.pad * 0.32, borderTop: '1px solid rgba(255,255,255,0.14)', paddingTop: d.pad * 0.3 }}>
+          <SocialIcons size={d.foot * 1.35} color="rgba(255,255,255,0.82)" handle="@menyesha" />
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { forwardRef } from 'react';
 import { Oswald } from 'next/font/google';
 import { isTbdKickoff, type Match, type MatchEvent, type Team } from '@org/api';
+import { SocialIcons } from '@org/ui';
 import { MENYESHA_LOGO } from './brand';
 
 // Condensed, broadcast-style display font for the scoreline / names / labels.
@@ -306,6 +307,7 @@ export const ResultCard = forwardRef<HTMLDivElement, Props>(function ResultCard(
           <img src={MENYESHA_LOGO} alt="Menyesha" style={{ height: d.brand * 1.15, width: 'auto', display: 'block' }} />
           <span style={{ fontSize: d.foot * 0.9, letterSpacing: 1, color: '#7f93a8' }}>menyesha.vand.rw</span>
         </div>
+        <SocialIcons size={d.foot * 1.3} color="#9fb3c8" />
         <div style={{ fontSize: d.foot, color: '#9fb3c8', textAlign: 'right' }}>
           {kickoff}
           {match.venue?.name ? ` · ${match.venue.name}` : ''}

@@ -1,6 +1,7 @@
 'use client';
 
 import { forwardRef, useEffect, useRef, useState } from 'react';
+import { SocialIcons } from '@org/ui';
 import { isTbdKickoff } from '@org/api';
 import { urlToDataUrl, downloadCardPng, slugify } from '@/lib/shareImage';
 import { X, Download, Copy, Check, Loader2, Square, RectangleVertical } from 'lucide-react';
@@ -202,6 +203,7 @@ const MatchShareCard = forwardRef<
             <span style={{ color: '#fff', fontWeight: 800, fontSize: d.logo * 0.7 }}>Menyesha</span>
           )}
         </div>
+        <SocialIcons size={d.foot * 1.3} color="rgba(255,255,255,0.8)" />
         <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: d.foot }}>menyesha.vand.rw</span>
       </div>
     </div>

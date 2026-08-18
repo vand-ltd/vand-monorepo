@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   getTeamProfile,
@@ -797,11 +797,11 @@ function SquadTab({
   t,
 }: {
   teamId: string;
-  seasons: { id: string; name: string }[];
+  seasons: SeasonOpt[];
   initialSeasonId?: string;
   t: ReturnType<typeof useTranslations>;
 }) {
-  const [seasonId, setSeasonId] = useState(initialSeasonId ?? seasons[0]?.id ?? '');
+  const [seasonId, selectSeason] = useSeasonParam(seasons, initialSeasonId);
   const { data, isLoading } = useQuery({
     queryKey: ['team-squad', teamId, seasonId],
     queryFn: () => getSquad(teamId, seasonId || undefined),
@@ -812,7 +812,7 @@ function SquadTab({
   return (
     <div className="space-y-3">
       {seasons.length > 1 && (
-        <SeasonSelect seasons={seasons} value={seasonId} onChange={setSeasonId} />
+        <SeasonSelect seasons={seasons} value={seasonId} onChange={selectSeason} />
       )}
       {isLoading ? (
         <div className="flex justify-center py-12">
@@ -877,13 +877,13 @@ function MatchListTab({
   t,
 }: {
   teamId: string;
-  seasons: { id: string; name: string }[];
+  seasons: SeasonOpt[];
   initialSeasonId?: string;
   dateLocale: string;
   mode: 'fixtures' | 'results';
   t: ReturnType<typeof useTranslations>;
 }) {
-  const [seasonId, setSeasonId] = useState(initialSeasonId ?? seasons[0]?.id ?? '');
+  const [seasonId, selectSeason] = useSeasonParam(seasons, initialSeasonId);
   const { data, isLoading } = useQuery({
     queryKey: ['team-matches', teamId, seasonId],
     queryFn: () => getMatches({ teamId, seasonId: seasonId || undefined, order: 'asc' }),
@@ -901,7 +901,7 @@ function MatchListTab({
   return (
     <div className="space-y-3">
       {seasons.length > 1 && (
-        <SeasonSelect seasons={seasons} value={seasonId} onChange={setSeasonId} />
+        <SeasonSelect seasons={seasons} value={seasonId} onChange={selectSeason} />
       )}
       {isLoading ? (
         <div className="flex justify-center py-12">
@@ -1064,6 +1064,50 @@ function EmptyBox({ text }: { text: string }) {
   );
 }
 
+/* ------------------------------ season param ------------------------------ */
+
+// A selectable competition-season: opaque id (for fetching) + readable slug (for
+// the shareable ?season= param, e.g. "bk-pro-league-2026-27").
+type SeasonOpt = { id: string; name: string; slug: string };
+
+const seasonSlugify = (s: string) =>
+  s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+// Reflects the chosen season in a shareable ?season=<slug> query param. The tab
+// URL stays canonical (see the team page's generateMetadata), so Google indexes
+// one page per tab while users can still deep-link a specific season. Updates go
+// through history.replaceState — a client-only URL tweak, so there's no RSC
+// refetch, no scroll jump, and no extra history entries for a filter change.
+function useSeasonParam(seasons: SeasonOpt[], fallbackId?: string) {
+  // The default (current) season must be one the dropdown actually lists — else
+  // the value we compare against wouldn't match the shown option, and selecting
+  // "current" would wrongly write ?season=. Fall back to the newest listed season.
+  const inList = fallbackId && seasons.some((s) => s.id === fallbackId);
+  const defaultId = (inList ? fallbackId : seasons[0]?.id) ?? '';
+  const [seasonId, setSeasonId] = useState(defaultId);
+
+  // Honour a ?season=<slug> deep link AFTER mount — keeping it out of the initial
+  // render so SSR and hydration agree (the <select> value would mismatch).
+  useEffect(() => {
+    const slug = new URLSearchParams(window.location.search).get('season');
+    const id = slug ? seasons.find((s) => s.slug === slug)?.id : undefined;
+    if (id && id !== seasonId) setSeasonId(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seasons]);
+
+  const select = (id: string) => {
+    setSeasonId(id);
+    const slug = seasons.find((s) => s.id === id)?.slug;
+    const url = new URL(window.location.href);
+    // Drop the param for the default season, so its URL stays clean (= canonical).
+    if (slug && id !== defaultId) url.searchParams.set('season', slug);
+    else url.searchParams.delete('season');
+    window.history.replaceState(null, '', url.toString());
+  };
+
+  return [seasonId, select] as const;
+}
+
 /* -------------------------------- page ------------------------------------ */
 
 type Tab = 'overview' | 'squad' | 'fixtures' | 'results';
@@ -1071,16 +1115,21 @@ type Tab = 'overview' | 'squad' | 'fixtures' | 'results';
 export function TeamProfile({
   slug,
   initialData,
+  initialTab = 'overview',
 }: {
   slug: string;
   // Server-fetched so the profile is in the initial HTML (crawlable) instead of
   // a loading state; the client still refetches for freshness.
   initialData?: Awaited<ReturnType<typeof getTeamProfile>>;
+  // Which tab to show, decided by the URL (…/fixtures, …/results, …/squad). The
+  // active tab is URL-driven — each is its own indexable page — so there's no
+  // local tab state; navigating between tabs updates the path (see tabLink).
+  initialTab?: Tab;
 }) {
   const locale = useLocale();
   const t = useTranslations('football');
   const dateLocale = locale === 'rw' ? 'en' : locale;
-  const [tab, setTab] = useState<Tab>('overview');
+  const tab: Tab = initialTab;
 
   const { data, isLoading } = useQuery({
     queryKey: ['team-profile', slug],
@@ -1088,15 +1137,29 @@ export function TeamProfile({
     initialData,
   });
 
-  const seasonOptions = useMemo(() => {
-    const seen = new Map<string, string>();
+  const seasonOptions = useMemo<SeasonOpt[]>(() => {
+    const seen = new Map<string, SeasonOpt>();
     for (const r of data?.seasons ?? []) {
-      if (!r.season?.id || seen.has(r.season.id)) continue;
+      const id = r.season?.id;
+      if (!id || seen.has(id)) continue;
       // Prefix the competition so seasons of the same year are distinguishable.
-      const label = [r.competition?.name, r.season.name].filter(Boolean).join(' · ');
-      seen.set(r.season.id, label || r.season.name);
+      const label = [r.competition?.name, r.season?.name].filter(Boolean).join(' · ') || r.season?.name || '';
+      const slug =
+        [r.competition?.slug, seasonSlugify(r.season?.name ?? '')].filter(Boolean).join('-') ||
+        seasonSlugify(label) ||
+        id;
+      seen.set(id, { id, name: label, slug });
     }
-    return Array.from(seen, ([id, name]) => ({ id, name }));
+    // Guarantee slugs are unique so ?season= maps back to exactly one season.
+    const used = new Set<string>();
+    for (const opt of seen.values()) {
+      let s = opt.slug;
+      let n = 1;
+      while (used.has(s)) s = `${opt.slug}-${++n}`;
+      used.add(s);
+      opt.slug = s;
+    }
+    return Array.from(seen.values());
   }, [data?.seasons]);
 
   if (isLoading) {
@@ -1116,9 +1179,16 @@ export function TeamProfile({
   const self: SelfTeam = { name: team.name, crest: logo, slug: team.slug };
   const honours = team.honours ?? [];
 
-  const tabBtn = (key: Tab, label: string) => (
-    <button
-      onClick={() => setTab(key)}
+  // Each tab is a real URL for SEO: overview at the base, the rest under a path
+  // segment. A soft <Link> nav keeps it snappy (react-query data is cached) while
+  // giving Google distinct, crawlable pages.
+  const teamSlug = team.slug ?? slug;
+  const tabHref = (key: Tab) =>
+    key === 'overview' ? `/football/team/${teamSlug}` : `/football/team/${teamSlug}/${key}`;
+  const tabLink = (key: Tab, label: string) => (
+    <Link
+      href={tabHref(key)}
+      scroll={false}
       className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
         tab === key
           ? 'border-[#003153] dark:border-[#F59E0B] text-[#003153] dark:text-[#F59E0B]'
@@ -1126,7 +1196,7 @@ export function TeamProfile({
       }`}
     >
       {label}
-    </button>
+    </Link>
   );
 
   return (
@@ -1201,10 +1271,10 @@ export function TeamProfile({
 
       {/* Tabs */}
       <div className="border-b border-gray-200 dark:border-gray-700 flex gap-1 overflow-x-auto">
-        {tabBtn('overview', t('overview'))}
-        {tabBtn('squad', t('squadTab'))}
-        {tabBtn('fixtures', t('fixturesTab'))}
-        {tabBtn('results', t('resultsTab'))}
+        {tabLink('overview', t('overview'))}
+        {tabLink('squad', t('squadTab'))}
+        {tabLink('fixtures', t('fixturesTab'))}
+        {tabLink('results', t('resultsTab'))}
       </div>
 
       {tab === 'overview' && (

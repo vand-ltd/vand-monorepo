@@ -300,16 +300,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const json = await res.json();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const teams: any[] = json.data?.data ?? json.data ?? [];
+      // Overview at the bare URL, plus each tabbed sub-page so Google discovers
+      // the fixtures / results / squad views (each is its own indexable page).
+      const teamPaths = (slug: string) => [
+        `football/team/${slug}`,
+        `football/team/${slug}/fixtures`,
+        `football/team/${slug}/results`,
+        `football/team/${slug}/squad`,
+      ];
       for (const team of teams) {
         if (!team.slug) continue;
-        for (const locale of locales) {
-          entries.push({
-            url: `${SITE_URL}/${locale}/football/team/${team.slug}`,
-            lastModified: new Date(team.updatedAt || now),
-            changeFrequency: 'weekly',
-            priority: 0.5,
-            alternates: alternatesFor(`football/team/${team.slug}`),
-          });
+        for (const path of teamPaths(team.slug)) {
+          for (const locale of locales) {
+            entries.push({
+              url: `${SITE_URL}/${locale}/${path}`,
+              lastModified: new Date(team.updatedAt || now),
+              changeFrequency: 'weekly',
+              priority: path.endsWith(team.slug) ? 0.5 : 0.4,
+              alternates: alternatesFor(path),
+            });
+          }
         }
       }
     }

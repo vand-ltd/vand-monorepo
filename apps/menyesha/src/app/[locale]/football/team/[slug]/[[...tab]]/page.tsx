@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { TeamProfile } from '@/components/layouts/TeamProfile';
 import { localeAlternates } from '@/lib/seo';
 
-type Props = { params: Promise<{ locale: string; slug: string }> };
+type TeamTab = 'overview' | 'fixtures' | 'results' | 'squad';
+type Props = { params: Promise<{ locale: string; slug: string; tab?: string[] }> };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://menyesha.vand.rw';
@@ -14,6 +16,18 @@ const RW_KEYWORDS = [
   'Rwanda Premier League',
   'football team Rwanda',
 ];
+
+// The tabs that live under a path segment. "overview" is the bare team URL, so
+// it's intentionally not in here (no /overview suffix — avoids a duplicate URL).
+const PATH_TABS = ['fixtures', 'results', 'squad'] as const;
+
+// Resolve the optional [[...tab]] segment to a tab, or null for an unknown/deep
+// path (→ 404, so Google never indexes junk like /team/x/foo or /team/x/a/b).
+function resolveTab(tab?: string[]): TeamTab | null {
+  if (!tab || tab.length === 0) return 'overview';
+  if (tab.length > 1) return null;
+  return (PATH_TABS as readonly string[]).includes(tab[0]) ? (tab[0] as TeamTab) : null;
+}
 
 function pretty(slug: string): string {
   return slug
@@ -59,19 +73,39 @@ function normalizeTeamProfile(p: any) {
   };
 }
 
+// Per-tab title/description suffix — so each tab is a distinct, self-describing
+// indexable page rather than four views sharing one <title>.
+function tabMeta(tab: TeamTab, name: string): { label: string; blurb: string } {
+  switch (tab) {
+    case 'fixtures':
+      return { label: 'Fixtures', blurb: `Upcoming ${name} fixtures, kickoff times and schedule.` };
+    case 'results':
+      return { label: 'Results', blurb: `Latest ${name} results, scores and match reports.` };
+    case 'squad':
+      return { label: 'Squad', blurb: `${name} squad and player list for the current season.` };
+    default:
+      return { label: '', blurb: 'Squad, fixtures, results, form and season-by-season record.' };
+  }
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale, slug } = await params;
-  const alternates = localeAlternates(locale, `football/team/${slug}`);
+  const { locale, slug, tab } = await params;
+  const active = resolveTab(tab);
+  if (!active) return {}; // unknown tab — the page renders notFound()
+
+  const path = active === 'overview' ? `football/team/${slug}` : `football/team/${slug}/${active}`;
+  const alternates = localeAlternates(locale, path);
   const data = await fetchTeam(slug);
   const team = data?.team;
   const name = team?.name ?? pretty(slug);
   const comp = data?.currentSeason?.competition?.name;
   const logo = logoUrl(team);
+  const { label, blurb } = tabMeta(active, name);
 
-  const title = `${name}${comp ? ` — ${comp}` : ''} | Rwanda Football | Menyesha`;
+  const title = `${name}${label ? ` — ${label}` : ''}${comp ? ` — ${comp}` : ''} | Rwanda Football | Menyesha`;
   const description = [
     `${name}${team?.city ? `, ${team.city}` : ''}${comp ? ` — ${comp}` : ''}.`,
-    'Squad, fixtures, results, form and season-by-season record.',
+    blurb,
     'Rwanda football club profile on Menyesha.',
   ]
     .filter(Boolean)
@@ -98,7 +132,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function Page({ params }: Props) {
-  const { slug } = await params;
+  const { slug, tab } = await params;
+  const active = resolveTab(tab);
+  if (!active) notFound();
+
   const data = await fetchTeam(slug);
   const team = data?.team;
   const logo = logoUrl(team);
@@ -134,7 +171,11 @@ export default async function Page({ params }: Props) {
       )}
       <section className="py-8">
         <div className="max-w-4xl mx-auto px-4">
-          <TeamProfile slug={slug} initialData={data ? normalizeTeamProfile(data) : undefined} />
+          <TeamProfile
+            slug={slug}
+            initialData={data ? normalizeTeamProfile(data) : undefined}
+            initialTab={active}
+          />
         </div>
       </section>
     </div>
