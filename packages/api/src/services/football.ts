@@ -561,6 +561,15 @@ export async function createVenuesBulk(payload: { venues: VenueInput[] }): Promi
   return unwrap<Venue[]>(data);
 }
 
+// PATCH /api/menyesha/venues/:id -> edit a venue's details.
+export async function updateVenue(
+  venueId: string,
+  payload: Partial<VenueInput>
+): Promise<Venue> {
+  const { data } = await api.patch(`/api/menyesha/venues/${venueId}`, payload);
+  return unwrap<Venue>(data);
+}
+
 export async function updateMatch(
   matchId: string,
   payload: {

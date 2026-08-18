@@ -29,6 +29,7 @@ import { toast } from 'sonner';
 import { Loader2, Plus, Trash2, Upload, MapPin, X, Power, PowerOff, Pencil } from 'lucide-react';
 import { EditTeamModal } from './EditTeamModal';
 import { EditCompetitionModal } from './EditCompetitionModal';
+import { EditVenueModal } from './EditVenueModal';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -258,6 +259,7 @@ export function SetupTab({
   });
 
   const [editTeam, setEditTeam] = useState<Team | null>(null);
+  const [editVenue, setEditVenue] = useState<Venue | null>(null);
   const [deleteTeamTarget, setDeleteTeamTarget] = useState<{
     teamId: string;
     name: string;
@@ -845,12 +847,12 @@ export function SetupTab({
               {(venuesQuery.data ?? []).map((v: Venue) => (
                 <div
                   key={v.id}
-                  className="flex items-center gap-2.5 rounded-lg border border-gray-200 dark:border-gray-700 p-2"
+                  className="group flex items-center gap-2.5 rounded-lg border border-gray-200 dark:border-gray-700 p-2"
                 >
                   <span className="h-8 w-8 shrink-0 rounded-full bg-[#005F73] text-white flex items-center justify-center">
                     <MapPin className="h-4 w-4" />
                   </span>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
                       {v.name}
                     </p>
@@ -859,6 +861,15 @@ export function SetupTab({
                       {v.capacity ? ` · ${v.capacity.toLocaleString()}` : ''}
                     </p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setEditVenue(v)}
+                    title="Edit venue"
+                    aria-label={`Edit ${v.name}`}
+                    className="shrink-0 p-1.5 rounded-md text-gray-400 hover:text-[#003153] dark:hover:text-[#F59E0B] hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
                 </div>
               ))}
             </div>
@@ -1029,6 +1040,7 @@ export function SetupTab({
       </AlertDialog>
 
       {editTeam && <EditTeamModal team={editTeam} onClose={() => setEditTeam(null)} />}
+      {editVenue && <EditVenueModal venue={editVenue} onClose={() => setEditVenue(null)} />}
       {editComp && (
         <EditCompetitionModal competition={editComp} onClose={() => setEditComp(null)} />
       )}

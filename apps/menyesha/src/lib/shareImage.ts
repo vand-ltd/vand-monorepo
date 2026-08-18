@@ -22,6 +22,36 @@ export async function urlToDataUrl(url: string): Promise<string | null> {
   }
 }
 
+// Fetch an image, then downscale + re-encode it as a compact JPEG data URL.
+// html-to-image inlines every <img> as base64 inside an SVG <foreignObject>; a
+// multi-MB cover inflates past the browser's embed limit and gets silently
+// dropped from the export (it still shows in the live preview, which is the
+// confusing part). Shrinking to a card-sized JPEG keeps the embed small enough
+// to survive, and awaiting decode() guarantees the pixels are ready. Aspect
+// ratio is preserved — the card's object-fit:cover does the framing. Falls back
+// to the full data URL if canvas encoding isn't available.
+export async function coverDataUrl(url: string, maxDim = 1280, quality = 0.85): Promise<string | null> {
+  const dataUrl = await urlToDataUrl(url);
+  if (!dataUrl) return null;
+  try {
+    const img = new Image();
+    img.src = dataUrl;
+    await img.decode();
+    const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return dataUrl;
+    ctx.drawImage(img, 0, 0, w, h);
+    return canvas.toDataURL('image/jpeg', quality);
+  } catch {
+    return dataUrl;
+  }
+}
+
 // Rasterize a card node to a PNG and save it. Desktop downloads a file; touch
 // devices get the native share sheet (Save to Photos / send to Instagram, etc.),
 // which is the natural save flow on phones where <a download> is unreliable.

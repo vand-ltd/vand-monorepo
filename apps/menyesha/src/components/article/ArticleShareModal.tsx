@@ -1,7 +1,7 @@
 'use client';
 
 import { forwardRef, useEffect, useRef, useState } from 'react';
-import { urlToDataUrl, downloadCardPng, slugify } from '@/lib/shareImage';
+import { urlToDataUrl, coverDataUrl, downloadCardPng, slugify } from '@/lib/shareImage';
 import { X, Download, Copy, Check, Loader2, Square, RectangleVertical } from 'lucide-react';
 
 type CardSize = 'square' | 'story';
@@ -15,8 +15,8 @@ const META_FONT = "Arial, Helvetica, sans-serif";
 
 const ShareCard = forwardRef<
   HTMLDivElement,
-  { size: CardSize; cover: string | null; logo: string | null; title: string; category?: string; date?: string }
->(function ShareCard({ size, cover, logo, title, category, date }, ref) {
+  { size: CardSize; cover: string | null; logo: string | null; title: string; date?: string }
+>(function ShareCard({ size, cover, logo, title, date }, ref) {
   const d = DIMS[size];
   return (
     <div
@@ -43,26 +43,6 @@ const ShareCard = forwardRef<
             'linear-gradient(to bottom, rgba(0,18,31,0.15) 0%, rgba(0,18,31,0) 28%, rgba(0,18,31,0.55) 60%, rgba(0,18,31,0.96) 100%)',
         }}
       />
-
-      {category && (
-        <div
-          style={{
-            position: 'absolute',
-            top: d.pad,
-            left: d.pad,
-            background: '#F59E0B',
-            color: '#00243e',
-            fontWeight: 800,
-            fontSize: d.cat,
-            letterSpacing: 1.5,
-            textTransform: 'uppercase',
-            padding: `${d.cat * 0.4}px ${d.cat * 0.7}px`,
-            borderRadius: 8,
-          }}
-        >
-          {category}
-        </div>
-      )}
 
       <div style={{ position: 'absolute', left: d.pad, right: d.pad, bottom: d.pad }}>
         <div
@@ -128,7 +108,7 @@ export function ArticleShareModal({
     let alive = true;
     setLoading(true);
     Promise.all([
-      thumbnailUrl ? urlToDataUrl(thumbnailUrl) : Promise.resolve(null),
+      thumbnailUrl ? coverDataUrl(thumbnailUrl) : Promise.resolve(null),
       urlToDataUrl('/menyesha-logo-dark.svg'),
     ]).then(([c, l]) => {
       if (!alive) return;
@@ -229,7 +209,7 @@ export function ArticleShareModal({
           ) : (
             <div style={{ width: previewW, height: d.h * scale, overflow: 'hidden', borderRadius: 12 }}>
               <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}>
-                <ShareCard ref={cardRef} size={size} cover={cover} logo={logo} title={title} category={categoryName} date={date} />
+                <ShareCard ref={cardRef} size={size} cover={cover} logo={logo} title={title} date={date} />
               </div>
             </div>
           )}
