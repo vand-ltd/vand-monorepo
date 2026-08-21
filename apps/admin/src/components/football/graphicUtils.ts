@@ -33,9 +33,21 @@ export async function downloadCardPng(node: HTMLElement, filename: string): Prom
   if (typeof document !== 'undefined' && document.fonts?.ready) {
     await document.fonts.ready;
   }
+  // Mobile Safari/Chrome can rasterize before embedded images decode, dropping
+  // crests/photos from the export — force every <img> to finish decoding first.
+  await Promise.all(
+    Array.from(node.querySelectorAll('img')).map((img) =>
+      (img.decode ? img.decode() : Promise.resolve()).catch(() => undefined)
+    )
+  );
   // No cacheBust: images are embedded data URLs; cache-busting appends a query
   // that corrupts data URIs and drops crests/photos from the exported PNG.
-  const dataUrl = await toPng(node, { pixelRatio: 2, backgroundColor: '#003153' });
+  // Warm-up passes: html-to-image's first pass on Safari/mobile often returns
+  // before inlined images load, so the final pass is the reliable one.
+  const opts = { pixelRatio: 2, backgroundColor: '#003153' };
+  await toPng(node, opts);
+  await toPng(node, opts);
+  const dataUrl = await toPng(node, opts);
   const blob = await (await fetch(dataUrl)).blob();
 
   const nav = navigator as Navigator & {
