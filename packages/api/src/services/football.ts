@@ -583,6 +583,12 @@ export async function updateMatch(
     venueId?: string;
     kickoffAt?: string;
     referee?: string;
+    // Fixture setup edits (e.g. a team is replaced, or the fixture moves round).
+    homeTeamId?: string;
+    awayTeamId?: string;
+    round?: string;
+    stageId?: string | null;
+    groupId?: string | null;
   }
 ): Promise<Match> {
   const { data } = await api.patch(`/api/menyesha/matches/${matchId}`, payload);

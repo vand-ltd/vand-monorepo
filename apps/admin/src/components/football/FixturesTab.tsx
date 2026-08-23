@@ -35,11 +35,13 @@ import {
   Calendar,
   Clock,
   ImageDown,
+  Pencil,
 } from 'lucide-react';
 import { cardClass, inputClass, labelClass, primaryBtn, ghostBtn } from './styles';
 import { MatchEventsPanel } from './MatchEventsPanel';
 import { MatchLineupsPanel } from './MatchLineupsPanel';
 import { MatchGraphicModal } from './MatchGraphicModal';
+import { EditFixtureModal } from './EditFixtureModal';
 import { BulkFixtureUpload } from './BulkFixtureUpload';
 import {
   AlertDialog,
@@ -696,6 +698,8 @@ export function FixturesTab({ seasonId, season }: { seasonId: string; season: Se
                     awayTeam={teamMap.get(m.awayTeamId) ?? m.awayTeam ?? null}
                     competitionLabel={competitionLabel}
                     venues={venues}
+                    teams={teams}
+                    seasonId={seasonId}
                     onSaved={() =>
                       qc.invalidateQueries({ queryKey: ['football', 'matches', seasonId] })
                     }
@@ -718,6 +722,8 @@ function MatchRow({
   awayTeam,
   competitionLabel,
   venues,
+  teams,
+  seasonId,
   onSaved,
 }: {
   match: Match;
@@ -727,6 +733,8 @@ function MatchRow({
   awayTeam?: Team | null;
   competitionLabel?: string;
   venues: Venue[];
+  teams: Team[];
+  seasonId: string;
   onSaved: () => void;
 }) {
   const [status, setStatus] = useState<MatchStatus>(match.status ?? 'Scheduled');
@@ -752,6 +760,7 @@ function MatchRow({
   const [showEvents, setShowEvents] = useState(false);
   const [showLineups, setShowLineups] = useState(false);
   const [showGraphic, setShowGraphic] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
 
   // Shootout tally only applies to knockout ties. A blank field clears it (null).
   const isKnockout = (match.stage as any)?.type === 'Knockout';
@@ -905,6 +914,19 @@ function MatchRow({
         <Users className="h-3.5 w-3.5" />
         Lineups
       </button>
+      {/* Fixture setup edits (swap team, reschedule…) only make sense before the
+          match happens — hide once it's live/finished. Gate on the saved status. */}
+      {match.status === 'Scheduled' && (
+        <button
+          type="button"
+          onClick={() => setShowEdit(true)}
+          title="Edit fixture — swap a team, reschedule, change venue/round"
+          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        >
+          <Pencil className="h-3.5 w-3.5" />
+          Edit
+        </button>
+      )}
       <button
         type="button"
         onClick={() => setShowGraphic(true)}
@@ -1056,6 +1078,16 @@ function MatchRow({
           awayTeam={awayTeam}
           competitionLabel={competitionLabel}
           onClose={() => setShowGraphic(false)}
+        />
+      )}
+
+      {showEdit && (
+        <EditFixtureModal
+          match={match}
+          teams={teams}
+          venues={venues}
+          seasonId={seasonId}
+          onClose={() => setShowEdit(false)}
         />
       )}
     </div>
