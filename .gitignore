@@ -57,3 +57,5 @@ out
 *.tsbuildinfo
 next-env.d.ts
 .nx/polygraph
+# Local-only operational docs (contain infrastructure details)
+docs/
