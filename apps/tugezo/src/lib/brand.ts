@@ -8,11 +8,10 @@
 // https URL, so a localhost value in dev can never leak into canonicals,
 // hreflang or the sitemap.
 //
-// TODO(domain move): still the *live* host — the brand is now Tugezo but the
-// site is served from here until tugezo.com is registered and pointed at it.
-// Flip this (and NEXT_PUBLIC_SITE_URL) only in the same deploy as the 301s,
-// so canonicals/sitemap never advertise a domain that isn't answering yet.
-const FALLBACK_SITE_URL = 'https://menyesha.vand.rw';
+// The canonical home of the site. Must always be the host that actually answers
+// with 200 — never one that redirects — since every canonical, hreflang and
+// sitemap URL is built from it. menyesha.vand.rw now 308s here.
+const FALLBACK_SITE_URL = 'https://tugezo.com';
 
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL && process.env.NEXT_PUBLIC_SITE_URL.startsWith('https://')
