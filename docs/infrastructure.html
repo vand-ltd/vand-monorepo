@@ -1,0 +1,813 @@
+<title>Vand Infrastructure Runbook</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chivo:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --ink:      #0f1c26;
+    --ink-2:    #3d5163;
+    --ink-3:    #6b8199;
+    --bg:       #f5f8f9;
+    --surface:  #ffffff;
+    --surface-2:#eef3f6;
+    --line:     #d7e2e9;
+    --line-2:   #c3d3dd;
+    --navy:     #003153;
+    --teal:     #005f73;
+    --amber:    #f59e0b;
+    --ok:       #0e7c66;
+    --warn:     #9a5b00;
+    --danger:   #b3261e;
+    --ok-bg:    #e4f4ef;
+    --warn-bg:  #fdf1dc;
+    --danger-bg:#fbe9e7;
+    --code-bg:  #edf2f5;
+    --shadow:   0 1px 2px rgba(15,28,38,.06), 0 8px 24px -16px rgba(15,28,38,.28);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink:      #e7eff5;
+      --ink-2:    #a9bdcd;
+      --ink-3:    #7a91a5;
+      --bg:       #0a131a;
+      --surface:  #101d27;
+      --surface-2:#152532;
+      --line:     #1f3444;
+      --line-2:   #2b4557;
+      --navy:     #5aa3d0;
+      --teal:     #46a8b1;
+      --amber:    #f5b544;
+      --ok:       #45c3a2;
+      --warn:     #e0a44a;
+      --danger:   #f08079;
+      --ok-bg:    #0e2b26;
+      --warn-bg:  #2c2113;
+      --danger-bg:#2d1614;
+      --code-bg:  #0c1922;
+      --shadow:   0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ink:      #e7eff5;
+    --ink-2:    #a9bdcd;
+    --ink-3:    #7a91a5;
+    --bg:       #0a131a;
+    --surface:  #101d27;
+    --surface-2:#152532;
+    --line:     #1f3444;
+    --line-2:   #2b4557;
+    --navy:     #5aa3d0;
+    --teal:     #46a8b1;
+    --amber:    #f5b544;
+    --ok:       #45c3a2;
+    --warn:     #e0a44a;
+    --danger:   #f08079;
+    --ok-bg:    #0e2b26;
+    --warn-bg:  #2c2113;
+    --danger-bg:#2d1614;
+    --code-bg:  #0c1922;
+    --shadow:   0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.65;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  code, kbd, .mono { font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+  /* ---------- shell ---------- */
+  .shell { max-width: 1180px; margin: 0 auto; padding: 0 24px 96px; }
+
+  .masthead {
+    border-bottom: 1px solid var(--line);
+    padding: 56px 0 32px;
+    margin-bottom: 40px;
+  }
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px; font-weight: 500;
+    letter-spacing: .16em; text-transform: uppercase;
+    color: var(--teal);
+    margin: 0 0 14px;
+  }
+  h1 {
+    font-family: Chivo, ui-sans-serif, system-ui, sans-serif;
+    font-weight: 900;
+    font-size: clamp(34px, 5.2vw, 54px);
+    line-height: 1.04;
+    letter-spacing: -.022em;
+    margin: 0 0 16px;
+    text-wrap: balance;
+  }
+  .lede { color: var(--ink-2); font-size: 17.5px; max-width: 62ch; margin: 0; }
+  .stamp {
+    margin-top: 22px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12.5px;
+    color: var(--ink-3);
+    display: flex; flex-wrap: wrap; gap: 8px 20px;
+  }
+
+  .layout { display: grid; grid-template-columns: 1fr; gap: 40px; }
+  @media (min-width: 1000px) {
+    .layout { grid-template-columns: 216px minmax(0,1fr); gap: 56px; align-items: start; }
+    nav.toc { position: sticky; top: 24px; }
+  }
+
+  nav.toc ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+  nav.toc a {
+    display: block;
+    padding: 5px 10px;
+    border-radius: 5px;
+    color: var(--ink-2);
+    text-decoration: none;
+    font-size: 13.5px;
+    border-left: 2px solid transparent;
+  }
+  nav.toc a:hover { background: var(--surface-2); color: var(--ink); }
+  nav.toc a:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+  nav.toc .grp {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-3); padding: 16px 10px 5px;
+  }
+
+  /* ---------- sections ---------- */
+  section { margin-bottom: 60px; scroll-margin-top: 20px; }
+  h2 {
+    font-family: Chivo, sans-serif;
+    font-weight: 700;
+    font-size: 25px;
+    letter-spacing: -.012em;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+  h2 .h2num {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 13px; font-weight: 500;
+    color: var(--teal);
+    margin-right: 12px;
+    vertical-align: 2px;
+  }
+  .sub { color: var(--ink-3); font-size: 14.5px; margin: 0 0 22px; max-width: 66ch; }
+  h3 {
+    font-family: Chivo, sans-serif;
+    font-weight: 600; font-size: 15.5px;
+    margin: 30px 0 10px;
+    letter-spacing: -.005em;
+  }
+  p { max-width: 68ch; }
+
+  /* ---------- cards / tables ---------- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+  }
+  .grid2 { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  @media (min-width: 700px) { .grid2 { grid-template-columns: 1fr 1fr; } }
+
+  .tw { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); box-shadow: var(--shadow); }
+  table { border-collapse: collapse; width: 100%; min-width: 520px; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10.5px; font-weight: 600;
+    letter-spacing: .12em; text-transform: uppercase;
+    color: var(--ink-3);
+    background: var(--surface-2);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.mono, th.mono { font-family: "IBM Plex Mono", monospace; font-size: 12.8px; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* ---------- code ---------- */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    margin: 12px 0;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  pre code { font-size: inherit; }
+  p code, li code, td code {
+    background: var(--code-bg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 12.8px;
+  }
+
+  /* ---------- callouts: label sits on the border, no accent rail ---------- */
+  .note {
+    position: relative;
+    border: 1px solid var(--line-2);
+    border-radius: 10px;
+    padding: 20px 20px 16px;
+    margin: 22px 0;
+    background: var(--surface);
+  }
+  .note > .tag {
+    position: absolute; top: -9px; left: 16px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10.5px; font-weight: 600;
+    letter-spacing: .13em; text-transform: uppercase;
+    padding: 1px 8px;
+    border-radius: 3px;
+    background: var(--surface);
+    color: var(--ink-3);
+    border: 1px solid var(--line-2);
+  }
+  .note > :first-of-type { margin-top: 0; }
+  .note > :last-child { margin-bottom: 0; }
+  .note.warn { border-color: var(--warn); background: var(--warn-bg); }
+  .note.warn > .tag { color: var(--warn); border-color: var(--warn); background: var(--warn-bg); }
+  .note.danger { border-color: var(--danger); background: var(--danger-bg); }
+  .note.danger > .tag { color: var(--danger); border-color: var(--danger); background: var(--danger-bg); }
+
+  /* ---------- status pills ---------- */
+  .pill {
+    display: inline-block;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10.5px; font-weight: 600;
+    letter-spacing: .08em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 3px; white-space: nowrap;
+  }
+  .pill.ok     { background: var(--ok-bg);     color: var(--ok); }
+  .pill.warn   { background: var(--warn-bg);   color: var(--warn); }
+  .pill.danger { background: var(--danger-bg); color: var(--danger); }
+  .pill.flat   { background: var(--surface-2); color: var(--ink-2); }
+
+  /* ---------- request path diagram ---------- */
+  .flow { display: flex; flex-direction: column; gap: 0; margin: 20px 0; }
+  .hop {
+    display: grid;
+    grid-template-columns: 84px minmax(0,1fr);
+    gap: 16px;
+    align-items: baseline;
+    padding: 12px 0;
+    border-bottom: 1px dashed var(--line);
+  }
+  .hop:last-child { border-bottom: 0; }
+  .hop .who {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--teal); padding-top: 2px;
+  }
+  .hop .what { font-size: 14px; }
+  .hop .what .mono { font-size: 13px; color: var(--ink-2); display: block; margin-top: 2px; }
+
+  ul, ol { max-width: 68ch; padding-left: 22px; }
+  li { margin: 5px 0; }
+  ol.steps { counter-reset: s; list-style: none; padding-left: 0; }
+  ol.steps > li {
+    counter-increment: s;
+    display: grid; grid-template-columns: 26px minmax(0,1fr); gap: 12px;
+    margin: 0 0 16px;
+  }
+  ol.steps > li::before {
+    content: counter(s);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px; font-weight: 600;
+    color: var(--teal);
+    border: 1px solid var(--line-2);
+    border-radius: 4px;
+    height: 22px; display: grid; place-items: center;
+  }
+  ol.steps > li > :first-child { margin-top: 0; }
+
+  hr.rule { border: 0; border-top: 1px solid var(--line); margin: 0 0 40px; }
+
+  a { color: var(--teal); }
+  a:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="shell">
+
+  <header class="masthead">
+    <p class="eyebrow">Operations reference</p>
+    <h1>Vand Infrastructure Runbook</h1>
+    <p class="lede">How the Vand&nbsp;Technologies stack is wired end to end — domains, edge, hosting, API, storage and mail — and the exact procedures for changing any of it without breaking search or media.</p>
+    <div class="stamp">
+      <span>Last verified 26 Aug 2026</span>
+      <span>Products: Tugezo · Admin · Vand</span>
+      <span>Registrar &amp; DNS: Cloudflare</span>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <nav class="toc" aria-label="Contents">
+      <ol>
+        <li class="grp">Inventory</li>
+        <li><a href="#stack">Stack at a glance</a></li>
+        <li><a href="#path">Request paths</a></li>
+        <li><a href="#domains">Domains &amp; DNS</a></li>
+        <li><a href="#hosting">Hosting &amp; apps</a></li>
+        <li><a href="#api">API server</a></li>
+        <li><a href="#storage">Storage &amp; media</a></li>
+        <li><a href="#mail">Mail &amp; DNS auth</a></li>
+        <li><a href="#env">Environment</a></li>
+        <li class="grp">Procedures</li>
+        <li><a href="#deploy">Deploy</a></li>
+        <li><a href="#add-domain">Add a domain</a></li>
+        <li><a href="#migrate">Migrate a domain</a></li>
+        <li><a href="#rebrand">Rebrand</a></li>
+        <li class="grp">Reference</li>
+        <li><a href="#gotchas">Hard-won gotchas</a></li>
+        <li><a href="#checks">Health checks</a></li>
+      </ol>
+    </nav>
+
+    <main>
+
+      <!-- ============ STACK ============ -->
+      <section id="stack">
+        <h2><span class="h2num">01</span>Stack at a glance</h2>
+        <p class="sub">Three Next.js apps in one Nx monorepo, deployed to Vercel, talking to a single self-hosted API and a Cloudflare R2 bucket.</p>
+
+        <div class="tw">
+          <table>
+            <thead><tr><th>Layer</th><th>Provider</th><th>What runs there</th></tr></thead>
+            <tbody>
+              <tr><td>Registrar &amp; DNS</td><td>Cloudflare</td><td>Zones <code>vand.rw</code> and <code>tugezo.com</code></td></tr>
+              <tr><td>Edge / CDN</td><td>Cloudflare + Vercel</td><td>Proxied for <code>vand.rw</code>; DNS-only for <code>tugezo.com</code></td></tr>
+              <tr><td>Web hosting</td><td>Vercel</td><td>Tugezo, Admin, Vand — separate projects, one repo</td></tr>
+              <tr><td>API</td><td>DigitalOcean</td><td>nginx 1.24 (Ubuntu) → app, at <span class="mono">159.89.97.208</span></td></tr>
+              <tr><td>Object storage</td><td>Cloudflare R2</td><td>Bucket <code>vandmedia</code> via <code>storage.vand.rw</code></td></tr>
+              <tr><td>Transactional mail</td><td>Brevo</td><td>DKIM-signed sending for <code>vand.rw</code></td></tr>
+              <tr><td>Inbound mail</td><td>Cloudflare Email Routing</td><td>MX on <code>vand.rw</code>, forwards to real inboxes</td></tr>
+              <tr><td>Search</td><td>Google Search Console</td><td>Properties for <code>tugezo.com</code> and <code>menyesha.vand.rw</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Monorepo</h3>
+        <p>Nx <span class="mono num">22.5.1</span> with npm workspaces (<code>packages/*</code>, <code>apps/*</code>). No pnpm — the lockfile is <code>package-lock.json</code>.</p>
+
+        <div class="grid2">
+          <div class="card">
+            <h3 style="margin-top:0">Apps</h3>
+            <table style="min-width:0">
+              <tbody>
+                <tr><td class="mono">@org/tugezo</td><td><code>apps/tugezo</code> — public site</td></tr>
+                <tr><td class="mono">@org/admin</td><td><code>apps/admin</code> — console</td></tr>
+                <tr><td class="mono">@org/vand</td><td><code>apps/vand</code> — company site</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card">
+            <h3 style="margin-top:0">Shared packages</h3>
+            <table style="min-width:0">
+              <tbody>
+                <tr><td class="mono">@org/api</td><td>axios client + typed services</td></tr>
+                <tr><td class="mono">@org/i18n</td><td>next-intl config, locales</td></tr>
+                <tr><td class="mono">@org/ui</td><td>theme, <code>cn()</code>, SocialIcons</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <h3>Runtime versions</h3>
+        <div class="tw">
+          <table>
+            <thead><tr><th>Package</th><th>Version</th><th>Package</th><th>Version</th></tr></thead>
+            <tbody>
+              <tr><td>Next.js</td><td class="mono num">~16.0.1</td><td>Tailwind CSS</td><td class="mono num">^4</td></tr>
+              <tr><td>React</td><td class="mono num">^19.0.0</td><td>next-intl</td><td class="mono num">^4.3.1</td></tr>
+              <tr><td>TypeScript</td><td class="mono num">~5.9.2</td><td>TanStack Query</td><td class="mono num">^5.90.21</td></tr>
+              <tr><td>Nx</td><td class="mono num">22.5.1</td><td>axios</td><td class="mono num">^1.13.6</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <hr class="rule">
+
+      <!-- ============ REQUEST PATH ============ -->
+      <section id="path">
+        <h2><span class="h2num">02</span>Request paths</h2>
+        <p class="sub">Where traffic actually goes. Note that the two domains take deliberately different routes through Cloudflare.</p>
+
+        <h3>Page request — <span class="mono">tugezo.com</span></h3>
+        <div class="flow card">
+          <div class="hop"><span class="who">Browser</span><span class="what">Resolves <code>tugezo.com</code><span class="mono">CNAME → cafc831d8a529b34.vercel-dns-017.com (flattened by Cloudflare)</span></span></div>
+          <div class="hop"><span class="who">Cloudflare</span><span class="what">DNS answer only — <strong>not</strong> proxied<span class="mono">Vercel provides CDN, DDoS and TLS itself</span></span></div>
+          <div class="hop"><span class="who">Vercel</span><span class="what">Serves the Next.js app from <code>apps/tugezo</code><span class="mono">SSR / ISR, edge OG images</span></span></div>
+          <div class="hop"><span class="who">Browser</span><span class="what">Client fetches data from <code>api.vand.rw</code><span class="mono">Bearer token from localStorage, added by the axios interceptor</span></span></div>
+        </div>
+
+        <h3>API request — <span class="mono">api.vand.rw</span></h3>
+        <div class="flow card">
+          <div class="hop"><span class="who">Browser</span><span class="what">Resolves via wildcard <code>*.vand.rw</code><span class="mono">A → 159.89.97.208, proxied</span></span></div>
+          <div class="hop"><span class="who">Cloudflare</span><span class="what"><strong>Proxied</strong> — origin IP hidden, DDoS absorbed, TLS terminated<span class="mono">Correct here: the origin is a bare droplet, not Vercel</span></span></div>
+          <div class="hop"><span class="who">nginx</span><span class="what">Routes by <code>server_name</code> to the API app<span class="mono">Routes are namespaced per product: /api/tugezo/*</span></span></div>
+        </div>
+
+        <div class="note">
+          <span class="tag">Why the difference</span>
+          <p style="margin-bottom:0">Vercel already provides CDN, DDoS mitigation and certificates, so proxying in front of it adds a hop and disables Vercel's own bot tooling — hence <strong>DNS-only</strong> there. The API is a bare DigitalOcean droplet with a public IP, so Cloudflare's proxy is genuinely valuable — hence <strong>proxied</strong>.</p>
+        </div>
+      </section>
+
+      <hr class="rule">
+
+      <!-- ============ DOMAINS ============ -->
+      <section id="domains">
+        <h2><span class="h2num">03</span>Domains &amp; DNS</h2>
+        <p class="sub">Two Cloudflare zones. <code>tugezo.com</code> is the product brand; <code>vand.rw</code> carries shared infrastructure.</p>
+
+        <h3>Zone: tugezo.com</h3>
+        <div class="tw">
+          <table>
+            <thead><tr><th>Type</th><th>Name</th><th>Value</th><th>Proxy</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">CNAME</td><td class="mono">@</td><td class="mono">cafc831d8a529b34.vercel-dns-017.com</td><td><span class="pill flat">DNS only</span></td></tr>
+              <tr><td class="mono">CNAME</td><td class="mono">www</td><td class="mono">cname.vercel-dns.com</td><td><span class="pill flat">DNS only</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:14px;color:var(--ink-3)">A <code>CNAME</code> at the apex is only legal because of Cloudflare's <strong>CNAME flattening</strong> — <code>dig A tugezo.com</code> still returns IPs, which is expected, not a fault.</p>
+
+        <h3>Zone: vand.rw — infrastructure records</h3>
+        <div class="tw">
+          <table>
+            <thead><tr><th>Type</th><th>Name</th><th>Value</th><th>Proxy</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">A</td><td class="mono">api</td><td class="mono">159.89.97.208</td><td><span class="pill ok">Proxied</span></td><td>API origin</td></tr>
+              <tr><td class="mono">A</td><td class="mono">*</td><td class="mono">64.29.17.65 · 216.198.79.1</td><td><span class="pill ok">Proxied</span></td><td>Wildcard — covers <code>menyesha</code></td></tr>
+              <tr><td class="mono">A</td><td class="mono">@ · www</td><td class="mono">216.198.79.1 · 64.29.17.x</td><td><span class="pill ok">Proxied</span></td><td>Company site (Vercel)</td></tr>
+              <tr><td class="mono">R2</td><td class="mono">storage</td><td class="mono">vandmedia</td><td><span class="pill ok">Proxied</span></td><td>Media bucket</td></tr>
+              <tr><td class="mono">MX</td><td class="mono">@</td><td class="mono">route1/2/3.mx.cloudflare.net</td><td>—</td><td>Email Routing</td></tr>
+              <tr><td class="mono">CAA</td><td class="mono">@</td><td class="mono">letsencrypt.org · pki.goog · sectigo.com</td><td>—</td><td>Restricts who may issue certs</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note warn">
+          <span class="tag">Wildcard consequence</span>
+          <p style="margin-bottom:0">There is <strong>no explicit <code>menyesha</code> record</strong> — it resolves through <code>*.vand.rw</code>. So you cannot unproxy that one hostname without adding a specific record to override the wildcard, and turning the wildcard off would unproxy <em>every</em> subdomain. This is why Vercel's "Proxy Detected" notice on <code>menyesha.vand.rw</code> is left alone.</p>
+        </div>
+
+        <h3>Redirect topology</h3>
+        <p>One canonical host. Every other entry point reaches it in <strong>a single hop</strong>, with the path preserved.</p>
+        <div class="tw">
+          <table>
+            <thead><tr><th>Hostname</th><th>Behaviour</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">tugezo.com</td><td>Serves the site — canonical</td><td><span class="pill ok">200</span></td></tr>
+              <tr><td class="mono">www.tugezo.com</td><td>→ <code>tugezo.com</code>, path preserved</td><td><span class="pill flat">308</span></td></tr>
+              <tr><td class="mono">menyesha.vand.rw</td><td>→ <code>tugezo.com</code>, path preserved</td><td><span class="pill flat">308</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mono" style="font-size:13px;color:var(--ink-2)">Keep the <code>menyesha.vand.rw</code> redirect indefinitely — old links persist in shares and on other sites long after Google has moved on.</p>
+      </section>
+
+      <hr class="rule">
+
+      <!-- ============ HOSTING ============ -->
+      <section id="hosting">
+        <h2><span class="h2num">04</span>Hosting &amp; apps</h2>
+        <p class="sub">Each app is its own Vercel project pointed at a subfolder of the same repository.</p>
+
+        <h3>Vercel project settings that matter</h3>
+        <div class="tw">
+          <table>
+            <thead><tr><th>Setting</th><th>Value</th><th>Note</th></tr></thead>
+            <tbody>
+              <tr><td>Root Directory</td><td class="mono">apps/tugezo</td><td>Must track folder renames</td></tr>
+              <tr><td>Include files outside root</td><td><span class="pill ok">On</span></td><td>Required — apps import <code>packages/*</code></td></tr>
+              <tr><td>Build command</td><td class="mono">default (next build)</td><td>Or <code>npx nx build @org/tugezo</code></td></tr>
+              <tr><td>Framework</td><td>Next.js</td><td>Output directory auto</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Local commands</h3>
+<pre><code>npx nx dev @org/tugezo        # dev server
+npx nx build @org/tugezo      # production build
+npx nx run-many --target=build --projects=@org/tugezo,@org/admin
+npx nx reset                  # clear Nx cache + daemon</code></pre>
+
+        <div class="note">
+          <span class="tag">Fallback build</span>
+          <p style="margin-bottom:0"><code>next.config.ts</code> tries <code>@nx/next</code> and falls back to a plain Next build if it is absent. That is what lets Vercel build a single app from a scoped install without the whole Nx toolchain.</p>
+        </div>
+      </section>
+
+      <hr class="rule">
+
+      <!-- ============ API ============ -->
+      <section id="api">
+        <h2><span class="h2num">05</span>API server</h2>
+        <p class="sub">Self-hosted on DigitalOcean, fronted by Cloudflare, reverse-proxied by nginx.</p>
+
+        <div class="tw">
+          <table>
+            <thead><tr><th>Property</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td>Public hostname</td><td class="mono">api.vand.rw</td></tr>
+              <tr><td>Origin IP</td><td class="mono">159.89.97.208</td></tr>
+              <tr><td>Web server</td><td class="mono">nginx/1.24.0 (Ubuntu)</td></tr>
+              <tr><td>Route namespace</td><td class="mono">/api/tugezo/*</td></tr>
+              <tr><td>Auth</td><td>Bearer token in <code>localStorage</code></td></tr>
+              <tr><td>Client</td><td><code>packages/api/src/client.ts</code> (axios)</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Auth flow</h3>
+        <p>A request interceptor attaches <code>Authorization: Bearer &lt;token&gt;</code> from <code>localStorage</code>. A response interceptor catches <span class="mono">401 · "Token has expired"</span>, clears the stored token and redirects to <code>/login</code>. There are no auth cookies — so the API host does not need to be same-site with the web app.</p>
+
+        <div class="note">
+          <span class="tag">Design note</span>
+          <p style="margin-bottom:0">API routes are namespaced per product (<code>/api/tugezo/*</code>), which is why the API lives on the <strong>company</strong> domain rather than the product's. Shared infrastructure stays with Vand; only user-facing brand assets follow the product.</p>
+        </div>
+
+        <h3>Adding a hostname to the API</h3>
+        <ol class="steps">
+          <li><div>Cloudflare → target zone → <strong>A</strong> record → <span class="mono">159.89.97.208</span>, <strong>Proxied</strong>.</div></li>
+          <li><div>On the droplet, add it to nginx and keep the old one:
+<pre><code>server_name api.vand.rw api.tugezo.com;</code></pre></div></li>
+          <li><div>Extend the certificate — required if the zone uses <em>Full (strict)</em>:
+<pre><code>sudo certbot --nginx -d api.vand.rw -d api.tugezo.com</code></pre></div></li>
+          <li><div>Add the new web origin to the backend's <strong>CORS allow-list</strong>.</div></li>
+          <li><div>Only then update <code>NEXT_PUBLIC_API_URL</code> and redeploy.</div></li>
+        </ol>
+      </section>
+
+      <hr class="rule">
+
+      <!-- ============ STORAGE ============ -->
+      <section id="storage">
+        <h2><span class="h2num">06</span>Storage &amp; media</h2>
+        <p class="sub">Cloudflare R2 bucket <code>vandmedia</code>, served publicly from <code>storage.vand.rw</code>.</p>
+
+        <div class="note danger">
+          <span class="tag">Do not rename</span>
+          <p>Image URLs are stored <strong>absolute in the database</strong>. Changing the R2 custom domain does not rewrite those rows — every existing article image, crest and player photo would 404.</p>
+          <p style="margin-bottom:0">If a new hostname is ever needed, <strong>add</strong> it as a second R2 custom domain and keep <code>storage.vand.rw</code> serving forever. R2 supports multiple custom domains per bucket.</p>
+        </div>
+
+        <h3>Where the media host is configured</h3>
+        <div class="tw">
+          <table>
+            <thead><tr><th>File</th><th>Setting</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">apps/tugezo/next.config.ts</td><td><code>images.remotePatterns</code> → <code>storage.vand.rw</code>, <code>*.r2.dev</code></td></tr>
+              <tr><td class="mono">apps/admin/next.config.ts</td><td>same</td></tr>
+              <tr><td class="mono">apps/tugezo/src/lib/brand.ts</td><td><code>MEDIA_HOST_SUFFIX = '.vand.rw'</code></td></tr>
+              <tr><td class="mono">…/api/media-proxy/route.ts</td><td><code>ALLOWED_SUFFIXES</code> host allow-list</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Why a media proxy exists</h3>
+        <p>Share graphics are rasterised in the browser with <code>html-to-image</code>. A cross-origin image taints the canvas and blanks the export, so covers are fetched through the same-origin route <code>/api/media-proxy</code> and inlined as data URLs. The route is host-allow-listed, capped at 8&nbsp;MB and restricted to image content types.</p>
+
+        <div class="note warn">
+          <span class="tag">Deliberate separation</span>
+          <p style="margin-bottom:0"><code>MEDIA_HOST_SUFFIX</code> is intentionally <strong>not</strong> derived from the site domain. Media still comes from <code>vand.rw</code> while the site lives on <code>tugezo.com</code> — coupling them would have silently broken every cover image at rebrand.</p>
+        </div>
+      </section>
+
+      <hr class="rule">
+
+      <!-- ============ MAIL ============ -->
+      <section id="mail">
+        <h2><span class="h2num">07</span>Mail &amp; DNS authentication</h2>
+        <p class="sub">Inbound via Cloudflare Email Routing; outbound signed by Brevo. All records live on <code>vand.rw</code>.</p>
+
+        <div class="tw">
+          <table>
+            <thead><tr><th>Record</th><th>Name</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">MX</td><td class="mono">@ ×3</td><td>Cloudflare Email Routing — forwards to real inboxes</td></tr>
+              <tr><td class="mono">TXT</td><td class="mono">@ (SPF)</td><td><code>v=spf1 include:_spf.mx.cloudflare.net include:_spf.google.com ~all</code></td></tr>
+              <tr><td class="mono">TXT</td><td class="mono">_dmarc</td><td><code>p=none</code> with <code>rua</code> reporting to Cloudflare</td></tr>
+              <tr><td class="mono">TXT</td><td class="mono">cf2024-1._domainkey</td><td>Cloudflare DKIM</td></tr>
+              <tr><td class="mono">CNAME</td><td class="mono">brevo1/2._domainkey</td><td>Brevo DKIM for transactional mail</td></tr>
+              <tr><td class="mono">TXT</td><td class="mono">@ (brevo-code)</td><td>Brevo domain ownership</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note">
+          <span class="tag">Open item</span>
+          <p style="margin-bottom:0"><code>tugezo.com</code> has <strong>no MX record</strong>, so <span class="mono">@tugezo.com</span> mail does not exist yet. Until it does, <code>CONTACT_EMAIL</code> in <code>brand.ts</code> deliberately still points at the working <code>vand.rw</code> address — changing it first would break every contact link on the site. Cloudflare Email Routing is already proven on <code>vand.rw</code>; repeat it on the new zone, then flip the constant.</p>
+        </div>
+
+        <p style="font-size:14px;color:var(--ink-3)">Raising DMARC to <code>p=quarantine</code> is worth doing once the <code>rua</code> reports show clean alignment for both Cloudflare and Brevo sources.</p>
+      </section>
+
+      <hr class="rule">
+
+      <!-- ============ ENV ============ -->
+      <section id="env">
+        <h2><span class="h2num">08</span>Environment</h2>
+        <p class="sub">Every variable is <code>NEXT_PUBLIC_*</code> except the proxy allow-list, meaning they ship to the browser. Never put secrets here.</p>
+
+        <div class="tw">
+          <table>
+            <thead><tr><th>Variable</th><th>Used by</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">NEXT_PUBLIC_API_URL</td><td>tugezo, admin</td><td>axios <code>baseURL</code></td></tr>
+              <tr><td class="mono">NEXT_PUBLIC_SITE_URL</td><td>tugezo</td><td>Canonicals, hreflang, sitemap, share links</td></tr>
+              <tr><td class="mono">NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION</td><td>tugezo</td><td>Renders the GSC meta tag</td></tr>
+              <tr><td class="mono">NEXT_PUBLIC_GA_ID</td><td>tugezo</td><td>Analytics</td></tr>
+              <tr><td class="mono">IMAGE_PROXY_HOSTS</td><td>tugezo, admin</td><td>Server-only; extra allowed media hosts, comma-separated</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note warn">
+          <span class="tag">Guard rail</span>
+          <p style="margin-bottom:0"><code>NEXT_PUBLIC_SITE_URL</code> is only trusted when it starts with <code>https://</code>. A localhost value is ignored in favour of the production fallback, so a dev machine can never leak <code>localhost</code> into canonicals or the sitemap.</p>
+        </div>
+
+        <h3>brand.ts — the single lever</h3>
+        <p><code>apps/tugezo/src/lib/brand.ts</code> is imported by roughly 36 files and is the only place brand or domain strings live. There are no hardcoded brand literals anywhere else in the app.</p>
+        <div class="tw">
+          <table>
+            <thead><tr><th>Constant</th><th>Drives</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">SITE_URL / SITE_HOST</td><td>Canonicals, hreflang, sitemap, robots, OG</td></tr>
+              <tr><td class="mono">BRAND_DOMAIN</td><td>What downloadable graphics print — <em>separate on purpose</em></td></tr>
+              <tr><td class="mono">BRAND_NAME / BRAND_TAGLINE</td><td>Titles, OG, alt text, footer</td></tr>
+              <tr><td class="mono">CONTACT_EMAIL</td><td>Contact, about, privacy, terms, advertise</td></tr>
+              <tr><td class="mono">MEDIA_HOST_SUFFIX</td><td>Media-proxy allow-list</td></tr>
+              <tr><td class="mono">LOGO_*_PATH / OG_IMAGE_PATH</td><td><code>/public</code> asset filenames</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:14px;color:var(--ink-3)"><code>BRAND_DOMAIN</code> is split from <code>SITE_URL</code> because graphics are permanent once posted to social, while canonicals must always name the host that actually answers <span class="mono">200</span>.</p>
+      </section>
+
+      <hr class="rule">
+
+      <!-- ============ DEPLOY ============ -->
+      <section id="deploy">
+        <h2><span class="h2num">09</span>Procedure — deploy</h2>
+        <ol class="steps">
+          <li><div>Build locally first — Vercel failures are slower to diagnose:
+<pre><code>npx nx run-many --target=build --projects=@org/tugezo,@org/admin</code></pre></div></li>
+          <li><div>Push to <code>main</code>. Vercel builds each project from its own Root Directory.</div></li>
+          <li><div>If the build fails on project resolution, run <code>npx nx reset</code> locally and confirm <code>nx show projects</code> lists what you expect.</div></li>
+        </ol>
+      </section>
+
+      <hr class="rule">
+
+      <!-- ============ ADD DOMAIN ============ -->
+      <section id="add-domain">
+        <h2><span class="h2num">10</span>Procedure — add a domain to a Vercel app</h2>
+        <ol class="steps">
+          <li><div><strong>Vercel first.</strong> Project → Settings → Domains → add the hostname. Vercel shows the exact DNS values — use those, not remembered ones.</div></li>
+          <li><div><strong>Cloudflare DNS</strong> → add the record → set <strong>DNS only (grey)</strong>. Proxying blocks Vercel's certificate issuance.</div></li>
+          <li><div>Wait for Vercel to report <span class="pill ok">Valid Configuration</span>. Certificate issuance is usually under a minute.</div></li>
+          <li><div>Pick a canonical host and redirect the other — apex or <code>www</code>, but only one serves <span class="mono">200</span>.</div></li>
+        </ol>
+        <div class="note warn">
+          <span class="tag">Vercel constraint</span>
+          <p style="margin-bottom:0">A domain cannot be both a redirect <em>target</em> and a redirect <em>source</em>. To flip an existing arrangement, first repoint whatever aims at the domain, which frees it to become a redirect itself.</p>
+        </div>
+      </section>
+
+      <hr class="rule">
+
+      <!-- ============ MIGRATE ============ -->
+      <section id="migrate">
+        <h2><span class="h2num">11</span>Procedure — migrate to a new domain</h2>
+        <p class="sub">The order is the whole procedure. Doing step 3 before step 2 tells Google to ignore the new domain.</p>
+
+        <ol class="steps">
+          <li><div><strong>Serve the new domain.</strong> Add it in Vercel, add DNS, confirm it returns <span class="mono">200</span>. Old domain still live and unchanged.</div></li>
+          <li><div><strong>Flip the canonical.</strong> Set <code>NEXT_PUBLIC_SITE_URL</code> and <code>FALLBACK_SITE_URL</code> to the new origin, deploy, then verify:
+<pre><code>curl -s https://new.example/rw/football \
+  | grep -o '&lt;link rel="canonical" href="[^"]*"'</code></pre>
+It must name the new domain before you continue.</div></li>
+          <li><div><strong>Redirect the old domain</strong> — permanent <span class="mono">308</span>, path preserved. Verify a deep URL, not the homepage:
+<pre><code>curl -sI https://old.example/rw/football | grep -i location
+# must be https://new.example/rw/football</code></pre></div></li>
+          <li><div><strong>Search Console.</strong> Verify the new property, then run <em>Change of Address</em> <strong>from the old property</strong>. Submit the sitemap as a full URL on a Domain property.</div></li>
+          <li><div><strong>Leave it alone.</strong> Expect a 2–8 week dip. Keep both GSC properties and the redirect permanently.</div></li>
+        </ol>
+
+        <div class="note danger">
+          <span class="tag">Never</span>
+          <ul style="margin-bottom:0">
+            <li>Collapse all old URLs to the new homepage — this is what actually destroys rankings.</li>
+            <li>Delete the old GSC property; it is where the move is tracked.</li>
+            <li>Remove the old domain from hosting; every indexed URL dies instantly.</li>
+            <li>Stage subdomain → root later; that is two dips instead of one.</li>
+          </ul>
+        </div>
+      </section>
+
+      <hr class="rule">
+
+      <!-- ============ REBRAND ============ -->
+      <section id="rebrand">
+        <h2><span class="h2num">12</span>Procedure — rebrand</h2>
+        <p class="sub">Performed once already: Menyesha → Tugezo, August 2026.</p>
+        <ol class="steps">
+          <li><div><strong>Config</strong> — edit <code>brand.ts</code>: name, tagline, email, asset paths, <code>BRAND_DOMAIN</code>.</div></li>
+          <li><div><strong>Assets</strong> — new wordmark SVGs and OG image in <code>/public</code>; delete the superseded files and grep for references to them.</div></li>
+          <li><div><strong>Copy</strong> — <code>messages/{en,rw,fr}.json</code>. Edit as parsed JSON and verify all three keep identical key sets.</div></li>
+          <li><div><strong>Admin</strong> — its own <code>brand.ts</code> holds a base64-inlined wordmark for graphics; regenerate it.</div></li>
+          <li><div><strong>Folder / project rename</strong> (optional) — <code>git mv</code>, update Root Directory in Vercel, <code>tsconfig</code> references, then <code>npm install</code> and <code>npx nx reset</code>.</div></li>
+        </ol>
+        <div class="note">
+          <span class="tag">Leave behind</span>
+          <p style="margin-bottom:0">Social account URLs and the media host are <em>not</em> brand strings — accounts keep their real handles until renamed by hand, and media stays on <code>vand.rw</code>. API route namespaces change only when the backend actually changes them.</p>
+        </div>
+      </section>
+
+      <hr class="rule">
+
+      <!-- ============ GOTCHAS ============ -->
+      <section id="gotchas">
+        <h2><span class="h2num">13</span>Hard-won gotchas</h2>
+        <p class="sub">Each of these cost real debugging time. They are not hypothetical.</p>
+
+        <div class="tw">
+          <table>
+            <thead><tr><th>Symptom</th><th>Cause &amp; fix</th></tr></thead>
+            <tbody>
+              <tr><td><span class="mono">Failed to process project graph</span></td><td>Stale Nx graph after moving or deleting a project folder → <code>npx nx reset</code></td></tr>
+              <tr><td><span class="mono">Waiting for … in another nx process</span></td><td>Orphaned <code>nx dev</code> processes holding the task lock → kill them, then <code>nx reset</code></td></tr>
+              <tr><td>Root Directory does not exist</td><td>Folder renamed in the repo but not in Vercel settings</td></tr>
+              <tr><td>Canonical points at a redirect</td><td><code>SITE_URL</code> names a host that 3xx's — it must always be the <span class="mono">200</span> host</td></tr>
+              <tr><td>Cover image missing from exported PNG</td><td>Browser rasterised before decode → await <code>img.decode()</code> and render warm-up passes</td></tr>
+              <tr><td>Emoji missing from exported PNG</td><td>Colour emoji do not rasterise in <code>html-to-image</code> → use inline SVG</td></tr>
+              <tr><td>Whole exported PNG blank</td><td>Cross-origin image tainted the canvas → route it through <code>/api/media-proxy</code></td></tr>
+              <tr><td>Cache-busting breaks graphics</td><td>A query string appended to a <code>data:</code> URI corrupts it → never enable <code>cacheBust</code></td></tr>
+              <tr><td>React #418 hydration mismatch</td><td>Timezone-dependent date rendered on the server → render empty, fill in on mount</td></tr>
+              <tr><td>Pages indexed but empty</td><td>Client-only rendering → seed <code>useQuery</code> with server-fetched <code>initialData</code></td></tr>
+              <tr><td>GSC "Couldn't fetch" on a new sitemap</td><td>Usually just queued; validate the XML, then wait a few days</td></tr>
+              <tr><td>Sitemap path rejected</td><td>A <strong>Domain</strong> property needs the full URL, not a relative path</td></tr>
+              <tr><td>Redirect loop behind Cloudflare</td><td>SSL mode <em>Flexible</em> in front of an HTTPS origin → use <em>Full (strict)</em></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <hr class="rule">
+
+      <!-- ============ CHECKS ============ -->
+      <section id="checks">
+        <h2><span class="h2num">14</span>Health checks</h2>
+        <p class="sub">Copy-paste verification for the things that break quietly.</p>
+
+        <h3>Redirect topology</h3>
+<pre><code>for u in https://tugezo.com/rw/football \
+         https://www.tugezo.com/rw/football \
+         https://menyesha.vand.rw/rw/football; do
+  printf "%-42s %s\n" "$u" \
+    "$(curl -s -o /dev/null -w '%{http_code} -> %{redirect_url}' "$u")"
+done
+# expect: 200 / 308 -> apex / 308 -> apex</code></pre>
+
+        <h3>Canonical matches the serving host</h3>
+<pre><code>curl -s https://tugezo.com/rw/football \
+  | grep -o '&lt;link rel="canonical" href="[^"]*"'</code></pre>
+
+        <h3>Sitemap is valid and on-domain</h3>
+<pre><code>curl -s -o /dev/null -w 'HTTP %{http_code} %{content_type}\n' \
+  https://tugezo.com/sitemap.xml
+curl -s https://tugezo.com/sitemap.xml | grep -c "&lt;loc&gt;"</code></pre>
+
+        <h3>API reachable and CORS-clean</h3>
+<pre><code>curl -sI "https://api.vand.rw/api/tugezo/categories?language=en" \
+  | grep -iE "^HTTP|^access-control"</code></pre>
+
+        <h3>DNS resolves as expected</h3>
+<pre><code>dig +short A tugezo.com      # flattened Vercel IPs
+dig +short CNAME www.tugezo.com</code></pre>
+
+        <div class="note">
+          <span class="tag">Cadence</span>
+          <p style="margin-bottom:0">Run the redirect and canonical checks after <em>any</em> domain, Vercel or DNS change — those two catch most silent SEO regressions. The rest are useful when something specific looks wrong.</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>

@@ -2,6 +2,10 @@
 
 Nx monorepo containing the **Vand** family of web applications with shared internationalization (i18n) and dark mode support.
 
+## Documentation
+
+- [Infrastructure Runbook](docs/INFRASTRUCTURE.md) — DNS, hosting, API, storage and mail, plus procedures for deploys, domain migrations and rebrands.
+
 ## Apps
 
 | App | Description | Path |
@@ -48,7 +52,7 @@ npm install
 ### 2. Run a dev server
 
 ```sh
-# Menyesha (news site)
+# Tugezo (news site)
 npx nx dev @org/tugezo
 
 # Vand (landing page)
