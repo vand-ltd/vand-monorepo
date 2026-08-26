@@ -83,22 +83,22 @@ export interface BulkFuelPricePayload {
 }
 
 export async function createFuelPricesBulk(payload: BulkFuelPricePayload): Promise<any> {
-  const { data } = await api.post('/api/menyesha/fuel-prices/bulk', payload);
+  const { data } = await api.post('/api/tugezo/fuel-prices/bulk', payload);
   return data;
 }
 
 export async function deleteFuelPrice(id: string): Promise<any> {
-  const { data } = await api.delete(`/api/menyesha/fuel-prices/${id}`);
+  const { data } = await api.delete(`/api/tugezo/fuel-prices/${id}`);
   return data;
 }
 
 export async function getCurrentFuelPrices(): Promise<CurrentFuelPrice[]> {
-  const { data } = await api.get('/api/menyesha/fuel-prices/current');
+  const { data } = await api.get('/api/tugezo/fuel-prices/current');
   return data.data;
 }
 
 export async function getUpcomingFuelPrices(): Promise<FuelPriceRecord[]> {
-  const { data } = await api.get('/api/menyesha/fuel-prices/upcoming');
+  const { data } = await api.get('/api/tugezo/fuel-prices/upcoming');
   return data.data;
 }
 
@@ -118,7 +118,7 @@ export async function getFuelPriceHistory(params?: {
       params.year ||
       params.direction ||
       params.order);
-  const { data } = await api.get('/api/menyesha/fuel-prices/history', {
+  const { data } = await api.get('/api/tugezo/fuel-prices/history', {
     params: hasParams ? params : undefined,
   });
   return data.data;
@@ -128,7 +128,7 @@ export async function getFuelPriceStats(params?: {
   year?: number;
   fuelType?: string;
 }): Promise<FuelPriceStats> {
-  const { data } = await api.get('/api/menyesha/fuel-prices/stats', {
+  const { data } = await api.get('/api/tugezo/fuel-prices/stats', {
     params: params && (params.year || params.fuelType) ? params : undefined,
   });
   return data.data;

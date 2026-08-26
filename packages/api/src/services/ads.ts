@@ -7,7 +7,7 @@ function unwrap<T>(payload: any): T {
 
 /* ------------------------------ Vocabularies ------------------------------ */
 // These MUST match the backend's ads.constants.ts exactly. Shared here so the
-// menyesha <AdSlot> and the admin console both target the same strings.
+// tugezo <AdSlot> and the admin console both target the same strings.
 
 export const AD_PLACEMENTS = ['Header', 'Sidebar', 'InFeed', 'Inline', 'Footer'] as const;
 export type AdPlacement = (typeof AD_PLACEMENTS)[number];
@@ -143,7 +143,7 @@ export interface ServedAd {
 
 /* ------------------------------- Public serve ----------------------------- */
 
-// GET /api/menyesha/ads/serve — the eligible ads for a slot (cacheable). The
+// GET /api/tugezo/ads/serve — the eligible ads for a slot (cacheable). The
 // client renders/rotates and fires impressions, so this stays cache-friendly.
 export async function serveAds(params: {
   placement: AdPlacement;
@@ -151,7 +151,7 @@ export async function serveAds(params: {
   pageType?: AdPageType | string;
   locale: AdLocale | string;
 }): Promise<ServedAd[]> {
-  const { data } = await api.get('/api/menyesha/ads/serve', { params });
+  const { data } = await api.get('/api/tugezo/ads/serve', { params });
   return unwrap<ServedAd[]>(data) ?? [];
 }
 
@@ -164,14 +164,14 @@ export async function trackAdImpression(
   id: string,
   body: { locale: string; placement: string; pageType?: string }
 ): Promise<void> {
-  await api.post(`/api/menyesha/ads/${id}/impression`, body);
+  await api.post(`/api/tugezo/ads/${id}/impression`, body);
 }
 
 // A click-through URL that logs then 302-redirects (reliable, works w/o JS).
 // Until the backend adds it, AdSlot links straight to creative.linkUrl.
 export function adClickHref(id: string, to: string): string {
   const base = process.env.NEXT_PUBLIC_API_URL ?? '';
-  return `${base}/api/menyesha/ads/${id}/click?to=${encodeURIComponent(to)}`;
+  return `${base}/api/tugezo/ads/${id}/click?to=${encodeURIComponent(to)}`;
 }
 
 /* -------------------------------- Admin ----------------------------------- */
@@ -181,36 +181,36 @@ export async function getAds(params?: {
   advertiserId?: string;
   isActive?: boolean;
 }): Promise<Ad[]> {
-  const { data } = await api.get('/api/menyesha/ads', { params });
+  const { data } = await api.get('/api/tugezo/ads', { params });
   return unwrap<Ad[]>(data) ?? [];
 }
 
 export async function getAd(id: string): Promise<Ad> {
-  const { data } = await api.get(`/api/menyesha/ads/${id}`);
+  const { data } = await api.get(`/api/tugezo/ads/${id}`);
   return unwrap<Ad>(data);
 }
 
 export async function createAd(input: AdInput): Promise<Ad> {
-  const { data } = await api.post('/api/menyesha/ads', input);
+  const { data } = await api.post('/api/tugezo/ads', input);
   return unwrap<Ad>(data);
 }
 
 export async function updateAd(id: string, input: Partial<AdInput>): Promise<Ad> {
-  const { data } = await api.patch(`/api/menyesha/ads/${id}`, input);
+  const { data } = await api.patch(`/api/tugezo/ads/${id}`, input);
   return unwrap<Ad>(data);
 }
 
 export async function deleteAd(id: string): Promise<void> {
-  await api.delete(`/api/menyesha/ads/${id}`);
+  await api.delete(`/api/tugezo/ads/${id}`);
 }
 
 export async function getAdvertisers(): Promise<Advertiser[]> {
-  const { data } = await api.get('/api/menyesha/advertisers');
+  const { data } = await api.get('/api/tugezo/advertisers');
   return unwrap<Advertiser[]>(data) ?? [];
 }
 
 export async function createAdvertiser(input: AdvertiserInput): Promise<Advertiser> {
-  const { data } = await api.post('/api/menyesha/advertisers', input);
+  const { data } = await api.post('/api/tugezo/advertisers', input);
   return unwrap<Advertiser>(data);
 }
 
@@ -218,10 +218,10 @@ export async function updateAdvertiser(
   id: string,
   input: Partial<AdvertiserInput>
 ): Promise<Advertiser> {
-  const { data } = await api.patch(`/api/menyesha/advertisers/${id}`, input);
+  const { data } = await api.patch(`/api/tugezo/advertisers/${id}`, input);
   return unwrap<Advertiser>(data);
 }
 
 export async function deleteAdvertiser(id: string): Promise<void> {
-  await api.delete(`/api/menyesha/advertisers/${id}`);
+  await api.delete(`/api/tugezo/advertisers/${id}`);
 }

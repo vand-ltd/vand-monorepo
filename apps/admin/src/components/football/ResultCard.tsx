@@ -1,8 +1,8 @@
 import { forwardRef } from 'react';
 import { Oswald } from 'next/font/google';
 import { isTbdKickoff, type Match, type MatchEvent, type Team } from '@org/api';
-import { SocialIcons } from '@org/ui';
-import { MENYESHA_LOGO } from './brand';
+import { SocialIcons, GRAPHIC_PLATFORMS } from '@org/ui';
+import { BRAND_LOGO, BRAND_NAME, BRAND_DOMAIN, GRAPHIC_HASHTAGS } from './brand';
 
 // Condensed, broadcast-style display font for the scoreline / names / labels.
 // Self-hosted by next/font (same-origin), so html-to-image can embed it cleanly.
@@ -77,7 +77,7 @@ export function buildCaption(opts: {
     lines.push(`(${match.homePenalties}–${match.awayPenalties} on penalties)`);
   }
   lines.push('');
-  lines.push('#Menyesha #Football #Rwanda');
+  lines.push(GRAPHIC_HASHTAGS);
   return lines.join('\n');
 }
 
@@ -304,10 +304,10 @@ export const ResultCard = forwardRef<HTMLDivElement, Props>(function ResultCard(
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={MENYESHA_LOGO} alt="Menyesha" style={{ height: d.brand * 1.15, width: 'auto', display: 'block' }} />
-          <span style={{ fontSize: d.foot * 0.9, letterSpacing: 1, color: '#7f93a8' }}>menyesha.vand.rw</span>
+          <img src={BRAND_LOGO} alt={BRAND_NAME} style={{ height: d.brand * 1.15, width: 'auto', display: 'block' }} />
+          <span style={{ fontSize: d.foot * 0.9, letterSpacing: 1, color: '#7f93a8' }}>{BRAND_DOMAIN}</span>
         </div>
-        <SocialIcons size={d.foot * 1.3} color="#9fb3c8" />
+        <SocialIcons size={d.foot * 1.1} color="#9fb3c8" platforms={GRAPHIC_PLATFORMS} showHandles />
         <div style={{ fontSize: d.foot, color: '#9fb3c8', textAlign: 'right' }}>
           {kickoff}
           {match.venue?.name ? ` · ${match.venue.name}` : ''}

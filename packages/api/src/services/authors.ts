@@ -1,7 +1,7 @@
 import api from '../client';
 
 export async function getAuthor(slug: string) {
-  const { data } = await api.get(`/api/menyesha/articles/author/${slug}`);
+  const { data } = await api.get(`/api/tugezo/articles/author/${slug}`);
   return data.data;
 }
 
@@ -15,7 +15,7 @@ export async function getAuthorArticles(
   }
 ) {
   const { data } = await api.get(
-    `/api/menyesha/articles/author/${slug}/articles`,
+    `/api/tugezo/articles/author/${slug}/articles`,
     { params }
   );
   return data.data;

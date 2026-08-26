@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 728 90" width="728" height="90" role="img" aria-label="Advertise here on Tugezo">
+  <title>Advertise here</title>
+  <defs>
+    <linearGradient id="ahl-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00243e"/>
+      <stop offset="55%" stop-color="#003153"/>
+      <stop offset="100%" stop-color="#005F73"/>
+    </linearGradient>
+    <radialGradient id="ahl-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.35"/>
+      <stop offset="70%" stop-color="#F59E0B" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect x="0" y="0" width="728" height="90" rx="14" fill="url(#ahl-bg)"/>
+  <circle cx="660" cy="0" r="110" fill="url(#ahl-glow)">
+    <animate attributeName="opacity" values="0.7;1;0.7" dur="4.5s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Signal -->
+  <g transform="translate(46,45)">
+    <circle cx="0" cy="0" r="6" fill="#F59E0B"/>
+    <path d="M 15 -10 A 14 14 0 0 1 15 10" fill="none" stroke="#F59E0B" stroke-width="3" stroke-linecap="round">
+      <animate attributeName="opacity" values="1;0.35;1" dur="2.6s" begin="0s" repeatCount="indefinite"/>
+    </path>
+    <path d="M 26 -17 A 23 23 0 0 1 26 17" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" opacity="0.85">
+      <animate attributeName="opacity" values="0.85;0.25;0.85" dur="2.6s" begin="0.3s" repeatCount="indefinite"/>
+    </path>
+    <path d="M 37 -24 A 32 32 0 0 1 37 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" opacity="0.45">
+      <animate attributeName="opacity" values="0.45;0.12;0.45" dur="2.6s" begin="0.6s" repeatCount="indefinite"/>
+    </path>
+  </g>
+
+  <!-- Copy -->
+  <text x="110" y="42" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="800" letter-spacing="1" fill="#ffffff">ADVERTISE HERE</text>
+  <text x="111" y="64" font-family="Arial, Helvetica, sans-serif" font-size="13" letter-spacing="0.4" fill="#F59E0B">Reach Rwanda&#8217;s fans &#8212; vand.rw</text>
+
+  <!-- CTA -->
+  <g transform="translate(566,29)">
+    <rect x="0" y="0" width="140" height="32" rx="16" fill="#F59E0B"/>
+    <text x="18" y="21" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#00243e">Get in touch &#8594;</text>
+  </g>
+</svg>

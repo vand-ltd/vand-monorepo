@@ -11,6 +11,6 @@ export async function getArticlesFeed(parms: {
   featuredType?: string;
   search?: string;
 }) {
-  const { data } = await api.get('/api/menyesha/articles/feed', { params: parms });
+  const { data } = await api.get('/api/tugezo/articles/feed', { params: parms });
   return data.data;
 }

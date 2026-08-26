@@ -227,11 +227,11 @@ export interface CompetitionInput {
 }
 
 export async function createCompetition(payload: CompetitionInput): Promise<Competition> {
-  const { data } = await api.post('/api/menyesha/competitions', payload);
+  const { data } = await api.post('/api/tugezo/competitions', payload);
   return unwrap<Competition>(data);
 }
 
-// PATCH /api/menyesha/competitions/:id -> partial update. Omitting a field keeps
+// PATCH /api/tugezo/competitions/:id -> partial update. Omitting a field keeps
 // it; send logo: null explicitly to clear it.
 export async function updateCompetition(
   competitionId: string,
@@ -243,7 +243,7 @@ export async function updateCompetition(
     isActive?: boolean;
   }
 ): Promise<Competition> {
-  const { data } = await api.patch(`/api/menyesha/competitions/${competitionId}`, payload);
+  const { data } = await api.patch(`/api/tugezo/competitions/${competitionId}`, payload);
   return unwrap<Competition>(data);
 }
 
@@ -252,16 +252,16 @@ export async function createSeason(payload: {
   name: string;
   isCurrent?: boolean;
 }): Promise<Season> {
-  const { data } = await api.post('/api/menyesha/seasons', payload);
+  const { data } = await api.post('/api/tugezo/seasons', payload);
   return unwrap<Season>(data);
 }
 
-// PATCH /api/menyesha/seasons/:id -> rename a season or mark it as current.
+// PATCH /api/tugezo/seasons/:id -> rename a season or mark it as current.
 export async function updateSeason(
   seasonId: string,
   payload: { name?: string; isCurrent?: boolean }
 ): Promise<Season> {
-  const { data } = await api.patch(`/api/menyesha/seasons/${seasonId}`, payload);
+  const { data } = await api.patch(`/api/tugezo/seasons/${seasonId}`, payload);
   return unwrap<Season>(data);
 }
 
@@ -273,11 +273,11 @@ export interface TeamInput {
 }
 
 export async function createTeamsBulk(payload: { teams: TeamInput[] }): Promise<Team[]> {
-  const { data } = await api.post('/api/menyesha/teams/bulk', payload);
+  const { data } = await api.post('/api/tugezo/teams/bulk', payload);
   return unwrap<Team[]>(data);
 }
 
-// PATCH /api/menyesha/teams/:id -> update a team (e.g. toggle isActive).
+// PATCH /api/tugezo/teams/:id -> update a team (e.g. toggle isActive).
 export async function updateTeam(
   teamId: string,
   payload: {
@@ -288,13 +288,13 @@ export async function updateTeam(
     isActive?: boolean;
   }
 ): Promise<Team> {
-  const { data } = await api.patch(`/api/menyesha/teams/${teamId}`, payload);
+  const { data } = await api.patch(`/api/tugezo/teams/${teamId}`, payload);
   return unwrap<Team>(data);
 }
 
-// DELETE /api/menyesha/teams/:id -> delete a team.
+// DELETE /api/tugezo/teams/:id -> delete a team.
 export async function deleteTeam(teamId: string): Promise<any> {
-  const { data } = await api.delete(`/api/menyesha/teams/${teamId}`);
+  const { data } = await api.delete(`/api/tugezo/teams/${teamId}`);
   return unwrap<any>(data);
 }
 
@@ -322,16 +322,16 @@ export async function addSquadPlayers(
   payload: { players: SquadPlayerInput[] }
 ): Promise<Player[]> {
   const { data } = await api.post(
-    `/api/menyesha/teams/${teamId}/squad/players`,
+    `/api/tugezo/teams/${teamId}/squad/players`,
     payload,
     { params: { seasonId } }
   );
   return unwrap<Player[]>(data);
 }
 
-// DELETE /api/menyesha/teams/:id/squad/:membershipId -> remove a squad member.
+// DELETE /api/tugezo/teams/:id/squad/:membershipId -> remove a squad member.
 export async function removeSquadPlayer(teamId: string, membershipId: string): Promise<any> {
-  const { data } = await api.delete(`/api/menyesha/teams/${teamId}/squad/${membershipId}`);
+  const { data } = await api.delete(`/api/tugezo/teams/${teamId}/squad/${membershipId}`);
   return unwrap<any>(data);
 }
 
@@ -345,14 +345,14 @@ export interface SquadPlayerUpdate {
   leftAt?: string | null;
 }
 
-// PATCH /api/menyesha/teams/:id/squad/:membershipId -> update a squad membership.
+// PATCH /api/tugezo/teams/:id/squad/:membershipId -> update a squad membership.
 export async function updateSquadPlayer(
   teamId: string,
   membershipId: string,
   payload: SquadPlayerUpdate
 ): Promise<Player> {
   const { data } = await api.patch(
-    `/api/menyesha/teams/${teamId}/squad/${membershipId}`,
+    `/api/tugezo/teams/${teamId}/squad/${membershipId}`,
     payload
   );
   return unwrap<Player>(data);
@@ -371,12 +371,12 @@ export interface PlayerUpdate {
   bio?: string | null;
 }
 
-// PATCH /api/menyesha/players/:playerId -> update the player record.
+// PATCH /api/tugezo/players/:playerId -> update the player record.
 export async function updatePlayer(
   playerId: string,
   payload: PlayerUpdate
 ): Promise<Player> {
-  const { data } = await api.patch(`/api/menyesha/players/${playerId}`, payload);
+  const { data } = await api.patch(`/api/tugezo/players/${playerId}`, payload);
   return unwrap<Player>(data);
 }
 
@@ -401,7 +401,7 @@ export async function createMatchesBulk(payload: {
   groupId?: string;
   matches: MatchInput[];
 }): Promise<Match[]> {
-  const { data } = await api.post('/api/menyesha/matches/bulk', payload);
+  const { data } = await api.post('/api/tugezo/matches/bulk', payload);
   return unwrap<Match[]>(data);
 }
 
@@ -409,13 +409,13 @@ export async function addSeasonEntries(
   seasonId: string,
   payload: { teamIds: string[] }
 ): Promise<any> {
-  const { data } = await api.post(`/api/menyesha/seasons/${seasonId}/entries`, payload);
+  const { data } = await api.post(`/api/tugezo/seasons/${seasonId}/entries`, payload);
   return unwrap<any>(data);
 }
 
-// DELETE /api/menyesha/seasons/:id/entries/:teamId -> unroll a team from a season.
+// DELETE /api/tugezo/seasons/:id/entries/:teamId -> unroll a team from a season.
 export async function removeSeasonEntry(seasonId: string, teamId: string): Promise<any> {
-  const { data } = await api.delete(`/api/menyesha/seasons/${seasonId}/entries/${teamId}`);
+  const { data } = await api.delete(`/api/tugezo/seasons/${seasonId}/entries/${teamId}`);
   return unwrap<any>(data);
 }
 
@@ -488,25 +488,25 @@ function normalizeStage(s: any): Stage {
   };
 }
 
-// POST /api/menyesha/seasons/:seasonId/stages/bulk -> whole cup structure at once.
+// POST /api/tugezo/seasons/:seasonId/stages/bulk -> whole cup structure at once.
 export async function createStagesBulk(
   seasonId: string,
   payload: { stages: StageInput[] }
 ): Promise<Stage[]> {
-  const { data } = await api.post(`/api/menyesha/seasons/${seasonId}/stages/bulk`, payload);
+  const { data } = await api.post(`/api/tugezo/seasons/${seasonId}/stages/bulk`, payload);
   return (unwrap<any[]>(data) ?? []).map(normalizeStage);
 }
 
-// POST /api/menyesha/stages/:stageId/groups/bulk -> groups + their teams at once.
+// POST /api/tugezo/stages/:stageId/groups/bulk -> groups + their teams at once.
 export async function createGroupsBulk(
   stageId: string,
   payload: { groups: GroupInput[] }
 ): Promise<StageGroup[]> {
-  const { data } = await api.post(`/api/menyesha/stages/${stageId}/groups/bulk`, payload);
+  const { data } = await api.post(`/api/tugezo/stages/${stageId}/groups/bulk`, payload);
   return (unwrap<any[]>(data) ?? []).map(normalizeGroup);
 }
 
-// PATCH /api/menyesha/stages/:stageId -> rename / retype / reorder a stage,
+// PATCH /api/tugezo/stages/:stageId -> rename / retype / reorder a stage,
 // or set the group-stage qualification rule (advancesPerGroup / bestLosersCount).
 export async function updateStage(
   stageId: string,
@@ -518,34 +518,34 @@ export async function updateStage(
     bestLosersCount?: number | null;
   }
 ): Promise<Stage> {
-  const { data } = await api.patch(`/api/menyesha/stages/${stageId}`, payload);
+  const { data } = await api.patch(`/api/tugezo/stages/${stageId}`, payload);
   return normalizeStage(unwrap<any>(data));
 }
 
-// DELETE /api/menyesha/stages/:stageId -> remove a stage (and its groups).
+// DELETE /api/tugezo/stages/:stageId -> remove a stage (and its groups).
 export async function deleteStage(stageId: string): Promise<any> {
-  const { data } = await api.delete(`/api/menyesha/stages/${stageId}`);
+  const { data } = await api.delete(`/api/tugezo/stages/${stageId}`);
   return unwrap<any>(data);
 }
 
-// GET /api/menyesha/seasons/:seasonId/stages -> stages (with groups when returned).
+// GET /api/tugezo/seasons/:seasonId/stages -> stages (with groups when returned).
 export async function getSeasonStages(seasonId: string): Promise<Stage[]> {
-  const { data } = await api.get(`/api/menyesha/seasons/${seasonId}/stages`);
+  const { data } = await api.get(`/api/tugezo/seasons/${seasonId}/stages`);
   return (unwrap<any[]>(data) ?? []).map(normalizeStage);
 }
 
-// GET /api/menyesha/stages/:stageId/groups -> groups in a stage, with teams.
+// GET /api/tugezo/stages/:stageId/groups -> groups in a stage, with teams.
 export async function getStageGroups(stageId: string): Promise<StageGroup[]> {
-  const { data } = await api.get(`/api/menyesha/stages/${stageId}/groups`);
+  const { data } = await api.get(`/api/tugezo/stages/${stageId}/groups`);
   return (unwrap<any[]>(data) ?? []).map(normalizeGroup);
 }
 
-// PATCH /api/menyesha/groups/:groupId -> rename / reorder / set how many advance.
+// PATCH /api/tugezo/groups/:groupId -> rename / reorder / set how many advance.
 export async function updateGroup(
   groupId: string,
   payload: { name?: string; order?: number; advancesCount?: number | null }
 ): Promise<StageGroup> {
-  const { data } = await api.patch(`/api/menyesha/groups/${groupId}`, payload);
+  const { data } = await api.patch(`/api/tugezo/groups/${groupId}`, payload);
   return normalizeGroup(unwrap<any>(data));
 }
 
@@ -557,16 +557,16 @@ export interface VenueInput {
 }
 
 export async function createVenuesBulk(payload: { venues: VenueInput[] }): Promise<Venue[]> {
-  const { data } = await api.post('/api/menyesha/venues/bulk', payload);
+  const { data } = await api.post('/api/tugezo/venues/bulk', payload);
   return unwrap<Venue[]>(data);
 }
 
-// PATCH /api/menyesha/venues/:id -> edit a venue's details.
+// PATCH /api/tugezo/venues/:id -> edit a venue's details.
 export async function updateVenue(
   venueId: string,
   payload: Partial<VenueInput>
 ): Promise<Venue> {
-  const { data } = await api.patch(`/api/menyesha/venues/${venueId}`, payload);
+  const { data } = await api.patch(`/api/tugezo/venues/${venueId}`, payload);
   return unwrap<Venue>(data);
 }
 
@@ -591,13 +591,13 @@ export async function updateMatch(
     groupId?: string | null;
   }
 ): Promise<Match> {
-  const { data } = await api.patch(`/api/menyesha/matches/${matchId}`, payload);
+  const { data } = await api.patch(`/api/tugezo/matches/${matchId}`, payload);
   return unwrap<Match>(data);
 }
 
-// DELETE /api/menyesha/matches/:id -> delete a match.
+// DELETE /api/tugezo/matches/:id -> delete a match.
 export async function deleteMatch(matchId: string): Promise<any> {
-  const { data } = await api.delete(`/api/menyesha/matches/${matchId}`);
+  const { data } = await api.delete(`/api/tugezo/matches/${matchId}`);
   return unwrap<any>(data);
 }
 
@@ -611,23 +611,23 @@ export interface MatchEventInput {
   note?: string;
 }
 
-// POST /api/menyesha/matches/:matchId/events -> add a goal/card/sub to a match.
+// POST /api/tugezo/matches/:matchId/events -> add a goal/card/sub to a match.
 export async function createMatchEvent(
   matchId: string,
   payload: MatchEventInput
 ): Promise<MatchEvent> {
-  const { data } = await api.post(`/api/menyesha/matches/${matchId}/events`, payload);
+  const { data } = await api.post(`/api/tugezo/matches/${matchId}/events`, payload);
   return unwrap<MatchEvent>(data);
 }
 
-// PATCH /api/menyesha/matches/:matchId/events/:eventId -> edit an event.
+// PATCH /api/tugezo/matches/:matchId/events/:eventId -> edit an event.
 export async function updateMatchEvent(
   matchId: string,
   eventId: string,
   payload: Partial<MatchEventInput>
 ): Promise<MatchEvent> {
   const { data } = await api.patch(
-    `/api/menyesha/matches/${matchId}/events/${eventId}`,
+    `/api/tugezo/matches/${matchId}/events/${eventId}`,
     payload
   );
   return unwrap<MatchEvent>(data);
@@ -637,36 +637,36 @@ export async function updateMatchEvent(
 /*  Reads (backend-confirmed paths)                                            */
 /* -------------------------------------------------------------------------- */
 
-// GET /api/menyesha/competitions -> all competitions + their seasons
+// GET /api/tugezo/competitions -> all competitions + their seasons
 export async function getCompetitions(): Promise<Competition[]> {
-  const { data } = await api.get('/api/menyesha/competitions');
+  const { data } = await api.get('/api/tugezo/competitions');
   return unwrap<Competition[]>(data);
 }
 
 export async function getCompetition(id: string): Promise<Competition> {
-  const { data } = await api.get(`/api/menyesha/competitions/${id}`);
+  const { data } = await api.get(`/api/tugezo/competitions/${id}`);
   return unwrap<Competition>(data);
 }
 
-// GET /api/menyesha/seasons?competitionId= -> seasons (+ entry/match counts)
+// GET /api/tugezo/seasons?competitionId= -> seasons (+ entry/match counts)
 export async function getSeasons(competitionId?: string): Promise<Season[]> {
-  const { data } = await api.get('/api/menyesha/seasons', {
+  const { data } = await api.get('/api/tugezo/seasons', {
     params: competitionId ? { competitionId } : undefined,
   });
   return unwrap<Season[]>(data);
 }
 
-// GET /api/menyesha/seasons/:id -> season + enrolled teams
+// GET /api/tugezo/seasons/:id -> season + enrolled teams
 export async function getSeason(id: string): Promise<Season> {
-  const { data } = await api.get(`/api/menyesha/seasons/${id}`);
+  const { data } = await api.get(`/api/tugezo/seasons/${id}`);
   return unwrap<Season>(data);
 }
 
-// GET /api/menyesha/seasons/:id/entries -> teams enrolled in a season.
+// GET /api/tugezo/seasons/:id/entries -> teams enrolled in a season.
 // The API may return bare teams or entry rows that wrap the team ({ team: {...} }),
 // so normalize to a flat Team[].
 export async function getSeasonEntries(seasonId: string): Promise<Team[]> {
-  const { data } = await api.get(`/api/menyesha/seasons/${seasonId}/entries`);
+  const { data } = await api.get(`/api/tugezo/seasons/${seasonId}/entries`);
   const rows = unwrap<any[]>(data) ?? [];
   return rows.map((r) => (r && r.team ? r.team : r)).filter((t) => t && t.id);
 }
@@ -727,19 +727,19 @@ function extractStandings(payload: any): StandingsResult {
   };
 }
 
-// GET /api/menyesha/seasons/:id/standings -> { season, standings, groups }.
+// GET /api/tugezo/seasons/:id/standings -> { season, standings, groups }.
 // Pass { live: true } to fold in-progress (Live/HalfTime) scores into the table.
 export async function getStandings(
   seasonId: string,
   opts?: { live?: boolean }
 ): Promise<StandingsResult> {
-  const { data } = await api.get(`/api/menyesha/seasons/${seasonId}/standings`, {
+  const { data } = await api.get(`/api/tugezo/seasons/${seasonId}/standings`, {
     params: opts?.live ? { live: true } : undefined,
   });
   return extractStandings(unwrap<any>(data));
 }
 
-// GET /api/menyesha/competitions/:id/standings?seasonId=&live= -> the table for a
+// GET /api/tugezo/competitions/:id/standings?seasonId=&live= -> the table for a
 // season (server resolves the current season if seasonId is omitted).
 export async function getCompetitionStandings(
   competitionId: string,
@@ -749,23 +749,23 @@ export async function getCompetitionStandings(
   const params: Record<string, string | boolean> = {};
   if (seasonId) params.seasonId = seasonId;
   if (opts?.live) params.live = true;
-  const { data } = await api.get(`/api/menyesha/competitions/${competitionId}/standings`, {
+  const { data } = await api.get(`/api/tugezo/competitions/${competitionId}/standings`, {
     params: Object.keys(params).length ? params : undefined,
   });
   return extractStandings(unwrap<any>(data));
 }
 
-// GET /api/menyesha/teams?isActive= -> teams, optionally filtered by active flag.
+// GET /api/tugezo/teams?isActive= -> teams, optionally filtered by active flag.
 // Public/consumer callers should pass { isActive: true } to get only usable teams.
 export async function getTeams(params?: { isActive?: boolean }): Promise<Team[]> {
-  const { data } = await api.get('/api/menyesha/teams', {
+  const { data } = await api.get('/api/tugezo/teams', {
     params: params && Object.keys(params).length ? params : undefined,
   });
   return unwrap<Team[]>(data);
 }
 
 export async function getTeam(id: string): Promise<Team> {
-  const { data } = await api.get(`/api/menyesha/teams/${id}`);
+  const { data } = await api.get(`/api/tugezo/teams/${id}`);
   return unwrap<Team>(data);
 }
 
@@ -890,13 +890,13 @@ export interface TeamSeasonJourney {
   eliminated?: boolean | null; // machine-readable: true=out, false=still in/won, null=unknown
 }
 
-// GET /api/menyesha/teams/:id/seasons/:seasonId/journey -> a cup-season drill-down
+// GET /api/tugezo/teams/:id/seasons/:seasonId/journey -> a cup-season drill-down
 // (loaded on demand when a user expands a cup season on the team page).
 export async function getTeamSeasonJourney(
   teamId: string,
   seasonId: string
 ): Promise<TeamSeasonJourney> {
-  const { data } = await api.get(`/api/menyesha/teams/${teamId}/seasons/${seasonId}/journey`);
+  const { data } = await api.get(`/api/tugezo/teams/${teamId}/seasons/${seasonId}/journey`);
   const p = unwrap<any>(data);
   return {
     team: p?.team ?? {},
@@ -908,9 +908,9 @@ export async function getTeamSeasonJourney(
   };
 }
 
-// GET /api/menyesha/teams/slug/:slug -> the whole team page in one call.
+// GET /api/tugezo/teams/slug/:slug -> the whole team page in one call.
 export async function getTeamProfile(slug: string): Promise<TeamProfile> {
-  const { data } = await api.get(`/api/menyesha/teams/slug/${slug}`);
+  const { data } = await api.get(`/api/tugezo/teams/slug/${slug}`);
   const p = unwrap<any>(data);
   return {
     team: p?.team ?? {},
@@ -922,7 +922,7 @@ export async function getTeamProfile(slug: string): Promise<TeamProfile> {
   };
 }
 
-// GET /api/menyesha/teams/:id/squad?seasonId= -> squad, filterable by season.
+// GET /api/tugezo/teams/:id/squad?seasonId= -> squad, filterable by season.
 // (Note: the POST to add players is /teams/:id/squad/players; the GET is /squad.)
 // Normalizes the various shapes the API may return into a flat Player[]:
 //   - a bare Player[]
@@ -930,7 +930,7 @@ export async function getTeamProfile(slug: string): Promise<TeamProfile> {
 //   - squad rows wrapping the player: [{ player: {...}, shirtNumber, position }]
 //     (row-level shirtNumber/position win, since they're season-specific).
 export async function getSquad(teamId: string, seasonId?: string): Promise<Player[]> {
-  const { data } = await api.get(`/api/menyesha/teams/${teamId}/squad`, {
+  const { data } = await api.get(`/api/tugezo/teams/${teamId}/squad`, {
     params: seasonId ? { seasonId } : undefined,
   });
   let rows: any = unwrap<any>(data);
@@ -1038,9 +1038,9 @@ export interface PlayerProfile {
   };
 }
 
-// GET /api/menyesha/players/slug/:slug -> full player profile.
+// GET /api/tugezo/players/slug/:slug -> full player profile.
 export async function getPlayerProfile(slug: string): Promise<PlayerProfile> {
-  const { data } = await api.get(`/api/menyesha/players/slug/${slug}`);
+  const { data } = await api.get(`/api/tugezo/players/slug/${slug}`);
   const p = unwrap<any>(data);
   return {
     player: p?.player ?? {},
@@ -1073,13 +1073,13 @@ export interface SeasonPlayerRow {
   team?: { id: string; name: string; shortName?: string; logo?: string | null };
 }
 
-// GET /api/menyesha/seasons/:id/players?search= -> every player registered in a
+// GET /api/tugezo/seasons/:id/players?search= -> every player registered in a
 // season (across all teams), from the squad-membership rows.
 export async function getSeasonPlayers(
   seasonId: string,
   params?: { search?: string }
 ): Promise<SeasonPlayerRow[]> {
-  const { data } = await api.get(`/api/menyesha/seasons/${seasonId}/players`, {
+  const { data } = await api.get(`/api/tugezo/seasons/${seasonId}/players`, {
     params: params && Object.keys(params).length ? params : undefined,
   });
   const rows = unwrap<any[]>(data) ?? [];
@@ -1110,18 +1110,18 @@ export interface PlayersQuery {
 }
 
 export async function getPlayers(params?: PlayersQuery): Promise<Player[]> {
-  const { data } = await api.get('/api/menyesha/players', {
+  const { data } = await api.get('/api/tugezo/players', {
     params: params && Object.keys(params).length ? params : undefined,
   });
   return unwrap<Player[]>(data);
 }
 
 export async function getVenues(): Promise<Venue[]> {
-  const { data } = await api.get('/api/menyesha/venues');
+  const { data } = await api.get('/api/tugezo/venues');
   return unwrap<Venue[]>(data);
 }
 
-// GET /api/menyesha/matches -> the LiveScore feed.
+// GET /api/tugezo/matches -> the LiveScore feed.
 export async function getMatches(params?: {
   date?: string;
   status?: MatchStatus;
@@ -1135,15 +1135,15 @@ export async function getMatches(params?: {
   to?: string; // ISO date, inclusive upper bound on kickoff
   order?: 'asc' | 'desc';
 }): Promise<Match[]> {
-  const { data } = await api.get('/api/menyesha/matches', {
+  const { data } = await api.get('/api/tugezo/matches', {
     params: params && Object.keys(params).length ? params : undefined,
   });
   return unwrap<Match[]>(data);
 }
 
-// GET /api/menyesha/matches/slug/:slug -> one match by slug (SEO-friendly URLs).
+// GET /api/tugezo/matches/slug/:slug -> one match by slug (SEO-friendly URLs).
 export async function getMatch(slug: string): Promise<Match> {
-  const { data } = await api.get(`/api/menyesha/matches/slug/${slug}`);
+  const { data } = await api.get(`/api/tugezo/matches/slug/${slug}`);
   return unwrap<Match>(data);
 }
 
@@ -1186,14 +1186,14 @@ export interface HeadToHead {
   meetings: HeadToHeadMeeting[]; // recent-first past encounters
 }
 
-// GET /api/menyesha/matches/head-to-head?teamA=&teamB=&limit= -> the all-time
+// GET /api/tugezo/matches/head-to-head?teamA=&teamB=&limit= -> the all-time
 // record + recent meetings between two teams. Accepts team id or slug.
 export async function getHeadToHead(
   teamA: string,
   teamB: string,
   limit?: number
 ): Promise<HeadToHead> {
-  const { data } = await api.get('/api/menyesha/matches/head-to-head', {
+  const { data } = await api.get('/api/tugezo/matches/head-to-head', {
     params: { teamA, teamB, ...(limit ? { limit } : {}) },
   });
   const p = unwrap<any>(data);
@@ -1217,13 +1217,13 @@ export async function getHeadToHead(
   };
 }
 
-// GET /api/menyesha/matches/:matchId/events -> timeline of goals, cards, subs.
+// GET /api/tugezo/matches/:matchId/events -> timeline of goals, cards, subs.
 // Optionally filter by event type and/or team.
 export async function getMatchEvents(
   matchId: string,
   params?: { type?: MatchEventType; teamId?: string }
 ): Promise<MatchEvent[]> {
-  const { data } = await api.get(`/api/menyesha/matches/${matchId}/events`, {
+  const { data } = await api.get(`/api/tugezo/matches/${matchId}/events`, {
     params: params && Object.keys(params).length ? params : undefined,
   });
   return unwrap<MatchEvent[]>(data) ?? [];
@@ -1244,14 +1244,14 @@ export interface LineupInput {
   players: LineupPlayerInput[];
 }
 
-// POST /api/menyesha/matches/:matchId/lineups/:teamId -> set a team's lineup.
+// POST /api/tugezo/matches/:matchId/lineups/:teamId -> set a team's lineup.
 export async function setMatchLineup(
   matchId: string,
   teamId: string,
   payload: LineupInput
 ): Promise<any> {
   const { data } = await api.put(
-    `/api/menyesha/matches/${matchId}/lineups/${teamId}`,
+    `/api/tugezo/matches/${matchId}/lineups/${teamId}`,
     payload
   );
   return unwrap<any>(data);
@@ -1277,13 +1277,13 @@ export interface MatchLineup {
   slots: LineupSlot[];
 }
 
-// GET /api/menyesha/matches/:matchId/lineups/:teamId -> a team's lineup (if set).
+// GET /api/tugezo/matches/:matchId/lineups/:teamId -> a team's lineup (if set).
 // Normalized to a MatchLineup with a `slots` array; tolerant of a `players` key.
 export async function getMatchLineup(
   matchId: string,
   teamId: string
 ): Promise<MatchLineup | null> {
-  const { data } = await api.get(`/api/menyesha/matches/${matchId}/lineups/${teamId}`);
+  const { data } = await api.get(`/api/tugezo/matches/${matchId}/lineups/${teamId}`);
   const p = unwrap<any>(data);
   if (!p) return null;
   const slots: LineupSlot[] = (p.slots ?? p.players ?? [])
@@ -1323,16 +1323,16 @@ export interface StatLeaderRow {
   assists: number;
 }
 
-// GET /api/menyesha/seasons/:id/top-scorers -> { season, scorers: [...] }
+// GET /api/tugezo/seasons/:id/top-scorers -> { season, scorers: [...] }
 export async function getTopScorers(seasonId: string): Promise<StatLeaderRow[]> {
-  const { data } = await api.get(`/api/menyesha/seasons/${seasonId}/top-scorers`);
+  const { data } = await api.get(`/api/tugezo/seasons/${seasonId}/top-scorers`);
   const payload = unwrap<any>(data);
   return (payload?.scorers ?? payload ?? []) as StatLeaderRow[];
 }
 
-// GET /api/menyesha/seasons/:id/top-assists -> { season, assisters: [...] }
+// GET /api/tugezo/seasons/:id/top-assists -> { season, assisters: [...] }
 export async function getTopAssists(seasonId: string): Promise<StatLeaderRow[]> {
-  const { data } = await api.get(`/api/menyesha/seasons/${seasonId}/top-assists`);
+  const { data } = await api.get(`/api/tugezo/seasons/${seasonId}/top-assists`);
   const payload = unwrap<any>(data);
   return (payload?.assisters ?? payload ?? []) as StatLeaderRow[];
 }
@@ -1352,14 +1352,14 @@ export interface InsightResponse {
 
 export type InsightKind = 'numbers' | 'records' | 'streaks';
 
-// GET /api/menyesha/seasons/:id/{numbers|records|streaks}
+// GET /api/tugezo/seasons/:id/{numbers|records|streaks}
 // `numbers` accepts an optional round label (leagues only) for one matchday.
 export async function getSeasonInsight(
   seasonId: string,
   kind: InsightKind,
   opts?: { round?: string }
 ): Promise<InsightResponse> {
-  const { data } = await api.get(`/api/menyesha/seasons/${seasonId}/${kind}`, {
+  const { data } = await api.get(`/api/tugezo/seasons/${seasonId}/${kind}`, {
     params: kind === 'numbers' && opts?.round?.trim() ? { round: opts.round.trim() } : undefined,
   });
   const p = unwrap<any>(data);

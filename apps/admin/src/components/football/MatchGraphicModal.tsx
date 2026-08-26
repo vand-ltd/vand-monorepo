@@ -77,7 +77,7 @@ export function MatchGraphicModal({
       });
       const a = document.createElement('a');
       a.href = dataUrl;
-      a.download = `menyesha-${slugify(homeName)}-vs-${slugify(awayName)}-${size}.png`;
+      a.download = `tugezo-${slugify(homeName)}-vs-${slugify(awayName)}-${size}.png`;
       a.click();
     } finally {
       setDownloading(false);

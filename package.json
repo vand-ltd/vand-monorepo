@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "build:vand": "nx build @org/vand",
-    "build:menyesha": "nx build @org/menyesha",
+    "build:tugezo": "nx build @org/tugezo",
     "build:admin": "nx build @org/admin"
   },
   "private": true,

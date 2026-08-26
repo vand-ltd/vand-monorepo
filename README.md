@@ -6,7 +6,7 @@ Nx monorepo containing the **Vand** family of web applications with shared inter
 
 | App | Description | Path |
 |---|---|---|
-| **menyesha** | Full-featured news/article site with i18n, dark mode, shadcn/ui | `apps/menyesha/` |
+| **tugezo** | Full-featured news/article site with i18n, dark mode, shadcn/ui | `apps/tugezo/` |
 | **vand** | "Coming Soon" brand landing page with i18n and dark mode | `apps/vand/` |
 
 ## Shared Packages
@@ -27,8 +27,8 @@ Nx monorepo containing the **Vand** family of web applications with shared inter
 - **Tailwind CSS v4** — Utility-first styling (via `@tailwindcss/postcss`)
 - **next-intl 4.3** — Internationalization (locales: `en`, `fr`, `rw`)
 - **next-themes** — Dark/light mode toggle
-- **shadcn/ui** — Component library with Radix UI primitives (menyesha only)
-- **Embla Carousel** — Carousel component (menyesha only)
+- **shadcn/ui** — Component library with Radix UI primitives (tugezo only)
+- **Embla Carousel** — Carousel component (tugezo only)
 
 ## Prerequisites
 
@@ -49,7 +49,7 @@ npm install
 
 ```sh
 # Menyesha (news site)
-npx nx dev @org/menyesha
+npx nx dev @org/tugezo
 
 # Vand (landing page)
 npx nx dev @org/vand
@@ -59,7 +59,7 @@ npx nx dev @org/vand
 
 ```sh
 # Single app
-npx nx build @org/menyesha
+npx nx build @org/tugezo
 npx nx build @org/vand
 
 # All apps
@@ -72,9 +72,9 @@ npx nx run-many --target=build
 
 | Command | Description |
 |---|---|
-| `npx nx dev @org/menyesha` | Start menyesha dev server |
+| `npx nx dev @org/tugezo` | Start tugezo dev server |
 | `npx nx dev @org/vand` | Start vand dev server |
-| `npx nx build @org/menyesha` | Production build for menyesha |
+| `npx nx build @org/tugezo` | Production build for tugezo |
 | `npx nx build @org/vand` | Production build for vand |
 | `npx nx run-many --target=build` | Build all apps |
 | `npx nx run-many --target=dev` | Run all dev servers |
@@ -88,7 +88,7 @@ npx nx run-many --target=build
 ```
 vand-monorepo/
 ├── apps/
-│   ├── menyesha/                  # News/article app
+│   ├── tugezo/                  # News/article app
 │   │   ├── messages/              # i18n translation files (en.json, fr.json, rw.json)
 │   │   ├── public/                # Static assets (logos, favicon)
 │   │   ├── src/
@@ -561,7 +561,7 @@ Any folder inside `packages/` or `apps/` with a `package.json` becomes a local w
 |---|---|
 | `@org/i18n` | `packages/i18n/src/index.ts` |
 | `@org/ui` | `packages/ui/src/index.ts` |
-| `@org/menyesha` | `apps/menyesha/` |
+| `@org/tugezo` | `apps/tugezo/` |
 | `@org/vand` | `apps/vand/` |
 
 Running `npm install` creates the symlinks between them. The `@org` scope is just a naming convention — it can be changed to any scope (e.g., `@vand`).

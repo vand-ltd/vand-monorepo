@@ -81,7 +81,7 @@ const prettyKey = (key: string) => {
     day: 'numeric',
   });
 };
-// Compact date navigation — an exact copy of the menyesha scores date nav.
+// Compact date navigation — an exact copy of the tugezo scores date nav.
 // The middle label shows "Today", or the date once you step away with the arrows.
 // A self-contained calendar popover — pure DOM, so it works everywhere (real
 // mobile, the DevTools emulator, and desktop) without the native OS date picker.
@@ -296,7 +296,7 @@ export function FixturesTab({ seasonId, season }: { seasonId: string; season: Se
   const competitionLabel: string | undefined =
     (season as any)?.competition?.name ?? season?.name ?? undefined;
 
-  // Date-nav labelling — identical to the menyesha scores nav.
+  // Date-nav labelling — identical to the tugezo scores nav.
   const navBtn =
     'p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors';
   const navIsToday = dateFilter === todayKey();
@@ -603,7 +603,7 @@ export function FixturesTab({ seasonId, season }: { seasonId: string; season: Se
           <p className="text-sm text-gray-400">No matches scheduled for this season yet.</p>
         ) : (
           <>
-            {/* Filter by day — same date nav as the menyesha scores board.
+            {/* Filter by day — same date nav as the tugezo scores board.
                 Defaults to today so score/event updates land on the games
                 actually being played. */}
             <div className="mb-4 flex flex-wrap items-center gap-1">
