@@ -130,7 +130,7 @@ export function MatchdayGraphicModal({
     try {
       await downloadCardPng(
         cardRef.current,
-        `menyesha-${slugify(competitionLabel ?? 'football')}-${slugify(title)}-${mode}-${size}.png`
+        `tugezo-${slugify(competitionLabel ?? 'football')}-${slugify(title)}-${mode}-${size}.png`
       );
     } finally {
       setDownloading(false);

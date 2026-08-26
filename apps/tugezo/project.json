@@ -1,0 +1,16 @@
+{
+  "name": "@org/tugezo",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/tugezo",
+        "command": "next dev",
+        "env": {
+          "NODE_OPTIONS": "--max-old-space-size=8192"
+        }
+      }
+    }
+  }
+}

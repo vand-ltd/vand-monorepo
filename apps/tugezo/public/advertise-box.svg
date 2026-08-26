@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 250" width="300" height="250" role="img" aria-label="Advertise here on Tugezo">
+  <title>Advertise here</title>
+  <defs>
+    <linearGradient id="ahb-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00243e"/>
+      <stop offset="55%" stop-color="#003153"/>
+      <stop offset="100%" stop-color="#005F73"/>
+    </linearGradient>
+    <radialGradient id="ahb-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.32"/>
+      <stop offset="70%" stop-color="#F59E0B" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect x="0" y="0" width="300" height="250" rx="18" fill="url(#ahb-bg)"/>
+  <circle cx="250" cy="6" r="150" fill="url(#ahb-glow)">
+    <animate attributeName="opacity" values="0.7;1;0.7" dur="4.5s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Centered signal rings (symmetric, calm pulse) -->
+  <g transform="translate(150,66)">
+    <circle r="6" fill="#F59E0B"/>
+    <circle r="17" fill="none" stroke="#F59E0B" stroke-width="2.6">
+      <animate attributeName="opacity" values="1;0.35;1" dur="2.6s" begin="0s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="28" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.5">
+      <animate attributeName="opacity" values="0.5;0.15;0.5" dur="2.6s" begin="0.4s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- Copy (centered) -->
+  <text x="150" y="140" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="800" letter-spacing="1" fill="#ffffff">ADVERTISE</text>
+  <text x="150" y="174" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="800" letter-spacing="1" fill="#ffffff">HERE</text>
+  <text x="150" y="198" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="13" letter-spacing="0.4" fill="#F59E0B">Reach Rwanda &#8212; vand.rw</text>
+
+  <!-- CTA -->
+  <g transform="translate(75,212)">
+    <rect x="0" y="0" width="150" height="30" rx="15" fill="#F59E0B"/>
+    <text x="75" y="20" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#00243e">Get in touch &#8594;</text>
+  </g>
+</svg>

@@ -1,8 +1,8 @@
 import { forwardRef, type ReactNode } from 'react';
 import { Oswald } from 'next/font/google';
 import { teamInitials } from './ResultCard';
-import { SocialIcons } from '@org/ui';
-import { MENYESHA_LOGO } from './brand';
+import { SocialIcons, GRAPHIC_PLATFORMS } from '@org/ui';
+import { BRAND_LOGO, BRAND_NAME, BRAND_DOMAIN, GRAPHIC_HASHTAGS } from './brand';
 
 const oswald = Oswald({ subsets: ['latin'], weight: ['500', '600', '700'] });
 const DISPLAY = oswald.style.fontFamily;
@@ -123,10 +123,10 @@ export const StatsCard = forwardRef<
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={MENYESHA_LOGO} alt="Menyesha" style={{ height: d.brand * 1.15, width: 'auto', display: 'block' }} />
-          <span style={{ fontSize: d.foot * 0.9, letterSpacing: 1, color: '#7f93a8' }}>menyesha.vand.rw</span>
+          <img src={BRAND_LOGO} alt={BRAND_NAME} style={{ height: d.brand * 1.15, width: 'auto', display: 'block' }} />
+          <span style={{ fontSize: d.foot * 0.9, letterSpacing: 1, color: '#7f93a8' }}>{BRAND_DOMAIN}</span>
         </div>
-        <SocialIcons size={d.foot * 1.3} color="#9fb3c8" />
+        <SocialIcons size={d.foot * 1.1} color="#9fb3c8" platforms={GRAPHIC_PLATFORMS} showHandles />
         {seasonLabel && <div style={{ fontSize: d.foot, color: '#9fb3c8' }}>{seasonLabel}</div>}
       </div>
     </div>
@@ -474,6 +474,6 @@ export function buildStatsCaption(opts: {
     opts.top.slice(0, 3).forEach((t, i) => lines.push(`${i + 1}. ${t.name} (${t.value})`));
   }
   lines.push('');
-  lines.push('#Menyesha #Football #Rwanda');
+  lines.push(GRAPHIC_HASHTAGS);
   return lines.join('\n');
 }

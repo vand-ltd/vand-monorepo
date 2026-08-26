@@ -90,4 +90,4 @@ export async function downloadCardPng(node: HTMLElement, filename: string): Prom
 }
 
 export const slugify = (s: string): string =>
-  s.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'menyesha';
+  s.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'tugezo';

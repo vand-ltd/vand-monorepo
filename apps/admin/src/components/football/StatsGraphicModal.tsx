@@ -145,7 +145,7 @@ export function StatsGraphicModal({
     try {
       await downloadCardPng(
         cardRef.current,
-        `menyesha-${slugify(competitionLabel ?? 'football')}-${type}-${size}.png`
+        `tugezo-${slugify(competitionLabel ?? 'football')}-${type}-${size}.png`
       );
     } finally {
       setDownloading(false);

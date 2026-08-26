@@ -108,7 +108,7 @@ export function TeamFixturesModal({
     if (!cardRef.current) return;
     setDownloading(true);
     try {
-      await downloadCardPng(cardRef.current, `menyesha-${slugify(team?.name ?? 'team')}-${mode}-${size}.png`);
+      await downloadCardPng(cardRef.current, `tugezo-${slugify(team?.name ?? 'team')}-${mode}-${size}.png`);
     } finally {
       setDownloading(false);
     }
