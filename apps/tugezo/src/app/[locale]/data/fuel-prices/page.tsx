@@ -140,6 +140,10 @@ export default async function FuelPricesPage({ params }: Props) {
       url: `${SITE_URL}/${locale}${PATH}`,
       inLanguage: locale,
       isAccessibleForFree: true,
+      // Recommended by Google for Dataset rich results / Dataset Search.
+      // Points at our terms rather than granting a blanket open licence:
+      // the underlying figures are RURA's, we publish the compilation.
+      license: `${SITE_URL}/${locale}/terms-of-service`,
       creator: { '@type': 'Organization', name: 'RURA', url: 'https://www.rura.rw' },
       ...(insights.lastDate ? { dateModified: insights.lastDate } : {}),
     },

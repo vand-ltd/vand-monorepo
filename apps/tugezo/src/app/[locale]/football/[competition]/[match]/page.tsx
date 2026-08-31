@@ -7,7 +7,7 @@ import { FootballResultsBoard } from '@/components/layouts/FootballResultsBoard'
 import { isTbdKickoff } from '@org/api';
 import { ssrMatchBundle } from '@/lib/matchSSR';
 import { localeAlternates } from '@/lib/seo';
-import { SITE_URL, BRAND_NAME } from '@/lib/brand';
+import { SITE_URL, BRAND_NAME, OG_IMAGE } from '@/lib/brand';
 
 // /football/<competition>/<match-slug>  -> match detail  (slug contains "-vs-")
 // /football/<competition>/<season-slug> -> that competition's season
@@ -113,7 +113,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function Page({ params }: Props) {
-  const { competition, match } = await params;
+  const { locale, competition, match } = await params;
 
   // Competition season overview
   if (!isMatchSlug(match)) {
@@ -139,6 +139,42 @@ export default async function Page({ params }: Props) {
   // Match detail (+ SportsEvent structured data for rich results). Server-fetch
   // the full bundle (match, events, lineups) to seed the client — crawlable HTML.
   const { match: m, events, homeLineup, awayLineup } = await ssrMatchBundle(match);
+  /* ---- values fed into the SportsEvent structured data ---------------- */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const competitionName = (m as any)?.season?.competition?.name ?? 'Rwanda Football';
+
+  // Crest may arrive as logoUrl, a plain url string, or { url }.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const crest = (t: any): string | undefined => {
+    const l = t?.logoUrl ?? t?.logo;
+    if (typeof l === 'string') return l.startsWith('http') ? l : undefined;
+    return typeof l?.url === 'string' ? l.url : undefined;
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const teamNode = (t: any, fallback: string) => ({
+    '@type': 'SportsTeam' as const,
+    name: t?.name ?? fallback,
+    ...(t?.slug ? { url: `${SITE_URL}/${locale}/football/team/${t.slug}` } : {}),
+    ...(crest(t) ? { logo: crest(t) } : {}),
+  });
+
+  const teamNodes = m ? [teamNode(m.homeTeam, 'Home'), teamNode(m.awayTeam, 'Away')] : [];
+
+  // Prefer real crests; fall back to the brand OG image so `image` is never empty.
+  const eventImages = m
+    ? ([crest(m.homeTeam), crest(m.awayTeam)].filter(Boolean) as string[])
+    : [];
+  if (m && eventImages.length === 0) eventImages.push(OG_IMAGE);
+
+  const eventScored =
+    !!m && ['FullTime', 'Live', 'HalfTime'].includes(m.status) && m.homeScore != null && m.awayScore != null;
+  const eventDescription = m
+    ? eventScored
+      ? `${m.homeTeam?.name ?? 'Home'} ${m.homeScore}-${m.awayScore} ${m.awayTeam?.name ?? 'Away'} — full-time result in the ${competitionName}${m.round ? `, ${m.round}` : ''}.`
+      : `${m.homeTeam?.name ?? 'Home'} vs ${m.awayTeam?.name ?? 'Away'} — ${competitionName} fixture${m.round ? `, ${m.round}` : ''} in Rwanda.`
+    : '';
+
   const jsonLd = m
     ? {
         '@context': 'https://schema.org',
@@ -156,24 +192,44 @@ export default async function Page({ params }: Props) {
               : m.status === 'Postponed'
                 ? 'https://schema.org/EventPostponed'
                 : 'https://schema.org/EventScheduled',
-        ...(m.venue?.name
+        // `location` is REQUIRED on SportsEvent — omitting it makes the whole
+        // item invalid and drops it from rich results. Many lower-league and
+        // youth fixtures have no venue recorded, so fall back to a
+        // country-level Place rather than emitting nothing.
+        location: m.venue?.name
           ? {
-              location: {
-                '@type': 'Place',
-                name: m.venue.name,
-                address: [m.venue.city, 'Rwanda'].filter(Boolean).join(', '),
+              '@type': 'Place',
+              name: m.venue.name,
+              address: {
+                '@type': 'PostalAddress',
+                ...(m.venue.city ? { addressLocality: m.venue.city } : {}),
+                addressCountry: 'RW',
               },
             }
-          : {}),
-        competitor: [
-          { '@type': 'SportsTeam', name: m.homeTeam?.name ?? 'Home' },
-          { '@type': 'SportsTeam', name: m.awayTeam?.name ?? 'Away' },
-        ],
+          : {
+              '@type': 'Place',
+              name: 'Rwanda',
+              address: { '@type': 'PostalAddress', addressCountry: 'RW' },
+            },
+        // `competitor` is the SportsEvent-specific field; `performer` is the
+        // generic Event one Google also looks for. Both name the same two teams.
+        competitor: teamNodes,
+        performer: teamNodes,
+        description: eventDescription,
+        ...(eventImages.length ? { image: eventImages } : {}),
+        // Football is ~90 minutes plus the interval and stoppage; two hours is
+        // the honest estimate. Skipped for TBD fixtures, which have no real start.
+        ...(isTbdKickoff(m.kickoffAt)
+          ? {}
+          : { endDate: new Date(new Date(m.kickoffAt).getTime() + 2 * 60 * 60 * 1000).toISOString() }),
         organizer: {
           '@type': 'Organization',
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          name: (m as any).season?.competition?.name ?? 'Rwanda Football',
+          name: competitionName,
+          url: `${SITE_URL}/${locale}/football/${competition}`,
         },
+        // No `offers`: we don't sell or list tickets. Emitting an offer we
+        // can't honour would be false markup, which is worse than an
+        // incomplete item.
       }
     : null;
 
