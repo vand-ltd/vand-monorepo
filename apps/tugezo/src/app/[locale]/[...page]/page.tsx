@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Article from "@/components/layouts/Article";
 import { FootballScoreboard } from "@/components/layouts/FootballScoreboard";
 import { SITE_URL, BRAND_NAME } from '@/lib/brand';
+import { localeAlternates } from '@/lib/seo';
 
 type Props = {
   params: Promise<{ locale: string; page: string[] }>;
@@ -91,6 +92,9 @@ export default async function DynamicPage(props: Props) {
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const { locale, page } = await props.params;
   const [mainPage, subPage] = page;
+  // Category and static-page slugs are identical across locales, so canonical +
+  // hreflang can be derived directly from the path.
+  const alternates = localeAlternates(locale, page.join('/'));
 
   const categories = await fetchCategories(locale);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -101,7 +105,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ? ` - ${(parentCategory.children || []).find((c: any) => c.slug === subPage)?.name || subPage}`
       : '';
-    return { title: `${parentCategory.name}${sub} - ${BRAND_NAME}` };
+    return { title: `${parentCategory.name}${sub} - ${BRAND_NAME}`, alternates };
   }
 
   if (page.length === 1) {
@@ -114,7 +118,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         // Avoid "Tugezo — Tugezo" when the title already names the brand.
         const title = String(raw).includes(BRAND_NAME) ? raw : `${raw} — ${BRAND_NAME}`;
         const description = cfg.descKey ? ns[cfg.descKey] : undefined;
-        return description ? { title, description } : { title };
+        return description ? { title, description, alternates } : { title, alternates };
       }
     }
     // Unknown single page — humanize the slug (the page itself 404s if missing).
@@ -122,7 +126,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       .split('-')
       .map((s) => (s ? s[0].toUpperCase() + s.slice(1) : s))
       .join(' ');
-    return { title: `${pretty} — ${BRAND_NAME}` };
+    return { title: `${pretty} — ${BRAND_NAME}`, alternates };
   }
 
   return { title: "Page Not Found" };

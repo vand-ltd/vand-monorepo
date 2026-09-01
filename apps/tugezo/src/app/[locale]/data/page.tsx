@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { Fuel, ChevronRight, Database } from 'lucide-react';
 import { BRAND_NAME } from '@/lib/brand';
+import { localeAlternates } from '@/lib/seo';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -14,6 +15,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${t('title')} - ${BRAND_NAME}`,
     description: t('subtitle'),
+    alternates: localeAlternates(locale, 'data'),
   };
 }
 

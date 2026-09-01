@@ -1,6 +1,19 @@
+import type { Metadata } from 'next';
 import Article from "@/components/layouts/Article";
 import { HomeDiscover } from "@/components/layouts/HomeDiscover";
 import { HomeTrending } from "@/components/layouts/HomeTrending";
+import { localeAlternates } from '@/lib/seo';
+
+type Props = { params: Promise<{ locale: string }> };
+
+// The three locale homepages are near-identical, so without a canonical Google
+// picks one itself ("Duplicate without user-selected canonical") and the others
+// drop out. Title/description still come from the layout — only alternates are
+// declared here.
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params;
+  return { alternates: localeAlternates(locale, '') };
+}
 
 export default function HomePage() {
   return (
