@@ -139,8 +139,7 @@ export function PlayerProfile({
             <img
               src={photo}
               alt={player.fullName}
-              className="h-24 w-24 sm:h-28 sm:w-28 rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0"
-            />
+              className="h-24 w-24 sm:h-28 sm:w-28 rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0" loading="lazy" />
           ) : (
             <span className="h-24 w-24 sm:h-28 sm:w-28 rounded-full bg-[#003153] text-white text-2xl font-bold flex items-center justify-center shrink-0">
               {initials(player.fullName)}
@@ -189,8 +188,7 @@ export function PlayerProfile({
               <img
                 src={crestUrl(currentTeam.team) as string}
                 alt=""
-                className="h-12 w-12 rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0"
-              />
+                className="h-12 w-12 rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0" loading="lazy" />
             ) : (
               <span className="h-12 w-12 rounded-full bg-[#003153] text-white text-sm font-bold flex items-center justify-center shrink-0">
                 {initials(currentTeam.team.name)}

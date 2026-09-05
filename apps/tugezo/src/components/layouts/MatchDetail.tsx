@@ -1143,8 +1143,7 @@ function TeamBar({
             alt=""
             crossOrigin="anonymous"
             onError={imgCorsFallback}
-            className="h-5 w-5 rounded-full object-cover bg-white/10 shrink-0"
-          />
+            className="h-5 w-5 rounded-full object-cover bg-white/10 shrink-0" loading="lazy" />
         ) : null}
         <span className="font-semibold text-sm truncate">{teamName(team)}</span>
       </TeamLink>
@@ -1188,8 +1187,7 @@ function StarterColumn({
             <img
               src={url}
               alt=""
-              className="h-6 w-6 rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0"
-            />
+              className="h-6 w-6 rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0" loading="lazy" />
           ) : (
             <span className="h-6 w-6 rounded-full bg-[#003153] text-white text-[9px] font-bold flex items-center justify-center shrink-0">
               {initials(team)}
@@ -1464,8 +1462,7 @@ function CombinedPitch({
           aria-hidden
           crossOrigin="anonymous"
           onError={imgCorsFallback}
-          className="pointer-events-none absolute top-10 right-3 h-24 w-24 rounded-full object-cover opacity-25"
-        />
+          className="pointer-events-none absolute top-10 right-3 h-24 w-24 rounded-full object-cover opacity-25" loading="lazy" />
       )}
       {awayCrest && (
         // eslint-disable-next-line @next/next/no-img-element
@@ -1475,8 +1472,7 @@ function CombinedPitch({
           aria-hidden
           crossOrigin="anonymous"
           onError={imgCorsFallback}
-          className="pointer-events-none absolute bottom-10 left-3 h-24 w-24 rounded-full object-cover opacity-25"
-        />
+          className="pointer-events-none absolute bottom-10 left-3 h-24 w-24 rounded-full object-cover opacity-25" loading="lazy" />
       )}
 
       {/* Brand watermark — top-left */}
@@ -1626,8 +1622,7 @@ function TeamBlock({
         <img
           src={url}
           alt=""
-          className="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover bg-gray-100 dark:bg-gray-700 transition-shadow group-hover:ring-2 group-hover:ring-[#003153]/40 dark:group-hover:ring-[#F59E0B]/40"
-        />
+          className="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover bg-gray-100 dark:bg-gray-700 transition-shadow group-hover:ring-2 group-hover:ring-[#003153]/40 dark:group-hover:ring-[#F59E0B]/40" loading="lazy" />
       ) : (
         <span className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-[#003153] text-white text-sm font-bold flex items-center justify-center">
           {initials(team)}
@@ -1663,8 +1658,7 @@ function H2HCrest({ team, size = 24 }: { team: any; size?: number }) {
       src={url}
       alt=""
       style={{ width: px, height: px }}
-      className="rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0"
-    />
+      className="rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0" loading="lazy" />
   ) : (
     <span
       style={{ width: px, height: px, fontSize: size * 0.36 }}

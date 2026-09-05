@@ -35,7 +35,7 @@ function MiniCrest({ team }: { team: any }) {
   const url = crestUrl(team);
   return url ? (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={url} alt="" className="h-4 w-4 rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0" />
+    <img src={url} alt="" className="h-4 w-4 rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0" loading="lazy" />
   ) : (
     <span className="h-4 w-4 rounded-full bg-[#003153] text-white text-[7px] font-bold flex items-center justify-center shrink-0">
       {initials(team?.shortName || team?.name)}
@@ -242,8 +242,7 @@ export function FootballWidget() {
                   <img
                     src={c.logo}
                     alt=""
-                    className="h-6 w-6 rounded-full object-contain bg-gray-100 dark:bg-gray-700 p-0.5 shrink-0"
-                  />
+                    className="h-6 w-6 rounded-full object-contain bg-gray-100 dark:bg-gray-700 p-0.5 shrink-0" loading="lazy" />
                 ) : (
                   <span className="h-6 w-6 rounded-full bg-[#003153] text-white text-[9px] font-bold flex items-center justify-center shrink-0">
                     {initials(c.name)}

@@ -727,8 +727,7 @@ export function FootballResultsBoard({
                 <img
                   src={compLogo}
                   alt=""
-                  className="h-9 w-9 rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0"
-                />
+                  className="h-9 w-9 rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0" loading="lazy" />
               ) : (
                 <span className="h-9 w-9 rounded-full bg-[#003153] text-white text-xs font-bold flex items-center justify-center shrink-0">
                   {initials({ name: compName })}
@@ -1391,8 +1390,7 @@ function PlayerAvatar({ player }: { player?: { fullName?: string; photo?: string
     <img
       src={photo}
       alt=""
-      className="h-8 w-8 shrink-0 rounded-full object-cover bg-gray-100 dark:bg-gray-700"
-    />
+      className="h-8 w-8 shrink-0 rounded-full object-cover bg-gray-100 dark:bg-gray-700" loading="lazy" />
   ) : (
     <span className="h-8 w-8 shrink-0 rounded-full bg-[#003153] text-white text-[10px] font-bold flex items-center justify-center">
       {initials({ name: player?.fullName })}
@@ -1600,7 +1598,7 @@ function Crest({ team }: { team: any }) {
   const url = crestUrl(team);
   const inner = url ? (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={url} alt="" className="h-6 w-6 rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0" />
+    <img src={url} alt="" className="h-6 w-6 rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0" loading="lazy" />
   ) : (
     <span className="h-6 w-6 rounded-full bg-[#003153] text-white text-[9px] font-bold flex items-center justify-center shrink-0">
       {initials(team)}

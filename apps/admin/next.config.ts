@@ -7,6 +7,13 @@ import createNextIntlPlugin from 'next-intl/plugin';
 const baseConfig: NextConfig = {
   transpilePackages: ['@org/api', '@org/i18n', '@org/ui'],
   images: {
+    // Vercel's Image Optimization quota is exhausted on the free tier, and an
+    // over-quota transform returns HTTP 402 — the image silently fails to render
+    // wherever next/image is used, while plain <img> (cards, OG) still works.
+    // Serving originals removes that failure mode entirely and takes image
+    // transforms off the platform bill. Sources are already modestly sized and
+    // sit behind Cloudflare, so the bandwidth cost is small.
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https' as const,

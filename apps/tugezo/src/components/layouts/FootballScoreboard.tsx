@@ -239,7 +239,7 @@ function TeamLine({
       >
         {url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={url} alt="" className="h-5 w-5 rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0" />
+          <img src={url} alt="" className="h-5 w-5 rounded-full object-cover bg-gray-100 dark:bg-gray-700 shrink-0" loading="lazy" />
         ) : (
           <span className="h-5 w-5 rounded-full bg-[#003153] text-white text-[8px] font-bold flex items-center justify-center shrink-0">
             {initials(team)}
