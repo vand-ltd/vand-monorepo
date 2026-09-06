@@ -19,7 +19,7 @@ import { toPng } from 'html-to-image';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { TeamLink } from '@/components/football/TeamLink';
-import { Loader2, ArrowLeft, MapPin, ArrowUp, ArrowDown, ChevronUp, Download, CheckCircle2, ImageDown } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowUp, Award, CheckCircle2, ChevronUp, Download, ImageDown, Loader2, MapPin } from 'lucide-react';
 import { ShareButton } from '@/components/article/ShareButton';
 import { MatchShareModal } from '@/components/football/MatchShareModal';
 import { LIVE_STATUSES, useNow, liveMinuteLabel } from '@/lib/matchClock';
@@ -492,6 +492,12 @@ function MatchInfo({
   t: ReturnType<typeof useTranslations>;
 }) {
   const referee = ((m as any).referee ?? (m as any).refereeName) as string | undefined;
+  // Man of the match is a Player relation, so it links through to their profile.
+  const motm = (m as any).manOfTheMatch as
+    | { id: string; fullName: string; slug?: string | null; photo?: string | { url?: string } | null }
+    | null
+    | undefined;
+  const motmPhoto = typeof motm?.photo === 'string' ? motm.photo : motm?.photo?.url;
   // Venue may arrive as the prop, nested on the match, or by id — show whatever we have.
   const v = venue ?? (m as any).venue;
   const venueStr = v
@@ -520,10 +526,34 @@ function MatchInfo({
       icon: <MapPin className="h-3.5 w-3.5 text-gray-400 shrink-0" />,
     },
     {
+      label: t('manOfTheMatch'),
+      value: motm ? (
+        <PlayerLink slug={motm.slug} className="inline-flex items-center gap-1.5 min-w-0">
+          {motmPhoto ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={motmPhoto}
+              alt=""
+              loading="lazy"
+              className="h-5 w-5 rounded-full object-cover shrink-0 bg-gray-100 dark:bg-gray-700"
+            />
+          ) : null}
+          <span className="truncate">{motm.fullName}</span>
+        </PlayerLink>
+      ) : undefined,
+      icon: <Award className="h-3.5 w-3.5 text-[#F59E0B] shrink-0" />,
+    },
+    {
       label: t('referee'),
       value: referee,
       icon: <WhistleIcon className="h-3.5 w-3.5 text-gray-400 shrink-0" />,
     },
+    // The rest of the officials. Each row drops out when unset (see filter below),
+    // so a fixture with only a referee appointed looks exactly as it did before.
+    { label: t('assistantReferee1'), value: (m as any).assistantReferee1 || undefined },
+    { label: t('assistantReferee2'), value: (m as any).assistantReferee2 || undefined },
+    { label: t('fourthOfficial'), value: (m as any).fourthOfficial || undefined },
+    { label: t('matchCommissioner'), value: (m as any).matchCommissioner || undefined },
   ].filter((r) => r.value);
 
   if (rows.length === 0)

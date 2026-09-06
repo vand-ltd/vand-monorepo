@@ -517,7 +517,12 @@
     "headToHead": "Head to head",
     "played": "Played",
     "h2h": "H2H",
-    "noMeetings": "No previous meetings between these teams."
+    "noMeetings": "No previous meetings between these teams.",
+    "assistantReferee1": "Assistant referee 1",
+    "assistantReferee2": "Assistant referee 2",
+    "fourthOfficial": "Fourth official",
+    "matchCommissioner": "Match commissioner",
+    "manOfTheMatch": "Man of the match"
   },
   "advertisePage": {
     "title": "Advertise on Tugezo",

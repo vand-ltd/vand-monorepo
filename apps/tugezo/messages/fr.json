@@ -517,7 +517,12 @@
     "headToHead": "Face à face",
     "played": "Joués",
     "h2h": "Face à face",
-    "noMeetings": "Aucune rencontre précédente entre ces équipes."
+    "noMeetings": "Aucune rencontre précédente entre ces équipes.",
+    "assistantReferee1": "Arbitre assistant 1",
+    "assistantReferee2": "Arbitre assistant 2",
+    "fourthOfficial": "Quatrième arbitre",
+    "matchCommissioner": "Commissaire au match",
+    "manOfTheMatch": "Homme du match"
   },
   "advertisePage": {
     "title": "Faire de la publicité sur Tugezo",

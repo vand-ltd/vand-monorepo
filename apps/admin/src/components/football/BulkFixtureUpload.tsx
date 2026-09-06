@@ -8,7 +8,9 @@ import { cardClass, primaryBtn, ghostBtn } from './styles';
 import { FileDown, Upload, Loader2, CheckCircle2, AlertCircle, X } from 'lucide-react';
 
 // The canonical template columns. Header matching is case/space-insensitive.
-const COLS = ['Home Team', 'Away Team', 'Date', 'Time', 'Round', 'Venue', 'Referee', 'Stage', 'Group'];
+const COLS = ['Home Team', 'Away Team', 'Date', 'Time', 'Round', 'Venue', 'Stage', 'Group',
+  // Match officials — all optional, free text.
+  'Referee', 'Assistant Referee 1', 'Assistant Referee 2', 'Fourth Official', 'Match Commissioner'];
 
 const norm = (v: unknown) => String(v ?? '').trim().toLowerCase();
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -78,6 +80,10 @@ type ParsedRow = {
   kickoffAt?: string;
   venueId?: string;
   referee?: string;
+  assistantReferee1?: string;
+  assistantReferee2?: string;
+  fourthOfficial?: string;
+  matchCommissioner?: string;
   stageId?: string;
   groupId?: string;
   errors: string[];
@@ -118,11 +124,12 @@ export function BulkFixtureUpload({
     const ws = wb.addWorksheet('Fixtures');
     ws.addRow(COLS);
     ws.getRow(1).font = { bold: true };
-    ws.addRow(['APR FC', 'Rayon Sports FC', '2026-08-22', '18:00', 'Matchday 1', venues[0]?.name ?? 'Amahoro Stadium', '', '', '']);
+    const pad = (r: (string | number)[]) => [...r, ...Array(Math.max(0, COLS.length - r.length)).fill('')];
+    ws.addRow(pad(['APR FC', 'Rayon Sports FC', '2026-08-22', '18:00', 'Matchday 1', venues[0]?.name ?? 'Amahoro Stadium']));
     // Time blank / TBD → known day, placeholder 15:00 time you edit later.
-    ws.addRow(['Police FC', 'AS Kigali', '2026-08-23', 'TBD', 'Matchday 1', '', '', '', '']);
+    ws.addRow(pad(['Police FC', 'AS Kigali', '2026-08-23', 'TBD', 'Matchday 1']));
     // Date blank / TBD → whole fixture shows "TBD" on the site until scheduled.
-    ws.addRow(['Musanze FC', 'Gasogi United', 'TBD', 'TBD', 'Matchday 1', '', '', '', '']);
+    ws.addRow(pad(['Musanze FC', 'Gasogi United', 'TBD', 'TBD', 'Matchday 1']));
     ws.columns = COLS.map(() => ({ width: 18 }));
 
     // Reference sheet: exact team / venue / stage names to copy from.
@@ -256,6 +263,10 @@ export function BulkFixtureUpload({
           kickoffAt,
           venueId,
           referee: String(get(row, 'Referee')).trim() || undefined,
+          assistantReferee1: String(get(row, 'Assistant Referee 1')).trim() || undefined,
+          assistantReferee2: String(get(row, 'Assistant Referee 2')).trim() || undefined,
+          fourthOfficial: String(get(row, 'Fourth Official')).trim() || undefined,
+          matchCommissioner: String(get(row, 'Match Commissioner')).trim() || undefined,
           stageId,
           groupId,
           errors,
@@ -281,6 +292,10 @@ export function BulkFixtureUpload({
         kickoffAt: r.kickoffAt!,
         ...(r.venueId ? { venueId: r.venueId } : {}),
         ...(r.referee ? { referee: r.referee } : {}),
+        ...(r.assistantReferee1 ? { assistantReferee1: r.assistantReferee1 } : {}),
+        ...(r.assistantReferee2 ? { assistantReferee2: r.assistantReferee2 } : {}),
+        ...(r.fourthOfficial ? { fourthOfficial: r.fourthOfficial } : {}),
+        ...(r.matchCommissioner ? { matchCommissioner: r.matchCommissioner } : {}),
         ...(r.round ? { round: r.round } : {}),
         ...(r.stageId ? { stageId: r.stageId } : {}),
         ...(r.groupId ? { groupId: r.groupId } : {}),

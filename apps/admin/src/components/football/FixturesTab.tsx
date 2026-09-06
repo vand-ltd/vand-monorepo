@@ -7,6 +7,7 @@ import {
   getVenues,
   getMatches,
   getSeasonStages,
+  getSquad,
   createMatchesBulk,
   updateMatch,
   deleteMatch,
@@ -14,6 +15,7 @@ import {
   TBD_KICKOFF,
   MATCH_STATUSES,
   type Team,
+  type Player,
   type Venue,
   type Match,
   type MatchStatus,
@@ -36,6 +38,7 @@ import {
   Clock,
   ImageDown,
   Pencil,
+  Star,
 } from 'lucide-react';
 import { cardClass, inputClass, labelClass, primaryBtn, ghostBtn } from './styles';
 import { MatchEventsPanel } from './MatchEventsPanel';
@@ -744,6 +747,10 @@ function MatchRow({
     match.venueId ?? (match.venue as any)?.id ?? ''
   );
   const [referee, setReferee] = useState<string>(match.referee ?? '');
+  const [ar1, setAr1] = useState<string>(match.assistantReferee1 ?? '');
+  const [ar2, setAr2] = useState<string>(match.assistantReferee2 ?? '');
+  const [fourth, setFourth] = useState<string>(match.fourthOfficial ?? '');
+  const [commissioner, setCommissioner] = useState<string>(match.matchCommissioner ?? '');
   // Kickoff editor. A TBD fixture starts blank so the admin picks a real date;
   // a blank value on save re-marks the fixture as TBD (the sentinel kickoff).
   const [kickoff, setKickoff] = useState<string>(
@@ -761,6 +768,23 @@ function MatchRow({
   const [showLineups, setShowLineups] = useState(false);
   const [showGraphic, setShowGraphic] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
+  const [showMotm, setShowMotm] = useState(false);
+  const [motmId, setMotmId] = useState<string>(match.manOfTheMatchId ?? '');
+
+  // Squads back the man-of-the-match picker. Loaded only when the panel is
+  // opened — a matchday list can hold dozens of rows, and eager-loading two
+  // squads per row would be a flood of requests. Same query key as the lineups
+  // panel, so opening one warms the other.
+  const homeSquadQ = useQuery({
+    queryKey: ['football', 'squad', match.homeTeamId, seasonId],
+    queryFn: () => getSquad(match.homeTeamId, seasonId),
+    enabled: showMotm && !!match.homeTeamId,
+  });
+  const awaySquadQ = useQuery({
+    queryKey: ['football', 'squad', match.awayTeamId, seasonId],
+    queryFn: () => getSquad(match.awayTeamId, seasonId),
+    enabled: showMotm && !!match.awayTeamId,
+  });
 
   // Shootout tally only applies to knockout ties. A blank field clears it (null).
   const isKnockout = (match.stage as any)?.type === 'Knockout';
@@ -779,7 +803,13 @@ function MatchRow({
         // liveStartedAt. Sending a stale minute here overrode the auto-45 and
         // made the second half restart from 0.
         ...(venueId ? { venueId } : {}),
-        ...(referee.trim() ? { referee: referee.trim() } : {}),
+        // Officials are sent on every save (even blank) so clearing one sticks.
+        referee: referee.trim(),
+        assistantReferee1: ar1.trim(),
+        assistantReferee2: ar2.trim(),
+        fourthOfficial: fourth.trim(),
+        matchCommissioner: commissioner.trim(),
+        manOfTheMatchId: motmId || null,
         ...(isKnockout
           ? {
               homePenalties: pens(homePens),
@@ -929,6 +959,20 @@ function MatchRow({
       )}
       <button
         type="button"
+        onClick={() => setShowMotm((v) => !v)}
+        title="Man of the match"
+        aria-expanded={showMotm}
+        className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+          showMotm
+            ? 'bg-[#003153]/10 dark:bg-[#F59E0B]/10 text-[#003153] dark:text-[#F59E0B]'
+            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+        }`}
+      >
+        <Star className="h-3.5 w-3.5" />
+        MOTM
+      </button>
+      <button
+        type="button"
         onClick={() => setShowGraphic(true)}
         title="Download shareable result graphic"
         className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -1017,7 +1061,36 @@ function MatchRow({
           value={referee}
           onChange={(e) => setReferee(e.target.value)}
           placeholder="Referee"
-          className="min-w-0 flex-1 sm:flex-none sm:max-w-[12rem] px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-[#003153] outline-none"
+          title="Referee"
+          className="min-w-0 flex-1 sm:flex-none sm:max-w-[10rem] px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-[#003153] outline-none"
+        />
+        <input
+          value={ar1}
+          onChange={(e) => setAr1(e.target.value)}
+          placeholder="AR 1"
+          title="Assistant referee 1"
+          className="min-w-0 flex-1 sm:flex-none sm:max-w-[9rem] px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-[#003153] outline-none"
+        />
+        <input
+          value={ar2}
+          onChange={(e) => setAr2(e.target.value)}
+          placeholder="AR 2"
+          title="Assistant referee 2"
+          className="min-w-0 flex-1 sm:flex-none sm:max-w-[9rem] px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-[#003153] outline-none"
+        />
+        <input
+          value={fourth}
+          onChange={(e) => setFourth(e.target.value)}
+          placeholder="4th official"
+          title="Fourth official"
+          className="min-w-0 flex-1 sm:flex-none sm:max-w-[9rem] px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-[#003153] outline-none"
+        />
+        <input
+          value={commissioner}
+          onChange={(e) => setCommissioner(e.target.value)}
+          placeholder="Commissioner"
+          title="Match commissioner"
+          className="min-w-0 flex-1 sm:flex-none sm:max-w-[9rem] px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-[#003153] outline-none"
         />
 
         {/* Penalty shootout — knockout ties only. Doesn't change the scoreline. */}
@@ -1063,6 +1136,46 @@ function MatchRow({
           <MatchEventsPanel match={match} homeName={homeName} awayName={awayName} />
         </div>
       )}
+      {showMotm && (
+        <div className="border-t border-gray-100 dark:border-gray-700 px-3 py-3">
+          <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wide text-gray-400">
+            Man of the match
+          </label>
+          {homeSquadQ.isLoading || awaySquadQ.isLoading ? (
+            <div className="flex items-center gap-2 text-xs text-gray-400">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading squads…
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={motmId}
+                onChange={(e) => setMotmId(e.target.value)}
+                className="min-w-0 flex-1 sm:flex-none sm:max-w-[18rem] px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-[#003153] outline-none"
+              >
+                <option value="">— none —</option>
+                <optgroup label={homeName}>
+                  {(homeSquadQ.data ?? []).map((pl: Player) => (
+                    <option key={pl.id} value={pl.id}>
+                      {pl.shirtNumber ? `${pl.shirtNumber}. ` : ''}{pl.name}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label={awayName}>
+                  {(awaySquadQ.data ?? []).map((pl: Player) => (
+                    <option key={pl.id} value={pl.id}>
+                      {pl.shirtNumber ? `${pl.shirtNumber}. ` : ''}{pl.name}
+                    </option>
+                  ))}
+                </optgroup>
+              </select>
+              <span className="text-[11px] text-gray-400">
+                Saved with the row&apos;s Save button.
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
       {showLineups && (
         <div className="px-3 pb-3">
           <MatchLineupsPanel match={match} homeName={homeName} awayName={awayName} />

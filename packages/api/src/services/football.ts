@@ -144,6 +144,21 @@ export interface Match {
   kickoffAt: string;
   status: MatchStatus;
   referee?: string | null;
+  // Match officials. Plain strings (names), all optional — the backend stores
+  // them as free text rather than person relations.
+  assistantReferee1?: string | null;
+  assistantReferee2?: string | null;
+  fourthOfficial?: string | null;
+  matchCommissioner?: string | null;
+  // Man of the match is a real Player relation (unlike the officials, which are
+  // free text) — so it links back to that player's profile. Null when unset.
+  manOfTheMatchId?: string | null;
+  manOfTheMatch?: {
+    id: string;
+    fullName: string;
+    slug?: string | null;
+    photo?: string | { url?: string } | null;
+  } | null;
   stageId?: string | null;
   groupId?: string | null;
   stage?: { id: string; name: string; type?: StageType } | null;
@@ -386,6 +401,11 @@ export interface MatchInput {
   kickoffAt: string;
   venueId?: string;
   referee?: string;
+  assistantReferee1?: string;
+  assistantReferee2?: string;
+  fourthOfficial?: string;
+  matchCommissioner?: string;
+  manOfTheMatchId?: string;
   // Per-fixture overrides of the top-level stage/group/round.
   stageId?: string;
   groupId?: string;
@@ -583,6 +603,11 @@ export async function updateMatch(
     venueId?: string;
     kickoffAt?: string;
     referee?: string;
+    assistantReferee1?: string;
+    assistantReferee2?: string;
+    fourthOfficial?: string;
+    matchCommissioner?: string;
+    manOfTheMatchId?: string | null;
     // Fixture setup edits (e.g. a team is replaced, or the fixture moves round).
     homeTeamId?: string;
     awayTeamId?: string;

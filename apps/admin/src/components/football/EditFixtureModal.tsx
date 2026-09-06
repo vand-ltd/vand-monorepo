@@ -39,6 +39,12 @@ export function EditFixtureModal({
   const [awayTeamId, setAwayTeamId] = useState(match.awayTeamId ?? '');
   const [venueId, setVenueId] = useState<string>(match.venueId ?? (match.venue as any)?.id ?? '');
   const [round, setRound] = useState(match.round ?? '');
+  // Match officials — all free-text and optional, mirroring `referee`.
+  const [referee, setReferee] = useState(match.referee ?? '');
+  const [ar1, setAr1] = useState(match.assistantReferee1 ?? '');
+  const [ar2, setAr2] = useState(match.assistantReferee2 ?? '');
+  const [fourth, setFourth] = useState(match.fourthOfficial ?? '');
+  const [commissioner, setCommissioner] = useState(match.matchCommissioner ?? '');
   const [kickoff, setKickoff] = useState(
     match.kickoffAt && !isTbdKickoff(match.kickoffAt) ? toDatetimeLocal(match.kickoffAt) : ''
   );
@@ -55,6 +61,11 @@ export function EditFixtureModal({
         kickoffAt: kickoff.trim() ? new Date(kickoff).toISOString() : TBD_KICKOFF,
         ...(venueId ? { venueId } : {}),
         ...(round.trim() ? { round: round.trim() } : {}),
+        referee: referee.trim(),
+        assistantReferee1: ar1.trim(),
+        assistantReferee2: ar2.trim(),
+        fourthOfficial: fourth.trim(),
+        matchCommissioner: commissioner.trim(),
       }),
     onSuccess: () => {
       toast.success('Fixture updated');
@@ -152,6 +163,39 @@ export function EditFixtureModal({
             <div>
               <label className={labelClass}>Round</label>
               <input value={round} onChange={(e) => setRound(e.target.value)} placeholder="Matchday 1" className={inputClass} />
+            </div>
+          </div>
+
+          {/* Match officials — optional; leave blank if not yet appointed. */}
+          <div className="border-t border-gray-100 dark:border-gray-700 pt-4">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">
+              Match officials
+            </p>
+            <div className="space-y-3">
+              <div>
+                <label className={labelClass}>Referee</label>
+                <input value={referee} onChange={(e) => setReferee(e.target.value)} placeholder="Full name" className={inputClass} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelClass}>Assistant referee 1</label>
+                  <input value={ar1} onChange={(e) => setAr1(e.target.value)} placeholder="Full name" className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>Assistant referee 2</label>
+                  <input value={ar2} onChange={(e) => setAr2(e.target.value)} placeholder="Full name" className={inputClass} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelClass}>Fourth official</label>
+                  <input value={fourth} onChange={(e) => setFourth(e.target.value)} placeholder="Full name" className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>Match commissioner</label>
+                  <input value={commissioner} onChange={(e) => setCommissioner(e.target.value)} placeholder="Full name" className={inputClass} />
+                </div>
+              </div>
             </div>
           </div>
         </div>
