@@ -6,6 +6,7 @@ import { updateMatch, isTbdKickoff, TBD_KICKOFF, type Match, type Team, type Ven
 import { toast } from 'sonner';
 import { Loader2, X } from 'lucide-react';
 import { inputClass, labelClass, primaryBtn } from './styles';
+import { NameCombo, useOfficialNames } from './NameCombo';
 
 function errMessage(error: any, fallback: string) {
   const m = error?.response?.data?.message || fallback;
@@ -35,6 +36,8 @@ export function EditFixtureModal({
   onClose: () => void;
 }) {
   const qc = useQueryClient();
+  const refLookup = useOfficialNames('Referee');
+  const commLookup = useOfficialNames('Commissioner');
   const [homeTeamId, setHomeTeamId] = useState(match.homeTeamId ?? '');
   const [awayTeamId, setAwayTeamId] = useState(match.awayTeamId ?? '');
   const [venueId, setVenueId] = useState<string>(match.venueId ?? (match.venue as any)?.id ?? '');
@@ -69,6 +72,8 @@ export function EditFixtureModal({
       }),
     onSuccess: () => {
       toast.success('Fixture updated');
+      [referee, ar1, ar2, fourth].forEach((n) => refLookup.ensure(n));
+      commLookup.ensure(commissioner);
       qc.invalidateQueries({ queryKey: ['football', 'matches', seasonId] });
       onClose();
     },
@@ -174,26 +179,26 @@ export function EditFixtureModal({
             <div className="space-y-3">
               <div>
                 <label className={labelClass}>Referee</label>
-                <input value={referee} onChange={(e) => setReferee(e.target.value)} placeholder="Full name" className={inputClass} />
+                <NameCombo value={referee} onChange={setReferee} options={refLookup.names} placeholder="Full name" title="Referee" className={inputClass} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className={labelClass}>Assistant referee 1</label>
-                  <input value={ar1} onChange={(e) => setAr1(e.target.value)} placeholder="Full name" className={inputClass} />
+                  <NameCombo value={ar1} onChange={setAr1} options={refLookup.names} placeholder="Full name" title="Assistant referee 1" className={inputClass} />
                 </div>
                 <div>
                   <label className={labelClass}>Assistant referee 2</label>
-                  <input value={ar2} onChange={(e) => setAr2(e.target.value)} placeholder="Full name" className={inputClass} />
+                  <NameCombo value={ar2} onChange={setAr2} options={refLookup.names} placeholder="Full name" title="Assistant referee 2" className={inputClass} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className={labelClass}>Fourth official</label>
-                  <input value={fourth} onChange={(e) => setFourth(e.target.value)} placeholder="Full name" className={inputClass} />
+                  <NameCombo value={fourth} onChange={setFourth} options={refLookup.names} placeholder="Full name" title="Fourth official" className={inputClass} />
                 </div>
                 <div>
                   <label className={labelClass}>Match commissioner</label>
-                  <input value={commissioner} onChange={(e) => setCommissioner(e.target.value)} placeholder="Full name" className={inputClass} />
+                  <NameCombo value={commissioner} onChange={setCommissioner} options={commLookup.names} placeholder="Full name" title="Match commissioner" className={inputClass} />
                 </div>
               </div>
             </div>

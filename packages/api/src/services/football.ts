@@ -1394,3 +1394,106 @@ export async function getSeasonInsight(
     briefing: typeof p?.briefing === 'string' ? p.briefing : '',
   };
 }
+
+/* -------------------------------------------------------------------------- */
+/*  Lookup lists: officials & coaches                                          */
+/*                                                                             */
+/*  These exist only to power admin dropdowns. Matches and lineups still store  */
+/*  the chosen NAME as a plain string — picking from the list is a convenience, */
+/*  not a relation. A name typed that isn't in the list can be POSTed here so   */
+/*  it appears next time.                                                      */
+/* -------------------------------------------------------------------------- */
+
+export type OfficialType = 'Referee' | 'Commissioner';
+export const OFFICIAL_TYPES: OfficialType[] = ['Referee', 'Commissioner'];
+
+export interface Official {
+  id: string;
+  name: string;
+  type: OfficialType | string;
+  nationality?: string | null;
+  photo?: string | null;
+  slug?: string;
+  isActive?: boolean;
+}
+
+export interface Coach {
+  id: string;
+  name: string;
+  teamId?: string | null;
+  team?: Team | null;
+  slug?: string;
+  isActive?: boolean;
+}
+
+// GET /api/tugezo/officials — `type` narrows to the slot being filled.
+export async function getOfficials(params?: {
+  type?: OfficialType;
+  q?: string;
+  active?: boolean;
+}): Promise<Official[]> {
+  const { data } = await api.get('/api/tugezo/officials', { params });
+  return unwrap<Official[]>(data) ?? [];
+}
+
+export async function createOfficial(payload: {
+  name: string;
+  type?: OfficialType;
+  nationality?: string;
+  photo?: string;
+  isActive?: boolean;
+}): Promise<Official> {
+  const { data } = await api.post('/api/tugezo/officials', payload);
+  return unwrap<Official>(data);
+}
+
+export async function updateOfficial(
+  officialId: string,
+  payload: Partial<{
+    name: string;
+    type: OfficialType;
+    nationality: string;
+    photo: string;
+    isActive: boolean;
+  }>
+): Promise<Official> {
+  const { data } = await api.patch(`/api/tugezo/officials/${officialId}`, payload);
+  return unwrap<Official>(data);
+}
+
+export async function deleteOfficial(officialId: string): Promise<any> {
+  const { data } = await api.delete(`/api/tugezo/officials/${officialId}`);
+  return unwrap<any>(data);
+}
+
+// GET /api/tugezo/coaches — `teamId` narrows to one club's coaches.
+export async function getCoaches(params?: {
+  teamId?: string;
+  q?: string;
+  active?: boolean;
+}): Promise<Coach[]> {
+  const { data } = await api.get('/api/tugezo/coaches', { params });
+  return unwrap<Coach[]>(data) ?? [];
+}
+
+export async function createCoach(payload: {
+  name: string;
+  teamId?: string;
+  isActive?: boolean;
+}): Promise<Coach> {
+  const { data } = await api.post('/api/tugezo/coaches', payload);
+  return unwrap<Coach>(data);
+}
+
+export async function updateCoach(
+  coachId: string,
+  payload: Partial<{ name: string; teamId: string | null; isActive: boolean }>
+): Promise<Coach> {
+  const { data } = await api.patch(`/api/tugezo/coaches/${coachId}`, payload);
+  return unwrap<Coach>(data);
+}
+
+export async function deleteCoach(coachId: string): Promise<any> {
+  const { data } = await api.delete(`/api/tugezo/coaches/${coachId}`);
+  return unwrap<any>(data);
+}

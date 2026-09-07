@@ -13,6 +13,7 @@ import {
 import { toast } from 'sonner';
 import { Loader2, Save, RotateCcw } from 'lucide-react';
 import { inputClass, labelClass, primaryBtn } from './styles';
+import { NameCombo, useCoachNames } from './NameCombo';
 
 function errMessage(error: any, fallback: string) {
   const m = error?.response?.data?.message || fallback;
@@ -148,6 +149,7 @@ function TeamLineupEditor({
 
   const [formation, setFormation] = useState('4-3-3');
   const [coach, setCoach] = useState('');
+  const coachLookup = useCoachNames(teamId);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [slots, setSlots] = useState<Record<string, Slot>>({});
   // Explicit drag placements; players without an entry use the formation default.
@@ -201,6 +203,8 @@ function TeamLineupEditor({
       }),
     onSuccess: () => {
       toast.success(`${teamName} lineup saved`);
+      // Add a newly typed coach to the lookup only once the lineup itself saved.
+      coachLookup.ensure(coach);
       qc.invalidateQueries({ queryKey: ['football', 'lineup', matchId, teamId] });
     },
     onError: (e) => toast.error(errMessage(e, 'Failed to save lineup')),
@@ -236,10 +240,12 @@ function TeamLineupEditor({
         </div>
         <div className="flex-1 min-w-[10rem]">
           <label className={labelClass}>Coach</label>
-          <input
+          <NameCombo
             value={coach}
-            onChange={(e) => setCoach(e.target.value)}
+            onChange={setCoach}
+            options={coachLookup.names}
             placeholder="Head coach"
+            title="Head coach"
             className={`${inputClass} py-1.5`}
           />
         </div>

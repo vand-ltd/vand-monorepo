@@ -46,6 +46,7 @@ import { MatchLineupsPanel } from './MatchLineupsPanel';
 import { MatchGraphicModal } from './MatchGraphicModal';
 import { EditFixtureModal } from './EditFixtureModal';
 import { BulkFixtureUpload } from './BulkFixtureUpload';
+import { NameCombo, useOfficialNames } from './NameCombo';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -768,6 +769,9 @@ function MatchRow({
   const [showLineups, setShowLineups] = useState(false);
   const [showGraphic, setShowGraphic] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
+  // Lookup-backed name suggestions. The match still stores plain strings.
+  const refLookup = useOfficialNames('Referee');
+  const commLookup = useOfficialNames('Commissioner');
   const [showMotm, setShowMotm] = useState(false);
   const [motmId, setMotmId] = useState<string>(match.manOfTheMatchId ?? '');
 
@@ -820,6 +824,10 @@ function MatchRow({
       }),
     onSuccess: () => {
       toast.success('Match updated');
+      // Names are added to the lookup only after the match itself saved, so the
+      // list never fills up with half-typed values.
+      [referee, ar1, ar2, fourth].forEach((n) => refLookup.ensure(n));
+      commLookup.ensure(commissioner);
       onSaved();
     },
     onError: (e) => toast.error(errMessage(e, 'Failed to update match')),
@@ -1057,37 +1065,42 @@ function MatchRow({
             </option>
           ))}
         </select>
-        <input
+        <NameCombo
           value={referee}
-          onChange={(e) => setReferee(e.target.value)}
+          onChange={setReferee}
+          options={refLookup.names}
           placeholder="Referee"
           title="Referee"
           className="min-w-0 flex-1 sm:flex-none sm:max-w-[10rem] px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-[#003153] outline-none"
         />
-        <input
+        <NameCombo
           value={ar1}
-          onChange={(e) => setAr1(e.target.value)}
+          onChange={setAr1}
+          options={refLookup.names}
           placeholder="AR 1"
           title="Assistant referee 1"
           className="min-w-0 flex-1 sm:flex-none sm:max-w-[9rem] px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-[#003153] outline-none"
         />
-        <input
+        <NameCombo
           value={ar2}
-          onChange={(e) => setAr2(e.target.value)}
+          onChange={setAr2}
+          options={refLookup.names}
           placeholder="AR 2"
           title="Assistant referee 2"
           className="min-w-0 flex-1 sm:flex-none sm:max-w-[9rem] px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-[#003153] outline-none"
         />
-        <input
+        <NameCombo
           value={fourth}
-          onChange={(e) => setFourth(e.target.value)}
+          onChange={setFourth}
+          options={refLookup.names}
           placeholder="4th official"
           title="Fourth official"
           className="min-w-0 flex-1 sm:flex-none sm:max-w-[9rem] px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-[#003153] outline-none"
         />
-        <input
+        <NameCombo
           value={commissioner}
-          onChange={(e) => setCommissioner(e.target.value)}
+          onChange={setCommissioner}
+          options={commLookup.names}
           placeholder="Commissioner"
           title="Match commissioner"
           className="min-w-0 flex-1 sm:flex-none sm:max-w-[9rem] px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-[#003153] outline-none"
