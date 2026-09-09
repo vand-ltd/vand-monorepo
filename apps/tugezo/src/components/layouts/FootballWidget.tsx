@@ -2,7 +2,14 @@
 
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getMatches, getSeasons, getCompetitions, isTbdKickoff, type Match } from '@org/api';
+import {
+  getMatches,
+  getSeasons,
+  getCompetitions,
+  isTbdKickoff,
+  isUpcomingFixture,
+  type Match,
+} from '@org/api';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Card, CardContent } from '@/components/ui/card';
@@ -61,7 +68,7 @@ export function FootballWidget() {
     const live = matches.filter((m) => LIVE_STATUSES.includes(m.status));
     const finished = matches.filter((m) => m.status === 'FullTime');
     const upcoming = matches
-      .filter((m) => m.status === 'Scheduled')
+      .filter((m) => isUpcomingFixture(m))
       .sort((a, b) => new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime());
     return [...live, ...finished, ...upcoming].slice(0, 6);
   }, [matches]);
@@ -181,13 +188,24 @@ export function FootballWidget() {
                         day: 'numeric',
                       });
               const comp = (m as any).season?.competition?.name ?? '';
+              const round = m.round ?? '';
               return (
                 <Link
                   key={m.id}
                   href={`/football/${(m as any).season?.competition?.slug ?? 'match'}/${(m as any).slug ?? m.id}`}
                   className="block px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-900/40 transition-colors"
                 >
-                  {comp && <div className="text-[10px] text-gray-400 truncate mb-1">{comp}</div>}
+                  {(comp || round) && (
+                    <div className="mb-1 flex items-baseline gap-1 text-[10px] text-gray-400">
+                      {comp && <span className="truncate min-w-0">{comp}</span>}
+                      {round && (
+                        <span className="shrink-0">
+                          {comp ? '· ' : ''}
+                          {round}
+                        </span>
+                      )}
+                    </div>
+                  )}
                   <div className="flex items-center gap-2 text-xs">
                     <span className="flex-1 flex items-center justify-end min-w-0">
                       <TeamLink

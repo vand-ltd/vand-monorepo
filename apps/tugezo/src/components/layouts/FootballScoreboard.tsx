@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getMatches, isTbdKickoff, type Match } from '@org/api';
+import { getMatches, isTbdKickoff, isUpcomingFixture, type Match } from '@org/api';
 import { useLocale, useTranslations } from 'next-intl';
 import { Loader2, Trophy, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
@@ -55,7 +55,7 @@ export function FootballScoreboard() {
     const live = matches.filter((m) => LIVE_STATUSES.includes(m.status));
     const results = matches.filter((m) => m.status === 'FullTime').slice(0, 8);
     const fixtures = matches
-      .filter((m) => m.status === 'Scheduled')
+      .filter((m) => isUpcomingFixture(m))
       .sort((a, b) => new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime())
       .slice(0, 8);
     return { live, results, fixtures };
@@ -206,7 +206,12 @@ function MatchCard({
       className="shrink-0 w-[240px] rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 hover:border-[#003153] dark:hover:border-[#F59E0B] transition-colors"
     >
       <div className="flex items-center justify-between text-[11px] mb-2">
-        <span className="truncate text-gray-500 dark:text-gray-400">{competitionName(m)}</span>
+        {/* The competition absorbs the truncation so the round, which is the
+            shorter and more perishable label, always stays readable. */}
+        <span className="flex min-w-0 items-baseline gap-1 text-gray-500 dark:text-gray-400">
+          <span className="truncate">{competitionName(m)}</span>
+          {m.round && <span className="shrink-0">· {m.round}</span>}
+        </span>
         <span className="shrink-0 ml-2">{statusNode}</span>
       </div>
       <div className="space-y-1.5">

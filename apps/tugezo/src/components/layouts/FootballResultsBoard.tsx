@@ -11,6 +11,7 @@ import {
   getTopAssists,
   getSeasonStages,
   isTbdKickoff,
+  isUpcomingFixture,
   type Match,
   type StandingRow,
   type StandingsResult,
@@ -371,18 +372,19 @@ export function FootballResultsBoard({
       }
       return Array.from(m.entries());
     };
+    // Results only. A fixture stays "Scheduled" until someone enters the score,
+    // so a played-but-not-updated match is indistinguishable from an upcoming
+    // one by status alone — which is how past fixtures ended up under "Upcoming".
+    // Showing only what actually happened sidesteps that entirely, and keeps the
+    // empty-day view to the thing readers come for.
+    const kickoff = (m: Match) => new Date(m.kickoffAt).getTime();
     const results = all
       .filter((m) => m.status === 'FullTime' || LIVE_STATUSES.includes(m.status))
-      .sort((a, b) => new Date(b.kickoffAt).getTime() - new Date(a.kickoffAt).getTime())
-      .slice(0, 8);
-    const upcoming = all
-      .filter((m) => m.status === 'Scheduled')
-      .sort((a, b) => new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime())
-      .slice(0, 8);
+      .sort((a, b) => kickoff(b) - kickoff(a))
+      .slice(0, 12);
     return {
-      hasAny: results.length > 0 || upcoming.length > 0,
+      hasAny: results.length > 0,
       results: byDate(results),
-      upcoming: byDate(upcoming),
     };
   }, [recentQuery.data]);
 
@@ -593,7 +595,7 @@ export function FootballResultsBoard({
     const filtered = (
       view === 'results'
         ? matches.filter((m) => m.status === 'FullTime' || LIVE_STATUSES.includes(m.status))
-        : matches.filter((m) => m.status === 'Scheduled')
+        : matches.filter((m) => isUpcomingFixture(m))
     ).filter((m) => !selectedRound || m.round === selectedRound);
     filtered.sort((a, b) => {
       const ta = new Date(a.kickoffAt).getTime();
@@ -651,7 +653,7 @@ export function FootballResultsBoard({
       .sort((a, b) => new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime());
     const hasMore = matches.length > 5;
     // Upcoming to see -> Fixtures; otherwise the season's done -> Results.
-    const moreTarget: 'results' | 'fixtures' = matches.some((m) => m.status === 'Scheduled')
+    const moreTarget: 'results' | 'fixtures' = matches.some((m) => isUpcomingFixture(m))
       ? 'fixtures'
       : 'results';
     return { top, hasMore, moreTarget };
@@ -837,7 +839,7 @@ export function FootballResultsBoard({
           <div className="space-y-3">
             <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700">
               {overview.top.map((m) => (
-                <MatchListRow key={m.id} m={m} dateLocale={dateLocale} t={t} showStage={hasStages} />
+                <MatchListRow key={m.id} m={m} dateLocale={dateLocale} t={t} showStage={hasStages} showRound />
               ))}
             </div>
             {overview.hasMore && (
@@ -869,12 +871,6 @@ export function FootballResultsBoard({
             <FallbackSection
               title={t('latestResults')}
               groups={fallback.results}
-              dateLocale={dateLocale}
-              t={t}
-            />
-            <FallbackSection
-              title={t('upcomingFixtures')}
-              groups={fallback.upcoming}
               dateLocale={dateLocale}
               t={t}
             />
@@ -941,6 +937,8 @@ export function FootballResultsBoard({
                     // Cup sections have a stage/group header; the all-competitions
                     // view groups by competition, so tag each row there instead.
                     showStage={!competitionId}
+                    // Redundant once every row in view is the same round.
+                    showRound={!selectedRound}
                     // Cup stage sections aren't grouped by date, so show each
                     // match's date on the row (league sections have a date header).
                     showDate={!!competitionId && !group.date}
@@ -985,7 +983,7 @@ function FallbackSection({
             </h4>
             <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700">
               {list.map((m) => (
-                <MatchListRow key={m.id} m={m} dateLocale={dateLocale} t={t} showStage />
+                <MatchListRow key={m.id} m={m} dateLocale={dateLocale} t={t} showStage showRound />
               ))}
             </div>
           </div>
@@ -1427,22 +1425,32 @@ function MatchListRow({
   dateLocale,
   t,
   showStage,
+  showRound,
   showDate,
 }: {
   m: Match;
   dateLocale: string;
   t: ReturnType<typeof useTranslations>;
   showStage?: boolean;
+  // Tag the row with its round ("Matchday 5"). Suppressed when a round filter is
+  // active, since every row would then repeat the same value.
+  showRound?: boolean;
   // Show each match's date in the status column. Needed when the section isn't
   // grouped by date (cup stages), so the date isn't lost.
   showDate?: boolean;
 }) {
-  // In mixed feeds (no per-stage section headers) tag the row with its
-  // group/stage so a cup fixture's context isn't lost.
+  // Row context tag. Stage/group only appear in mixed feeds — where there's no
+  // per-stage section header to carry them — but the round is shown wherever
+  // it isn't already implied, since league sections group by DATE and would
+  // otherwise never reveal which matchday a fixture belongs to.
   const stageTag =
-    showStage && ((m as any).group?.name || (m as any).stage?.name)
-      ? [(m as any).group?.name, (m as any).stage?.name].filter(Boolean).join(' · ')
-      : null;
+    [
+      showStage ? (m as any).group?.name : null,
+      showStage ? (m as any).stage?.name : null,
+      showRound ? m.round : null,
+    ]
+      .filter(Boolean)
+      .join(' · ') || null;
   const isLive = LIVE_STATUSES.includes(m.status);
   const isFinished = m.status === 'FullTime';
   // Only a started match shows a score; a scheduled fixture shows its time,

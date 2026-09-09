@@ -1,5 +1,5 @@
 import { getLocale, getTranslations } from 'next-intl/server';
-import { isTbdKickoff } from '@org/api';
+import { isTbdKickoff, isUpcomingFixture } from '@org/api';
 import { Link } from '@/i18n/navigation';
 import { ChevronRight, CalendarDays, Newspaper } from 'lucide-react';
 import { SITE_URL } from '@/lib/brand';
@@ -58,7 +58,7 @@ export async function HomeDiscover() {
 
   const results = matches.filter((m) => PLAYED.includes(m.status)).slice(0, 6);
   const fixtures = matches
-    .filter((m) => !PLAYED.includes(m.status))
+    .filter((m) => isUpcomingFixture(m))
     .sort((a, b) => new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime())
     .slice(0, 6);
   const matchList = [...results, ...fixtures].slice(0, 8);

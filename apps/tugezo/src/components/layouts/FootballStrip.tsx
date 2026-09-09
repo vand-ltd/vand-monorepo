@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getMatches, isTbdKickoff, type Match } from '@org/api';
+import { getMatches, isTbdKickoff, isUpcomingFixture, type Match } from '@org/api';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Trophy, ChevronRight } from 'lucide-react';
@@ -52,7 +52,7 @@ export function FootballStrip() {
     const live = matches.filter((m) => LIVE_STATUSES.includes(m.status));
     const finished = matches.filter((m) => m.status === 'FullTime');
     const upcoming = matches
-      .filter((m) => m.status === 'Scheduled')
+      .filter((m) => isUpcomingFixture(m))
       .sort((a, b) => new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime());
     return [...live, ...finished, ...upcoming].slice(0, 10);
   }, [matches]);
@@ -103,7 +103,10 @@ export function FootballStrip() {
               className="shrink-0 w-[168px] rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-2.5"
             >
               <div className="flex items-center justify-between text-[10px] text-gray-400 mb-1.5">
-                <span className="truncate">{comp}</span>
+                <span className="flex min-w-0 items-baseline gap-1">
+                  <span className="truncate">{comp}</span>
+                  {m.round && <span className="shrink-0">· {m.round}</span>}
+                </span>
                 <span
                   className={`shrink-0 ml-1 ${
                     isLive ? 'text-red-600 dark:text-red-400 font-semibold' : ''

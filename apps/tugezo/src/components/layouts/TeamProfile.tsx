@@ -9,6 +9,7 @@ import {
   getStandings,
   getTeamSeasonJourney,
   isTbdKickoff,
+  isUpcomingFixture,
   type TeamPerspectiveMatch,
   type TeamSeasonRow,
   type TeamHonour,
@@ -895,7 +896,7 @@ function MatchListTab({
     if (mode === 'results') {
       return all.filter((m) => PLAYED_STATUSES.includes(m.status)).reverse(); // most recent first
     }
-    return all.filter((m) => !PLAYED_STATUSES.includes(m.status)); // upcoming, soonest first
+    return all.filter((m) => isUpcomingFixture(m)); // upcoming, soonest first
   }, [data, mode]);
 
   return (

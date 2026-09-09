@@ -135,6 +135,33 @@ export function isTbdKickoff(iso?: string | null): boolean {
   return !Number.isNaN(t) && t === TBD_KICKOFF_MS;
 }
 
+// The calendar day a moment falls on in Rwanda, as YYYY-MM-DD. Fixtures are
+// scheduled and read in local time, so "is this in the past?" has to be asked
+// against Kigali's date rather than the viewer's or the server's. The en-CA
+// format sorts chronologically as a plain string, so keys compare directly.
+export function kigaliDayKey(d: Date | string | number): string {
+  return new Date(d).toLocaleDateString('en-CA', { timeZone: 'Africa/Kigali' });
+}
+
+// True when a match still lies ahead, compared by DATE rather than by clock
+// time: everything scheduled for today stays upcoming for the whole day, and
+// anything dated yesterday or earlier drops out.
+//
+// Use this instead of `status === 'Scheduled'` anywhere a list is labelled
+// fixtures/upcoming. A fixture stays `Scheduled` until someone enters a result,
+// so status alone can never distinguish "not played yet" from "played, nobody
+// updated it" — and the second kind would otherwise sit in fixture lists
+// forever. TBD fixtures carry the far-future sentinel kickoff, so they stay
+// upcoming, which is correct: they're unscheduled, not overdue.
+export function isUpcomingFixture(
+  m: { status: MatchStatus; kickoffAt: string },
+  now: Date | number = Date.now()
+): boolean {
+  if (m.status !== 'Scheduled') return false;
+  if (Number.isNaN(new Date(m.kickoffAt).getTime())) return true; // no usable date — don't hide it
+  return kigaliDayKey(m.kickoffAt) >= kigaliDayKey(now);
+}
+
 export interface Match {
   id: string;
   seasonId: string;
