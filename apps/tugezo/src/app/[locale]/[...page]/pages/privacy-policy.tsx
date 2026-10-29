@@ -1,9 +1,16 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Shield, Cookie, Share2, UserCheck, Mail } from 'lucide-react';
+import { Shield, Cookie, Megaphone, Share2, UserCheck, Mail } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { CONTACT_EMAIL } from '@/lib/brand';
+
+// Opt-out links AdSense requires the policy to point visitors to.
+const AD_LINKS = [
+  { key: 'adsLinkSettings', href: 'https://myadcenter.google.com/' },
+  { key: 'adsLinkPartners', href: 'https://policies.google.com/technologies/partner-sites' },
+  { key: 'adsLinkOptout', href: 'https://optout.aboutads.info/' },
+] as const;
 
 export default function PrivacyPolicyPage() {
   const t = useTranslations('privacyPage');
@@ -49,6 +56,12 @@ export default function PrivacyPolicyPage() {
                 <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{t('collectCommentsText')}</p>
               </CardContent>
             </Card>
+            <Card>
+              <CardContent className="p-5">
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{t('collectAds')}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{t('collectAdsText')}</p>
+              </CardContent>
+            </Card>
           </div>
         </section>
 
@@ -68,8 +81,37 @@ export default function PrivacyPolicyPage() {
               <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-brand-primary dark:bg-brand-accent flex-shrink-0" />
               {t('cookieAnalytics')}
             </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-brand-primary dark:bg-brand-accent flex-shrink-0" />
+              {t('cookieAdvertising')}
+            </li>
           </ul>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">{t('cookiesNote')}</p>
+        </section>
+
+        {/* Advertising */}
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <Megaphone className="h-5 w-5 text-brand-primary dark:text-brand-accent" />
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('adsTitle')}</h2>
+          </div>
+          <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-3">{t('adsText')}</p>
+          <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-3">{t('adsLinksIntro')}</p>
+          <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+            {AD_LINKS.map(({ key, href }) => (
+              <li key={key} className="flex items-start gap-2">
+                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-brand-primary dark:bg-brand-accent flex-shrink-0" />
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-brand-primary dark:text-brand-accent underline underline-offset-2 hover:no-underline"
+                >
+                  {t(key)}
+                </a>
+              </li>
+            ))}
+          </ul>
         </section>
 
         {/* Data Sharing */}
@@ -100,6 +142,10 @@ export default function PrivacyPolicyPage() {
             <li className="flex items-start gap-2">
               <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-brand-primary dark:bg-brand-accent flex-shrink-0" />
               {t('rightPortability')}
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-brand-primary dark:bg-brand-accent flex-shrink-0" />
+              {t('rightAdsOptOut')}
             </li>
           </ul>
         </section>

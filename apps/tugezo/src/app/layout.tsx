@@ -3,7 +3,8 @@ import "./globals.css";
 import type { Metadata, Viewport } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
 import { GoogleAnalytics } from '@next/third-parties/google';
-import { BRAND_NAME } from '@/lib/brand';
+import { BRAND_NAME, ADSENSE_CLIENT } from '@/lib/brand';
+import GoogleAdSense from '@/components/ads/GoogleAdSense';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -70,6 +71,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content={BRAND_NAME} />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <GoogleAdSense publisherId={ADSENSE_CLIENT} />
       </head>
       <body className={`min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased ${inter.className}`} suppressHydrationWarning>
         {children}

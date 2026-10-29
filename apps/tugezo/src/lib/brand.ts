@@ -48,6 +48,9 @@ export const CONTACT_EMAIL = 'menyesha@vand.rw';
 // X/Twitter handle for `twitter:creator`.
 export const TWITTER_HANDLE = '@tugezo';
 
+// Google AdSense publisher ID. Must match the line in public/ads.txt.
+export const ADSENSE_CLIENT = 'ca-pub-8201445737289406';
+
 // Default social/OG share image (lives in /public).
 export const OG_IMAGE_PATH = '/tugezo.png';
 export const OG_IMAGE = `${SITE_URL}${OG_IMAGE_PATH}`;
